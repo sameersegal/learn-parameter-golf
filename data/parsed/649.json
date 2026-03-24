@@ -1,0 +1,137 @@
+{
+  "pr_number": 649,
+  "title": "Record: 1.2073 bpb \u2022 11L gold6 \u2022 8xH100",
+  "author": "pall23-mech",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.2073,
+  "architecture": "Transformer",
+  "quantization": "mixed int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Embedding weights are tied to output weights to reduce parameters",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used to improve embedding efficiency",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with rope_dims=16",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross self-attention enabled on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "8 attention heads with 4 key-value heads (GQA)",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "layerwise residual mixing",
+        "description": "Layerwise residual mixing applied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN scaling",
+        "description": "LayerNorm scaling enabled",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "momentum_warmup_steps": 20,
+          "Adam/AdamW": "used for embeddings, scalar params, head params"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup",
+        "parameters": {
+          "warmup_steps": 20
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of mixed int6 quantization with per-row scales combined with zstd-22 compression to fit under 16MB artifact size",
+    "Tuned 11-layer GPT model with 8 attention heads and 4 KV heads (GQA) trained on 8x H100 GPUs under a strict 600-second wallclock limit",
+    "Empirical finding that smaller global batch size (TRAIN_BATCH_TOKENS=262144) yields better validation bpb on degraded multi-GPU H100 infrastructure compared to larger batch sizes",
+    "Use of Muon optimizer with tuned momentum warmup for matrix parameters and Adam/AdamW for embeddings and scalar parameters",
+    "Application of EMA to final weights for improved validation performance",
+    "Inclusion of bigram hash embedding and layerwise residual mixing with LN scaling",
+    "Use of RoPE with rope_dims=16 and enabling cross self-attention (XSA) on last 4 layers"
+  ],
+  "artifact_size": "under 16 MB"
+}

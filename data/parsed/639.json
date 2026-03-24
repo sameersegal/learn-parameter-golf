@@ -1,0 +1,96 @@
+{
+  "pr_number": 639,
+  "title": "Full GPTQ + XSA-all + SWA/EMA (val_bpb=1.1158, 3-seed mean=1.1163)",
+  "author": "Robby955",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1158,
+  "architecture": "11L GEPA Transformer",
+  "quantization": "Full GPTQ int6 quantization on all 11 layers",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all 11 layers"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer self-attention applied on all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA+EMA blend",
+        "parameters": {
+          "blend_ratio": "50/50",
+          "snapshots": 16
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "LZMA",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizers_tested": [
+            "AdamW",
+            "SGD"
+          ],
+          "learning_rates": [
+            0.0005,
+            0.002,
+            0.001
+          ],
+          "epochs": [
+            3,
+            5,
+            10
+          ],
+          "effect": "neutral-to-harmful on GPTQ weights"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Full GPTQ quantization halves the quantization gap from 0.008 to 0.004 BPB using Cholesky-based GPTQ with act-order column permutation and block-wise error compensation.",
+    "AdamW optimizer catastrophically harms GPTQ-calibrated weights during test-time training; TTT is neutral-to-harmful regardless of optimizer or learning rate.",
+    "GPTQ damping factor has negligible impact on performance, showing robustness of Cholesky solve.",
+    "Applying XSA on all 11 layers (instead of last 4) improves training quality and sliding window BPB by 0.0013.",
+    "EB-TTT with Born-rule scaling (SNR\u00b2) is a novel per-layer TTT gradient scaling inspired by quantum probability amplitudes but provides no measurable BPB improvement on GPTQ-quantized models."
+  ],
+  "artifact_size": "15.92 MB"
+}

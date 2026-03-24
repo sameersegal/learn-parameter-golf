@@ -1,0 +1,140 @@
+{
+  "pr_number": 524,
+  "title": "Xsa vr lora ttt",
+  "author": "Himanshukkk",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "XSA-VR Transformer",
+  "quantization": "int8 per-row quantization with float16 scales",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Sliding Attention with local sliding window and cross-summary attention streams combined via learned scalar gate",
+        "parameters": {
+          "layers": 11,
+          "dimension": 384,
+          "local_window": 64,
+          "cross_heads": 2,
+          "chunk_size": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Each layer mixes value tensor from previous layer via learned scalar gate for soft dense connectivity",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ALiBi Positional Encoding",
+        "description": "Relative distance bias allowing evaluation at 3x training context length without fine-tuning",
+        "parameters": {
+          "train_length": 512,
+          "eval_length": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Factorized Tied Embeddings",
+        "description": "Embedding factorization into vocab\u00d764 and 64\u00d7dim matrices with tied input/output projections",
+        "parameters": {
+          "vocab_size": 1024,
+          "embedding_dim": 384,
+          "factor_dim": 64
+        }
+      }
+    },
+    {
+      "category": "training_techniques",
+      "data": {
+        "description": "Self-distillation starting at 70% training budget using model snapshot as teacher with softened KL loss",
+        "parameters": {
+          "distillation_start": "70% training",
+          "loss_weights": {
+            "cross_entropy": 0.75,
+            "kl_divergence": 0.25
+          },
+          "temperature": 2.0
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 4,
+          "layers": 11,
+          "adapted_projections": [
+            "Q",
+            "V"
+          ],
+          "steps_per_chunk": 5,
+          "chunk_size": 256,
+          "reset_between_sequences": true,
+          "parameter_count": 50000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "N-gram Mixer",
+        "parameters": {
+          "ngram_order": 2,
+          "mix_weight_neural": 0.93,
+          "mix_weight_bigram": 0.07,
+          "artifact_cost_bytes": 0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "Temperature Calibration",
+        "parameters": {
+          "temperature": 0.93,
+          "objective": "minimize bpb on held-out calibration set"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8 per-row quantization with float16 scales",
+        "bits": 8,
+        "scope": "all except norm, scale, gate, bias parameters"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "Cross-Sliding Attention (XSA) combining local sliding window attention with cross-summary attention via learned gating",
+    "Value Residual connections mixing value tensors from previous layers for soft dense connectivity",
+    "Use of ALiBi positional encoding enabling 3x longer evaluation context without fine-tuning",
+    "Factorized tied embeddings reducing embedding parameters and redirecting savings to deeper layers",
+    "Self-distillation training starting at 70% of training budget to smooth predictions without external teacher",
+    "LoRA-based test-time training (TTT) on Q and V projections with low-rank adapters for efficient adaptation",
+    "N-gram bigram mixer at evaluation to handle exact repetitions and proper nouns with zero artifact cost",
+    "Temperature calibration optimized for bits-per-byte metric rather than perplexity",
+    "INT8 per-row quantization with selective float16 parameters and zlib compression to fit under 16MB"
+  ],
+  "artifact_size": "15.8 MB"
+}

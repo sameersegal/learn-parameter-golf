@@ -20,19 +20,115 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "GEPA",
-        "description": "11-layer architecture with ReLU\u00b2 MLP, Cross-sequence attention (XSA), Bigram hash embeddings, Partial RoPE, U-Net skip connections, LN depth scaling, Value embeddings on layers 9-10, Late QAT",
+        "component": "XSA",
+        "description": "Cross-sequence attention on last 4 layers removing self-value bias via orthogonal projection",
         "parameters": {
-          "layers": 11,
-          "embedding_dim": 512,
-          "heads": "8 query, 4 KV (GQA)",
-          "MLP_hidden": 1536,
-          "BigramHash_buckets": 2048,
-          "BigramHash_dim": 128,
-          "RoPE_dims": 16,
-          "XSA_layers": 4,
-          "ValueEmbeddings_layers": "9,10",
-          "LN_scale": "1/sqrt(layer+1)"
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token-mixing gate on input embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embeddings with 2048 buckets and 128 dimensions for cheap bigram context",
+        "parameters": {
+          "buckets": 2048,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings on 16 of 64 dims with YARN scaling",
+        "parameters": {
+          "dims": 16,
+          "total_dims": 64,
+          "train_seq_len": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3\u00d7 expansion MLP with 1536 hidden units and ReLU\u00b2 activation",
+        "parameters": {
+          "hidden": 1536,
+          "activation": "ReLU\u00b2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Residual skip connections across layer pairs",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN depth scaling",
+        "description": "LayerNorm scale adjusted by 1/sqrt(layer+1) for stable deep training",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value embeddings",
+        "description": "128-dimensional value embeddings on layers 9 and 10 with per-layer scale",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimensions": 128,
+          "init_scale": 0.1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Late QAT",
+        "description": "Quantization-aware training with GPTQ-lite clip search enabled at step 6476 when LR scale < 0.15",
+        "parameters": {
+          "step_enabled": 6476,
+          "clip_candidates_per_row": 5,
+          "threshold": 0.15
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "applied_to": "embeddings/scalars"
         }
       }
     },
@@ -41,23 +137,19 @@
       "data": {
         "method": "EMA",
         "parameters": {
-          "decay": 0.997
+          "decay": 0.997,
+          "frequency": "every step"
         }
       }
     },
     {
-      "category": "compression",
+      "category": "lr_schedule",
       "data": {
-        "method": "zstd",
-        "level": 22
-      }
-    },
-    {
-      "category": "evaluation_technique",
-      "data": {
-        "method": "stride-based eval",
+        "method": "warmdown",
         "parameters": {
-          "stride": 64
+          "warmdown_steps": 3500,
+          "total_steps": 7000,
+          "type": "cosine anneal"
         }
       }
     },
@@ -73,61 +165,46 @@
           "chunk_size_tokens": 32768,
           "stride": 64,
           "frozen_blocks": 2,
-          "trainable_params": 22301260
+          "trainable_params": 22301260,
+          "total_params": 27030108
         }
       }
     },
     {
-      "category": "optimizer_technique",
+      "category": "evaluation_technique",
       "data": {
-        "method": "Muon + Adam",
-        "weight_decay": 0.04,
-        "momentum": null,
-        "other_params": {
-          "Muon_applied_to": "hidden/attention weights",
-          "Adam_applied_to": "embeddings/scalars",
-          "decoder_lr_mult": 2.0,
-          "grad_clip_norm": 0.3
-        }
-      }
-    },
-    {
-      "category": "lr_schedule",
-      "data": {
-        "method": "warmdown",
+        "method": "stride-based eval",
         "parameters": {
-          "warmdown_start_step": 3500,
-          "warmdown_end_step": 7000,
-          "warmup_steps": 20,
-          "type": "cosine anneal"
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
         }
       }
     },
     {
       "category": "other",
       "data": {
-        "description": "Late QAT enabled at step 6476 with GPTQ-lite clip search (5 candidates per row)",
+        "description": "Freezing first 2 blocks during TTT",
         "parameters": {
-          "QAT_threshold": 0.15,
-          "clip_candidates_per_row": 5
+          "frozen_blocks": 2
         }
-      }
-    },
-    {
-      "category": "sequence_length",
-      "data": {
-        "train_length": 2048,
-        "eval_length": null
       }
     }
   ],
   "compression": "zstd-22",
   "novel_contributions": [
-    "Extended training to 7000 steps with longer warmdown cosine anneal for better convergence",
-    "Mixed int6/int8 quantization scheme combining per-row int6 QAT for large tensors and per-tensor int8 for sensitive smaller tensors to keep artifact under 16MB",
-    "GEPA architecture combining ReLU\u00b2 MLP, Cross-sequence attention, Bigram hash embeddings, Partial RoPE, U-Net skip connections, LN depth scaling, and late QAT",
-    "Legal score-first test-time training (TTT) with SGD momentum for 10 epochs per chunk, freezing first 2 blocks, yielding a \u22120.0142 BPB improvement",
-    "Fewer TTT epochs (10 vs 30) with faster evaluation time (40% less wall time) while achieving better final BPB"
+    "Extended training to 7000 steps with warmdown cosine anneal from step 3500 to 7000 for better convergence",
+    "Mixed int6/int8 quantization scheme combining int6 per-row GPTQ-lite quantization for large QAT-trained weights and int8 per-tensor scalar quantization for smaller sensitive tensors",
+    "GEPA architecture combining multiple techniques: ReLU\u00b2 activation, Cross-sequence attention (XSA), Bigram hash embeddings, Partial RoPE with YARN scaling, U-Net skip connections, Value embeddings on deep layers, LN depth scaling, and Late QAT",
+    "Legal score-first test-time training (TTT) protocol using SGD with momentum for 10 epochs per 32K-token chunk with frozen first 2 blocks, yielding a \u22120.0142 BPB improvement",
+    "Achieving a 15.70 MB artifact size under the 16MB limit with 27M parameters using mixed quantization and zstd-22 compression"
   ],
   "artifact_size": "15.70 MB"
 }

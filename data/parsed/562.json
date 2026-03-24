@@ -1,0 +1,190 @@
+{
+  "pr_number": 562,
+  "title": "Non-record: 1.1354 BPB \u2014 10L TTT 22ep AdamW Cosine + LeakyReLU(0.5)\u00b2 + TrigramHash",
+  "author": "bigbag",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1354,
+  "architecture": "Transformer",
+  "quantization": "mixed int5 (MLP) / int6 (attention) + FP16 passthrough for embeddings",
+  "optimizer": "Muon (matrices) + AdamW (embeddings/scalars)",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "ResFormer-style layer-0 V mixing",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "per-head sigmoid gates",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "cross self-attention on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2",
+        "description": "activation preserving negative gradient flow, improves BPB by -0.003",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "extends BigramHash to 3-token context via XOR hashing into shared embedding table",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "additional gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "depth-scaled residuals",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "skip connections inspired by U-Net architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "Newton-Schulz": "used for matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars",
+          "TTT_lr": 0.0005
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 27
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5 (MLP) / int6 (attention) + GPTQ-lite per-row clip search + 3% magnitude pruning + FP16 passthrough for embeddings + zstd-22 compression",
+        "bits": null,
+        "scope": "MLP, attention, embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 22,
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "weight_decay": 0.0,
+          "lr_schedule": "per-step cosine decay to 0",
+          "per_layer_lr_groups": {
+            "output_projections": 3.0,
+            "input_projections": 0.5
+          },
+          "batch_size_per_gpu": 32,
+          "gradient_sync": "all_reduce per step",
+          "gradient_clipping": 1.0,
+          "TTT_time_seconds": 406,
+          "eval_time_seconds": 197
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "per_step": true,
+          "decay_to": 0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval + Test-Time Training (TTT)",
+        "parameters": {
+          "TTT_epochs": 22,
+          "TTT_batch_size": 32,
+          "distributed_sync": "all_reduce per step"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Batched TTT with 32 sequences per GPU is ~500x faster than chunk-based TTT",
+    "Per-step cosine learning rate decay prevents overfitting at high epoch counts during TTT",
+    "Gradient synchronization per step (all_reduce on gradients) is critical for stable multi-GPU TTT",
+    "Per-layer learning rate groups compensate for uneven quantization damage, especially on output projections",
+    "LeakyReLU(0.5)\u00b2 activation improves BPB by -0.003 compared to ReLU\u00b2",
+    "TrigramHash extends BigramHash context from 2 to 3 tokens using a shared embedding table with zero extra parameters"
+  ],
+  "artifact_size": "15.35 MB"
+}

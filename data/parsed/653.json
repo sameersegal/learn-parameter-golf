@@ -1,0 +1,157 @@
+{
+  "pr_number": 653,
+  "title": "feat(arch): Mish\u00b2 Activation & PyTorch Native SDPA GQA Core (1.155 BPB) 8xH100",
+  "author": "demirelo",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1552,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parameter Banking + Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mish\u00b2 Activation",
+        "description": "Smooth non-monotonic activation function using F.mish(x).square() replacing LeakyReLU\u00b2",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashing mechanism for bigrams with vocabulary size 1536",
+        "parameters": {
+          "bigram_vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary Positional Embeddings applied partially on 16/64 dimensions",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LayerNorm Scale",
+        "description": "LayerNorm scaled by 1/sqrt(layer+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "3\u00d7 MLP layers using Mish\u00b2 activation",
+        "parameters": {
+          "count": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parameter Banking + Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "adam_wd": 0.04,
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "optimizer": "SGD",
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs_per_chunk": 3,
+          "frozen_blocks": 0,
+          "gradient_clip": 1.0,
+          "batch_seqs": 32
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Parameter Banking replaces many separate nn.Linear weights with 4 contiguous 3D parameter banks for efficiency",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "PyTorch-native scaled dot product attention loop replacing flash-attn C++ dependency for robust multi-GPU synchronization",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Integration of Mish\u00b2 activation (F.mish(x).square()) for improved implicit regularization and BPB reduction",
+    "PyTorch-native GQA-aware scaled dot product attention loop replacing flash-attn C++ dependency for stable multi-GPU training",
+    "Use of Parameter Banking combined with Parallel Muon optimizer for faster training throughput",
+    "Legal score-first Test-Time Training (TTT) protocol with sliding window evaluation and SGD adaptation on validation chunks",
+    "Partial RoPE positional embeddings and layer-scaled LayerNorm for architectural improvements",
+    "Artifact size tightly optimized under 16MB limit using GPTQ-lite int6 quantization and lzma compression"
+  ],
+  "artifact_size": "15.65 MB"
+}

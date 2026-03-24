@@ -1,0 +1,161 @@
+{
+  "pr_number": 636,
+  "title": "Add non-record 10min submission: 11L XSA4 + EMA + GPTQ + FA3 (1.12336724)",
+  "author": "NewyorkDev",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.12336724,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon + Adam-style groups",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer self-attention on the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Token mixing technique combined with BigramHash and tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Token mixing with BigramHash embedding",
+        "parameters": {
+          "vocab_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Weight tying of embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE",
+        "description": "Late-layer vector embedding enabled on layers 9 and 10",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "3x expansion MLP",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam-style groups",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "exact": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT trigger before full GPTQ int6 export",
+        "parameters": {
+          "late_qat_threshold": 0.15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 3 kernel on Hopper hardware with PyTorch SDPA fallback",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Combination of 11-layer 512d GQA model with 2048-token training and tied embeddings",
+    "Use of BigramHash + SmearGate token mixing",
+    "Cross-layer self-attention (XSA) on the last 4 layers",
+    "Late-layer vector embedding (VE) enabled on layers 9 and 10",
+    "EMA applied before export",
+    "Late QAT trigger followed by full GPTQ int6 quantization",
+    "Use of FlashAttention 3 kernel on Hopper hardware with fallback to PyTorch SDPA",
+    "Submission as a fully preserved single-run official log without multi-seed statistical significance claim"
+  ],
+  "artifact_size": "15,853,809 bytes"
+}

@@ -12,33 +12,34 @@
     {
       "category": "other",
       "data": {
-        "description": "Asynchronous prefetching of training and validation batches to overlap CPU data preparation and host-to-device copies with GPU compute, reducing GPU idle time and pipeline bubbles under fixed wall-clock budget.",
+        "description": "Asynchronous prefetching of training and validation batches to overlap CPU data preparation and host-to-device transfers with GPU compute, reducing GPU idle time and pipeline bubbles.",
         "parameters": {
-          "training_batch_prefetch": "Background thread builds next pinned CPU batch while GPU runs current step",
-          "h2d_copy_stream": "Optional dedicated CUDA copy stream with pinned memory and wait_stream synchronization",
-          "validation_prefetch": "Prefetch thread for pinned CPU batches with double-buffered H2D using copy stream and events",
-          "default_env_vars": {
-            "TRAIN_PREFETCH": "on",
-            "TRAIN_COPY_STREAM": "on",
-            "VAL_PREFETCH": "on",
-            "VAL_COPY_STREAM": "on",
-            "TRAINING_TIMING_BREAKDOWN": "off by default, disables prefetch/overlap when on"
-          },
-          "val_bytecount_device": "cpu by default, can be set to cuda to mirror baseline GPU byte math",
-          "val_progress_log_every": "optional, default 0"
+          "training_batches": "Background thread builds next pinned CPU batch while GPU runs current step",
+          "H2D_transfers": "Optional dedicated CUDA copy stream with pinned memory, waits for H2D before forward",
+          "validation": "Prefetch thread for pinned CPU batches; double-buffered H2D with copy stream and events; default BPB byte counting on CPU"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Diagnostics added to measure timing breakdown of batch CPU, H2D, forward/backward/optimizer, and validation steps with logging.",
+        "parameters": {
+          "TRAINING_TIMING_BREAKDOWN": "Logs timing breakdown, disables prefetch/overlap for interpretability",
+          "VAL_BYTECOUNT_DEVICE": "Defaults to cpu in improved script, can be set to cuda to mirror baseline",
+          "VAL_PROGRESS_LOG_EVERY": "Optional per-batch validation progress logging"
         }
       }
     }
   ],
   "compression": null,
   "novel_contributions": [
-    "Overlap CPU data preparation and host-to-device (H2D) memory copies with GPU compute to reduce GPU idle time.",
+    "Overlap CPU data preparation and host-to-device copies with GPU compute to reduce GPU idle time.",
     "Use background threads to asynchronously prefetch training and validation batches with pinned CPU memory.",
-    "Introduce optional dedicated CUDA copy streams for H2D transfers to enable parallelism with GPU compute.",
-    "Double-buffered H2D for validation batches allowing next batch to copy while current batch is processed.",
-    "Add TRAINING_TIMING_BREAKDOWN diagnostic to measure time spent in batch CPU prep, H2D, forward/backward, optimizer, and validation stages.",
-    "Automatic disabling of prefetch/overlap features when timing diagnostics are enabled to keep timings interpretable.",
-    "Default validation byte counting moved to CPU to reduce GPU load during validation."
+    "Introduce optional dedicated CUDA copy streams for host-to-device transfers with synchronization.",
+    "Double-buffered validation batch transfers to overlap data movement with forward passes.",
+    "Add detailed timing diagnostics to measure and analyze the impact of prefetching and overlapping.",
+    "Automatic disabling of prefetch/overlap features when timing diagnostics are enabled for clearer measurements."
   ],
   "artifact_size": null
 }

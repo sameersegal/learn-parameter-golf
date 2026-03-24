@@ -1,0 +1,103 @@
+{
+  "pr_number": 510,
+  "title": "Non-record: MUD optimizer \u2014 triangular Gram preconditioning (arxiv:2603.17970)",
+  "author": "SelfAnush",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1989,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "MUD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP weights (int5), attention weights (int6)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate + BigramHash",
+        "description": "SmearGate and BigramHash(10240, dim=128) used for improved model structure",
+        "parameters": {
+          "BigramHash_size": 10240,
+          "BigramHash_dim": 128,
+          "layers": 10,
+          "hidden_dim": 1536,
+          "heads": 8,
+          "KV_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x expansion and relu\u00b2 activation",
+        "parameters": {
+          "expansion_factor": 3,
+          "activation": "relu\u00b2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Use of U-Net style skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "MUD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "mud_whiten_replaces": "zeropower_via_newtonschulz5",
+          "passes": 1,
+          "eps": 1e-07
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Replacing Muon's 5-step Newton-Schulz iteration with MUD's triangular Gram preconditioning (Algorithm 2 from arxiv:2603.17970).",
+    "MUD optimizer is 12x cheaper in FLOPs per step compared to Muon5 and replaces expensive Gram matrix formation and polynomial iteration with a triangular solve approach.",
+    "Demonstrated strong convergence with fewer steps but slower per-step throughput on H100 GPUs due to CUDA kernel inefficiencies.",
+    "Maintains all other training components identical to Muon SOTA for direct comparison.",
+    "Detailed analysis of throughput differences across GPU architectures (A100/MI250/GH200 vs H100)."
+  ],
+  "artifact_size": "15.9 MB"
+}

@@ -1,0 +1,92 @@
+{
+  "pr_number": 490,
+  "title": "Record: 11L VR + GA + LeakyReLU\u00b2 + Legal Score-First TTT (val_bpb=pending)",
+  "author": "amaljithkuttamath",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Learned lambda blends first-block V into subsequent blocks, adding 2 params per layer",
+        "parameters": {
+          "params_per_layer": 2,
+          "layers_affected": "1-10"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gate on attention output with learned weight matrix and bias initialized near-open",
+        "parameters": {
+          "params_per_layer": 4104
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2",
+        "description": "Replaces relu\u00b2 in MLP to preserve negative gradient flow",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "learning_rate": 0.0001,
+          "epochs": 3,
+          "unfreeze_blocks": 2,
+          "unfreeze_norms": true,
+          "description": "Every token scored before training on it; last 2 blocks and norms unfrozen"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Integration of Value Residual (ResFormer) with learned lambda blending first-block V into subsequent blocks",
+    "Use of Gated Attention with per-head sigmoid gating on attention outputs",
+    "Replacement of relu\u00b2 with LeakyReLU(0.5)\u00b2 in MLP to preserve negative gradient flow",
+    "Implementation of legal score-first test-time training (TTT) where each validation chunk is scored before training on it",
+    "Ablation studies confirming the impact of Value Residual and Gated Attention",
+    "Use of EMA with decay 0.997 and cosine learning rate schedule",
+    "Compliance with competition rules by switching from pre-eval TTT to legal score-first TTT"
+  ],
+  "artifact_size": null
+}

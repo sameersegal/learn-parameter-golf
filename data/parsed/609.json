@@ -1,9 +1,9 @@
 {
   "pr_number": 609,
-  "title": "Record: 11L XSA-all + Full GPTQ + Selective Pruning (val_bpb=1.1154, 3-seed)",
+  "title": "Non-record: 11L XSA-all + Full GPTQ + Selective Pruning (val_bpb=1.1154, 3-seed)",
   "author": "saml212",
   "status": "open",
-  "is_record": true,
+  "is_record": false,
   "val_bpb": 1.1154,
   "architecture": "Transformer",
   "quantization": "Full Hessian GPTQ int6",
@@ -23,7 +23,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "Selective \u00b11 magnitude pruning",
-        "description": "Post-GPTQ pruning of \u00b11 quantized values sorted by reconstruction error, zeroing least-impactful values first until artifact fits",
+        "description": "Post-GPTQ pruning of \u00b11 quantized values sorted by reconstruction error (scale\u00b2), zeroing least-impactful values first until artifact fits",
         "parameters": null
       }
     },
@@ -32,10 +32,7 @@
       "data": {
         "component": "LeakyReLU(0.5)\u00b2 MLP 3x",
         "description": "MLP with LeakyReLU activation squared, repeated 3 times",
-        "parameters": {
-          "activation": "LeakyReLU(0.5)^2",
-          "repeats": 3
-        }
+        "parameters": null
       }
     },
     {
@@ -61,8 +58,26 @@
     {
       "category": "architecture_modification",
       "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scaling",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value Embedding with dimension 128",
+        "parameters": {
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
         "component": "SmearGate",
-        "description": "SmearGate architectural component",
+        "description": "SmearGate mechanism",
         "parameters": null
       }
     },
@@ -104,7 +119,7 @@
       "data": {
         "method": "Full Hessian GPTQ",
         "bits": 6,
-        "scope": "all"
+        "scope": "int6"
       }
     },
     {
@@ -113,21 +128,12 @@
         "method": "lzma",
         "level": null
       }
-    },
-    {
-      "category": "evaluation_technique",
-      "data": {
-        "method": "sliding window eval",
-        "parameters": {
-          "stride": 64
-        }
-      }
     }
   ],
   "compression": "lzma",
   "novel_contributions": [
-    "Applying Cross-Position Self-Attention (XSA) on all 11 layers instead of the standard last 4 layers, improving BPB by -0.0016 without adding parameters.",
-    "Selective \u00b11 magnitude pruning post-GPTQ by sorting \u00b11 quantized values by reconstruction error and zeroing the least impactful first until artifact fits, targeting minimal reconstruction damage."
+    "Applying Cross-Position Self-Attention (XSA) on all 11 layers instead of the standard last 4 layers, improving cross-position information mixing from layer 0",
+    "Selective \u00b11 magnitude pruning post-GPTQ by sorting \u00b11 quantized values by reconstruction error and zeroing the least impactful first until artifact fits"
   ],
   "artifact_size": "15.94 MB"
 }

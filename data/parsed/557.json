@@ -1,0 +1,151 @@
+{
+  "pr_number": 557,
+  "title": "Non-record: 10L + Batched LoRA TTT (val_bpb=1.1160)",
+  "author": "hypery11",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.116,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP (int5), attention (int6)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashing bigrams into 10240 buckets with 128 dim embeddings",
+        "parameters": {
+          "buckets": 10240,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism applied in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "value residual",
+        "description": "Residual connection on value vectors",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "gated attention",
+        "description": "Attention mechanism with gating",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x with LeakyReLU(0.5)^2",
+        "description": "Three-layer MLP with squared LeakyReLU activation",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2",
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections inspired by U-Net architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "scope": "Q, V projections + LM head across all layers",
+          "batch_size": 64,
+          "per_document_reset": true,
+          "optimizer": "Adam",
+          "adam_betas": [
+            0.9,
+            0.95
+          ],
+          "chunk_size": 256,
+          "epochs": 3,
+          "scoring": "final epoch only",
+          "document_split": "BOS boundaries"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Batched per-document LoRA test-time training with rank-8 LoRA on Q/V/LM-head across all layers",
+    "64 documents batched in parallel for LoRA TTT with per-document fresh initialization and optimizer reset",
+    "Use of mixed int5 (MLP) and int6 (attention) quantization combined with zstd-22 compression",
+    "Architecture modifications including BigramHash, SmearGate, value residual, gated attention, U-Net skip connections, and 3x MLP with LeakyReLU(0.5)^2",
+    "EMA weight averaging with decay 0.995",
+    "Efficient training with Muon optimizer combined with AdamW"
+  ],
+  "artifact_size": "15.75 MB"
+}

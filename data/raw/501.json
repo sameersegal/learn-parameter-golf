@@ -1,0 +1,12 @@
+{
+  "number": 501,
+  "title": "Non-record: 1xH100 warmdown100 30m scaling run",
+  "author": "aamodbhatt",
+  "body": "## Summary\nThis PR adds one non-record unlimited-compute folder with a 30-minute 1xH100 run using the baseline script and WARMDOWN_ITERS=100.\n\n## Why this matters\n- Low-cost 1x evidence while waiting for larger 8x grants\n- Same-session controlled comparison against a 10-minute baseline\n\n## Key result\n- 30m run: val_bpb=1.27705124\n- Same-session 10m control: val_bpb=1.34638424\n- Improvement: 0.06933300\n\n## Included files\n- README.md\n- submission.json\n- train.log\n- train_gpt.py\n\nThis PR only adds one folder under records/track_non_record_16mb/.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-23T04:36:59Z",
+  "updated_at": "2026-03-23T04:37:08Z",
+  "submission_readme": "This non-record submission reports a budget-efficient 30-minute 1xH100 run using the baseline script with a scheduler tweak (`WARMDOWN_ITERS=100`).\n\n## Why this run exists\n- We are compute constrained on 8xH100 and using 1xH100 to generate reliable signal before larger grant-backed attempts.\n- This run tests whether extending wallclock from 10m to 30m on the same 1x recipe produces a meaningful quality jump while staying under the 16MB artifact cap.\n\n## Configuration\n- Hardware: `1x H100 80GB`\n- Wallclock cap: `1800s`\n- Layout: `VOCAB_SIZE=1024 NUM_LAYERS=9 MODEL_DIM=512 NUM_HEADS=8 NUM_KV_HEADS=4 MLP_MULT=2`\n- Scheduler: `WARMDOWN_ITERS=100`\n- Batch/sequence: `TRAIN_BATCH_TOKENS=524288 TRAIN_SEQ_LEN=1024`\n\n## Command\n```bash\nRUN_ID=run5_wd100_30m \\\nDATA_PATH=./data/datasets/fineweb10B_sp1024/ \\\nTOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model \\\nVOCAB_SIZE=1024 \\\nWARMDOWN_ITERS=100 \\\nMAX_WALLCLOCK_SECONDS=1800 \\\nVAL_LOSS_EVERY=500 \\\nTRAIN_LOG_EVERY=200 \\\ntorchrun --standalone --nproc_per_node=1 train_gpt.py\n```\n\n## Results\n- Stop point: `step 3545` at `1800.187s`\n- Pre-quant stop eval: `val_loss=2.1506`, `val_bpb=1.2737`\n- Post-quant roundtrip exact: `val_loss=2.15624752`, `val_bpb=1.27705124`\n- Serialized model int8+zlib: `15,792,656 bytes`\n- Code size: `47,686 bytes`\n- Total submission size int8+zlib: `15,840,342 bytes`\n\n## Comparison to today's 10m control\n- 10m control (same pod/session): `val_bpb=1.34638424`\n- This 30m run: `val_bpb=1.27705124`\n- Improvement: `0.06933300`\n\nIncluded files:\n- `train_gpt.py` (exact script snapshot used)\n- `train.log` (full run output)\n- `submission.json` (metadata)\n"
+}

@@ -1,13 +1,13 @@
 {
   "pr_number": 586,
-  "title": "Record: 11L + Hadamard Rotation + VE128 + cuDNN SDPA (val_bpb: 1.1365)",
+  "title": "11L + Hadamard Rotation + VE128 + cuDNN SDPA (val_bpb: 1.1365, 3-seed mean)",
   "author": "EaCognitive",
   "status": "open",
-  "is_record": true,
+  "is_record": false,
   "val_bpb": 1.1365,
   "architecture": "Transformer",
   "quantization": "int6 per-row with Hadamard rotation",
-  "optimizer": "Muon",
+  "optimizer": "Muon + AdamW",
   "training_techniques": [
     {
       "category": "quantization",
@@ -31,7 +31,15 @@
       "category": "architecture_modification",
       "data": {
         "component": "SmearGate",
-        "description": "SmearGate mechanism with BigramHash embedding",
+        "description": "Gating mechanism integrated in architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets and inner dimension 128",
         "parameters": {
           "buckets": 2048,
           "inner_dim": 128
@@ -41,19 +49,8 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "BigramHash",
-        "description": "BigramHash embedding projection quantized to int6",
-        "parameters": {
-          "dim": 128,
-          "projection_dim": 512
-        }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
         "component": "Partial RoPE",
-        "description": "Rotary Positional Embeddings applied partially (16/64 dims)",
+        "description": "Rotary positional embeddings applied partially (16/64 dims)",
         "parameters": {
           "dimensions": 16
         }
@@ -63,15 +60,50 @@
       "category": "architecture_modification",
       "data": {
         "component": "MLP3x",
-        "description": "3x MLP expansion with relu-squared activation",
+        "description": "MLP with 3x expansion and relu-squared activation",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embeddings (VE128)",
+        "description": "Shared value embeddings of dimension 128 on layers 9 and 10 with per-layer learned scales",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Layer Norm Scale",
+        "description": "Layer norm scale factor 1/sqrt(layer_idx+1)",
         "parameters": null
       }
     },
     {
       "category": "architecture_modification",
       "data": {
-        "component": "weight tying",
-        "description": "Tied embeddings",
+        "component": "U-Net skip connections",
+        "description": "5 encoder and 6 decoder skip connections",
+        "parameters": {
+          "encoder": 5,
+          "decoder": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "cuDNN SDPA",
+        "description": "cuDNN scaled dot-product attention backend with FlashAttention 3 conditional fallback",
         "parameters": null
       }
     },
@@ -106,9 +138,7 @@
       "data": {
         "method": "EMA",
         "parameters": {
-          "decay": 0.997,
-          "continuous": true,
-          "frequency": "every step"
+          "decay": 0.997
         }
       }
     },
@@ -120,10 +150,12 @@
       }
     },
     {
-      "category": "initialization",
+      "category": "evaluation_technique",
       "data": {
-        "method": "Orthogonal initialization",
-        "description": "Orthogonal init with projection scaling by 1/sqrt(2*num_layers)"
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
       }
     },
     {
@@ -131,7 +163,7 @@
       "data": {
         "method": "warmdown",
         "parameters": {
-          "warmdown_iterations": 3500,
+          "warmdown_steps": 3500,
           "schedule": "cosine"
         }
       }
@@ -141,35 +173,36 @@
       "data": {
         "method": "weight decay",
         "parameters": {
-          "value": 0.04
+          "weight_decay": 0.04
         }
       }
     },
     {
-      "category": "sequence_length",
+      "category": "initialization",
       "data": {
-        "train_length": 2048,
-        "eval_length": null
+        "method": "Orthogonal initialization",
+        "description": "Orthogonal init with projection scaling by 1/sqrt(2*num_layers)"
       }
     },
     {
       "category": "other",
       "data": {
-        "description": "CPU parameter probe for hyperparameter selection reducing GPU compute by ~84%",
+        "description": "Hadamard rotation applied to weight matrices before int6 quantization to spread outlier values uniformly, improving compression and reducing quantization gap",
         "parameters": null
       }
     }
   ],
   "compression": "zstd-22",
   "novel_contributions": [
-    "First application of Walsh-Hadamard rotation for int6 quantization in this competition",
-    "Hadamard rotation improves zstd compression from 1.70x to 1.77x and reduces quantization gap",
-    "Hadamard rotation enables Shared Value Embeddings (VE128) by recovering 530KB of artifact headroom",
-    "CPU parameter probe guided hyperparameter selection, reducing GPU compute by ~84%",
-    "Identification and removal of dead QAT code leading to 7% throughput gain",
-    "Demonstration that Hadamard rotation and GPTQ are substitutes, not complements, at int6 precision",
-    "Quantization of BigramHash projection to int6 improves compression with negligible noise",
-    "Use of cuDNN SDPA backend with FlashAttention 3 fallback"
+    "First application of Walsh-Hadamard rotation for int6 per-row quantization in this competition",
+    "Hadamard rotation improves zstd compression from 1.70x to 1.76x and reduces quantization gap from 0.0093 to 0.0084 BPB",
+    "Hadamard rotation is data-free and deterministic, requiring no calibration or training data access at evaluation",
+    "Hadamard rotation and GPTQ are substitutes at int6 precision; GPTQ adds no benefit when Hadamard rotation is used",
+    "Compression improvement recovers 530KB of artifact headroom enabling Shared Value Embeddings (VE128) on layers 9-10",
+    "CPU parameter probe guided hyperparameter selection across 9.5M configurations, reducing GPU compute by ~84%",
+    "Identification and removal of dead QAT code improved throughput by 7%",
+    "Quantizing BigramHash projection to int6 improves compression with negligible noise",
+    "Use of cuDNN SDPA backend with FlashAttention 3 conditional fallback"
   ],
-  "artifact_size": "under 16MB"
+  "artifact_size": "~15.6 MB"
 }

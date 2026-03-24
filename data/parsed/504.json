@@ -1,0 +1,82 @@
+{
+  "pr_number": 504,
+  "title": "Non-record: TrigramHash \u2014 iso-parametric bigram(96)+trigram(32), val_bpb=1.5275 (1xH100)",
+  "author": "fleeb83",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.5275,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int5",
+  "optimizer": "AdamW with Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHashEmbedding",
+        "description": "Iso-parametric split of BigramHash(128 dim) into BigramHash(96 dim) plus new TrigramHash(32 dim) to capture 3-token co-occurrence patterns with orthogonal hash functions",
+        "parameters": {
+          "bigram_dim": 96,
+          "trigram_dim": 32,
+          "vocab_size": 10240,
+          "hash_function": "(36313*t[i] XOR 27191*t[i-1] XOR 18731*t[i-2]) % (vocab_size - 1)"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5",
+        "bits": null,
+        "scope": "mlp, attn, bigram, trigram"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW with Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "swa_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "zero-init",
+        "description": "Zero initialization for trigram embedding and projection weights to start as no-op and learn gradually"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Introduction of TrigramHashEmbedding to capture 3-token co-occurrence patterns orthogonally to bigram embeddings",
+    "Iso-parametric embedding parameter split maintaining total embedding parameters identical to SOTA BigramHash(128 dim)",
+    "Use of three independent prime multipliers in hash function to ensure orthogonal bit patterns per token position",
+    "Extension of quantization and optimizer parameter groups to include trigram embedding components",
+    "Demonstration of architecture running cleanly and artifact size within 16MB limit despite added trigram component"
+  ],
+  "artifact_size": "15.4MB"
+}

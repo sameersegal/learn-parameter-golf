@@ -1,0 +1,204 @@
+{
+  "pr_number": 535,
+  "title": "Record: 11L LeakyReLU\u00b2 + Full GPTQ + QAT Alignment (val_bpb: 1.1204)",
+  "author": "raahilshah",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1204,
+  "architecture": "Transformer",
+  "quantization": "Full GPTQ int6 per-row with Hessian calibration and quantile(0.9995) clipping",
+  "optimizer": "Muon (matrices) and AdamW (embeddings and scalars)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full GPTQ",
+        "bits": 6,
+        "scope": "all weights except small tensors and tok_emb.weight (fp16)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2 activation",
+        "description": "Replaces relu\u00b2 in MLP to prevent dead neurons and double effective MLP capacity",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA4",
+        "description": "Exclusive Self-Attention on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial Rotary Positional Embeddings with NTK-aware scaling",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale factor 1/sqrt(layer_idx+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Temporal gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets and 128-dim embedding",
+        "parameters": {
+          "buckets": 2048,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "U-Net style skip connections with 5 encoder and 6 decoder skips",
+        "parameters": {
+          "encoder_skips": 5,
+          "decoder_skips": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Exponential Moving Average with decay 0.997",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": {
+          "frequency_steps": 50,
+          "scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "scope": "matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.025,
+          "scope": "embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_value": 0.3
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT-export alignment",
+        "bits": 6,
+        "scope": "per-row clipping with quantile(0.9995) in STE and export quantizer"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "none",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal init",
+        "description": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU(0.5)\u00b2 activation replacing relu\u00b2 to prevent dead neurons and double effective MLP capacity",
+    "Full GPTQ quantization with Hessian calibration reducing quantization gap by 31%",
+    "QAT-export alignment using quantile(0.9995) clipping to match STE fake-quantizer and export quantizer"
+  ],
+  "artifact_size": "15.85 MB"
+}

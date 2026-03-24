@@ -37,11 +37,10 @@
       "category": "architecture_modification",
       "data": {
         "component": "MLP3x",
-        "description": "MLP multiplier 3\u00d7 with int5 quantization to save size",
+        "description": "MLP multiplier 3\u00d7 with hidden dimension 1536 and ReLU\u00b2 activation",
         "parameters": {
           "multiplier": 3.0,
-          "hidden_dim": 1536,
-          "activation": "ReLU\u00b2"
+          "hidden_dim": 1536
         }
       }
     },
@@ -49,7 +48,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "BigramHash",
-        "description": "BigramHash embedding with vocab 4096 and dim 128",
+        "description": "BigramHash embedding with vocab size 4096 and dimension 128",
         "parameters": {
           "vocab": 4096,
           "dim": 128
@@ -60,7 +59,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "SmearGate",
-        "description": "Per-dim learned gate blending current and previous token",
+        "description": "Per-dimension learned gate blending current and previous token",
         "parameters": null
       }
     },
@@ -68,7 +67,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "RoPE",
-        "description": "Rotary positional embeddings with base 50000, full dims",
+        "description": "Rotary positional embeddings with base 50000, full dimensions",
         "parameters": {
           "base": 50000,
           "partial": false
@@ -82,14 +81,13 @@
         "weight_decay": 0.045,
         "momentum": 0.99,
         "other_params": {
-          "muon_weight_decay_type": "decoupled",
-          "muon_momentum_warmup_start": 0.92,
-          "muon_momentum_warmup_steps": 1500,
           "learning_rates": {
             "matrix": 0.035,
             "tied_embed": 0.045,
             "scalar": 0.035
           },
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
           "grad_clip_norm": 0.35,
           "warmdown_iters": 2000,
           "warmup_steps": 20,
@@ -112,7 +110,7 @@
       "data": {
         "method": "warmdown",
         "parameters": {
-          "warmdown_steps": 2000,
+          "warmdown_iters": 2000,
           "warmup_steps": 20
         }
       }
@@ -120,12 +118,12 @@
   ],
   "compression": "zstd-22",
   "novel_contributions": [
-    "Exact matching of Int6 STE scale during training and export is critical to avoid bpb degradation",
-    "EMA and SWA weight averaging hurt quantized model quality by moving weights off the int6 grid",
-    "Higher learning rates (0.035/0.045) are optimal for fewer training steps (~5500) on 8\u00d7H100",
-    "Int5 quantization of MLP enables 3\u00d7 MLP multiplier within 16MB size cap, saving ~1.5MB",
-    "Sliding window evaluation with stride 64 improves bpb by ~0.023 without training changes",
-    "Optuna TPE sweep found better training schedule than hand-tuning, including lower embed LR and shorter warmdown"
+    "Int6 STE must match export exactly to avoid bpb degradation",
+    "EMA and SWA weight averaging hurt full-run QAT quantized models",
+    "Higher learning rates (0.035/0.045) are optimal for fewer training steps (~5500)",
+    "Int5 quantization on MLP enables larger MLP multiplier (3\u00d7) within 16MB cap",
+    "Sliding window evaluation with stride 64 improves val_bpb by ~0.023 bpb",
+    "Optuna TPE sweep found better training schedule than hand-tuning"
   ],
-  "artifact_size": "15.4MB"
+  "artifact_size": "under 16MB"
 }

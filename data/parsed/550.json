@@ -1,0 +1,133 @@
+{
+  "pr_number": 550,
+  "title": "11L INT6 + Backward-Looking Per-Document LoRA TTT",
+  "author": "haimianbaobao007",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.189,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "INT6 QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 4096 buckets and 128 embedding dimension",
+        "parameters": {
+          "buckets": 4096,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate mechanism applied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the transformer",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x expansion",
+        "parameters": {
+          "expansion_factor": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2 activation",
+        "description": "LeakyReLU with negative slope 0.5 squared to preserve negative gradient flow",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "Muon_scope": "matrices",
+          "Adam_scope": "scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "auto warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.15
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "target": "attention Q and V projections",
+          "epochs_per_document": 10,
+          "learning_rate_decay": "cosine decay from 0.01 to 0.0001",
+          "mode": "backward-looking (score-first)",
+          "per_document_reset": true,
+          "last_chunk_no_train": true,
+          "documents_less_than_512_tokens_no_TTT": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Backward-looking (score-first) per-document LoRA test-time training",
+    "Use of LoRA with rank 8 to constrain adaptation subspace and prevent overfitting on quantized models",
+    "Per-document independent LoRA with reset between documents to avoid cross-contamination",
+    "INT6 quantization-aware training (QAT) applied uniformly",
+    "Combination of Muon optimizer for matrices and Adam for scalars",
+    "LeakyReLU(0.5)^2 activation to preserve negative gradient flow",
+    "U-Net style skip connections in transformer architecture"
+  ],
+  "artifact_size": "11MB"
+}

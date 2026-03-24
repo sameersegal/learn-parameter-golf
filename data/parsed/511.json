@@ -1,0 +1,79 @@
+{
+  "pr_number": 511,
+  "title": "Non Record: Add PPM heuristic for test time learning ",
+  "author": "AnirudhRahul",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1417373,
+  "architecture": "Transformer",
+  "quantization": "int5/int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5/int6",
+        "bits": null,
+        "scope": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash(10240) used as part of the model architecture",
+        "parameters": {
+          "hash_size": 10240
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "delayed outside-context-only PPM",
+        "parameters": {
+          "delay": 2048,
+          "K": 15,
+          "k_values": [
+            16,
+            12,
+            8,
+            6
+          ],
+          "min_confidence": [
+            1.0,
+            1.0,
+            1.0,
+            0.95
+          ],
+          "min_count": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "bos_id": 1
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Introduced delayed outside-context-only PPM heuristic at evaluation time to improve test-time performance without changing training architecture",
+    "PPM bank only uses targets from positions at least 2048 tokens behind current position, ensuring no overlap with transformer's local context window",
+    "Combination of transformer local context and delayed PPM for longer-range repeated-sequence signal",
+    "Demonstrated consistent val_bpb improvement across 3 seeds with small but statistically significant gains",
+    "Self-contained snapshot submission including train_gpt.py and trie_bench.c for delayed PPM implementation"
+  ],
+  "artifact_size": "15.6MB to 15.85MB"
+}

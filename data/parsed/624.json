@@ -12,7 +12,7 @@
     {
       "category": "quantization",
       "data": {
-        "method": "Full GPTQ int6 with GPTQ-lite fallback",
+        "method": "Full GPTQ int6 with Hessian-guided column-by-column error compensation and GPTQ-lite int6 fallback",
         "bits": 6,
         "scope": "attention and MLP weights (Full GPTQ), output projections and MLP down-projections (GPTQ-lite), embeddings and small tensors (int8)"
       }
@@ -20,99 +20,32 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "LeakyReLU(0.5)^2 activation",
-        "description": "Squared LeakyReLU activation with negative slope 0.5",
-        "parameters": null
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "U-Net skip connections",
-        "description": "5 encoder + 6 decoder layers with skip connections",
+        "component": "LeakyReLU(0.5)^2 activation, U-Net skip connections, Grouped Query Attention with partial RoPE, Cross-Self Attention (XSA), BigramHash embedding, RMSNorm with learnable scale, parameter banking",
+        "description": "Custom Transformer variant with advanced attention and embedding mechanisms",
         "parameters": {
-          "encoder_layers": 5,
-          "decoder_layers": 6
+          "layers": 11,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 2,
+          "mlp_multiplier": 3,
+          "partial_rope_dims": "16/64",
+          "bigramhash_vocab": 3072,
+          "bigramhash_dim": 128,
+          "value_embedding_dim": 128,
+          "value_embedding_layers": "9-10"
         }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "Grouped Query Attention with partial RoPE",
-        "description": "Grouped Query Attention using partial Rotary Positional Embeddings on 16/64 dims",
-        "parameters": {
-          "partial_rope_dims": "16/64"
-        }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "Cross-Self Attention (XSA)",
-        "description": "Cross-Self Attention applied on last 4 layers",
-        "parameters": {
-          "layers": 4
-        }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "BigramHash embedding",
-        "description": "Embedding with vocabulary size 3072 and dimension 128",
-        "parameters": {
-          "vocab": 3072,
-          "dim": 128
-        }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "Value Embedding",
-        "description": "Value embedding applied on layers 9-10 with dimension 128",
-        "parameters": {
-          "layers": [
-            9,
-            10
-          ],
-          "dim": 128
-        }
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "RMSNorm with learnable scale",
-        "description": "Root Mean Square Layer Normalization with learnable scaling parameter",
-        "parameters": null
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "Parameter banking",
-        "description": "All 2D weights stored in contiguous 3D banks",
-        "parameters": null
       }
     },
     {
       "category": "optimizer_technique",
       "data": {
-        "method": "Muon",
+        "method": "Muon + AdamW",
         "weight_decay": null,
         "momentum": null,
-        "other_params": null
-      }
-    },
-    {
-      "category": "optimizer_technique",
-      "data": {
-        "method": "AdamW",
-        "weight_decay": null,
-        "momentum": null,
-        "other_params": null
+        "other_params": {
+          "Muon_lr": 0.0126,
+          "AdamW_lr": 0.0036
+        }
       }
     },
     {
@@ -120,17 +53,9 @@
       "data": {
         "method": "EMA + SWA",
         "parameters": {
-          "decay": 0.95,
-          "start_step": 800
+          "EMA_decay": 0.95,
+          "EMA_start_step": 800
         }
-      }
-    },
-    {
-      "category": "quantization",
-      "data": {
-        "method": "Soft-Round QAT",
-        "bits": 6,
-        "scope": "CastedLinear layers during warmdown QAT phase"
       }
     },
     {
@@ -140,8 +65,8 @@
         "parameters": {
           "rank": 8,
           "alpha": 16,
-          "projections": "Q/K/V/O",
           "optimizer": "AdamW",
+          "projections": "Q/K/V/O",
           "epochs_per_chunk": 3,
           "chunk_size_tokens": 32000,
           "learning_rate_schedule": "cosine annealed"
@@ -151,43 +76,30 @@
     {
       "category": "compression",
       "data": {
-        "method": "Entropy-coded compression (Huffman + LZMA fallback to plain LZMA)",
+        "method": "Entropy-coded compression (Huffman + LZMA or fallback to plain LZMA)",
         "level": null
       }
     },
     {
       "category": "evaluation_technique",
       "data": {
-        "method": "Sliding window with legal score-first TTT protocol",
+        "method": "sliding window with legal score-first TTT protocol",
         "parameters": null
-      }
-    },
-    {
-      "category": "sequence_length",
-      "data": {
-        "train_length": 1024,
-        "eval_length": null
       }
     },
     {
       "category": "lr_schedule",
       "data": {
-        "method": "warmdown with warmup",
+        "method": "warmup + warmdown",
         "parameters": {
           "warmup_steps": 200,
-          "warmdown_fraction": 0.26
+          "warmdown_fraction": 0.26,
+          "soft-round QAT activation threshold": "< 0.18 warmdown scale"
         }
-      }
-    },
-    {
-      "category": "other",
-      "data": {
-        "description": "Late QAT with soft-rounding activated at warmdown scale < 0.18",
-        "parameters": null
       }
     }
   ],
-  "compression": "Entropy-coded compression (Huffman + LZMA fallback)",
+  "compression": "Entropy-coded compression (Huffman + LZMA or plain LZMA fallback)",
   "novel_contributions": [
     "Full GPTQ Quantization with Hessian-guided column-by-column error compensation replacing GPTQ-lite clip search",
     "Soft-Round QAT using differentiable soft-rounding with tanh-based smooth approximation and temperature annealing",

@@ -7,14 +7,14 @@
   "val_bpb": 1.1418,
   "architecture": "11-layer GPT",
   "quantization": "int6 QAT with Full GPTQ and Int5 MLP re-quantization",
-  "optimizer": "Muon (matrix_lr=0.025, momentum=0.99) and Adam (lr=0.025/0.035)",
+  "optimizer": "Muon (for matrices) and Adam (for scalars/embeddings)",
   "training_techniques": [
     {
       "category": "quantization",
       "data": {
-        "method": "STE QAT + Full GPTQ + Int5 MLP re-quantization + GPTQ-lite",
+        "method": "STE QAT (late QAT) + Full GPTQ + Int5 MLP re-quantization + GPTQ-lite",
         "bits": 6,
-        "scope": "all weights with Int5 applied to MLP weights post-training"
+        "scope": "all linear layers with special Int5 re-quantization for MLP"
       }
     },
     {
@@ -36,21 +36,20 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "BigramHash embeddings",
-        "description": "Bigram hash embeddings with 1024 buckets",
+        "component": "XSA",
+        "description": "Cross-sequence attention applied in first 4 layers",
         "parameters": {
-          "buckets": 1024,
-          "vocab_size": 1024
+          "layers": 4
         }
       }
     },
     {
       "category": "architecture_modification",
       "data": {
-        "component": "XSA (cross-sequence attention)",
-        "description": "Cross-sequence attention applied in first 4 layers",
+        "component": "BigramHash embeddings",
+        "description": "Bigram hash embeddings with 1024 buckets",
         "parameters": {
-          "layers": 4
+          "buckets": 1024
         }
       }
     },
@@ -68,7 +67,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "SmearGate",
-        "description": "Attention gating mechanism from community meta-stack",
+        "description": "Attention gating mechanism",
         "parameters": null
       }
     },
@@ -108,6 +107,13 @@
       }
     },
     {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
       "category": "lr_schedule",
       "data": {
         "method": "warmdown",
@@ -131,21 +137,6 @@
       "data": {
         "method": "OrthoInit",
         "description": "Orthogonal initialization of weights"
-      }
-    },
-    {
-      "category": "sequence_length",
-      "data": {
-        "train_length": 1024,
-        "eval_length": 1024
-      }
-    },
-    {
-      "category": "quantization",
-      "data": {
-        "method": "Late QAT (STE fake-quantize)",
-        "bits": 6,
-        "scope": "all linear layers during final ~5% of training"
       }
     },
     {

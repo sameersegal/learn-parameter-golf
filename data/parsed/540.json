@@ -1,0 +1,94 @@
+{
+  "pr_number": 540,
+  "title": "[DRAFT] BitNet b1.58 ternary QAT + depth recurrence submission",
+  "author": "devferrazZz",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "ternary QAT with STE",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary QAT + STE",
+        "bits": 1,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "K=4 unique transformer blocks applied N=6 times during training and M=12 times at evaluation to increase effective depth",
+        "parameters": {
+          "num_unique_layers": 4,
+          "num_recurrences_train": 6,
+          "num_recurrences_eval": 12,
+          "effective_depth_train": 24,
+          "effective_depth_eval": 48
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "resid_mix residual anchor",
+        "description": "Residual anchor mixing to stabilize representations across recurrence steps and prevent distribution shift at eval time",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FP16 tied embedding export",
+        "description": "Export embeddings in FP16 with weight tying",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE, GQA, QK-Norm, ReLU\u00b2",
+        "description": "Use of Rotary Positional Embeddings, GQA, QK-Norm, and squared ReLU activations",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Use of ternary quantization-aware training (QAT) with STE and learnable scale (LSQ) to achieve ~1.7 bits/param",
+    "Depth recurrence with eval-time loop scaling to effectively double model depth at evaluation without increasing parameters",
+    "Residual anchor mixing (resid_mix) to stabilize representations across recurrence steps and prevent distribution shift",
+    "Achieving ~4-5x more unique parameters in the same ~14.2MB artifact budget compared to int8 baseline",
+    "Sliding window evaluation with stride=64 for improved evaluation",
+    "FP16 tied embedding export to reduce artifact size"
+  ],
+  "artifact_size": "14.2MB"
+}

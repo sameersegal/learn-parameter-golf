@@ -1,0 +1,174 @@
+{
+  "pr_number": 657,
+  "title": "Record: 11L LeakyReLU\u00b2 + VRL + lzma \u2014 val_bpb 1.1234",
+  "author": "anthony-maio",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1234,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2",
+        "description": "One-line activation swap preserving negative gradient flow, replacing standard relu^2 with leaky relu squared",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual Learning (VRL)",
+        "description": "Layer 0's value output blended into all subsequent layers via learned sigmoid gates to combat attention concentration",
+        "parameters": {
+          "layers": 11,
+          "initial_gate_bias": -1.5,
+          "initial_mixing": "approx 18%"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash with 2048 buckets used in model",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA4",
+        "description": "Cross-Shaped Attention with 4 heads",
+        "parameters": {
+          "heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary Positional Embeddings applied partially with 16/64 dimensions",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP 3\u00d7",
+        "description": "MLP applied three times with LeakyReLU(0.5)^2 activation",
+        "parameters": {
+          "count": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate mechanism included",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "U-Net style skip connections with 5 encoder and 6 decoder layers",
+        "parameters": {
+          "encoder_skips": 5,
+          "decoder_skips": 6
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_scale_max": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(i+1)"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late Quantization Aware Training (QAT) with STE at threshold 0.15",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 3 Hopper native kernels used",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "LeakyReLU(0.5)^2 activation replacing standard relu^2 to preserve negative gradient flow and improve BPB by ~0.002",
+    "Value Residual Learning (VRL) blending layer 0's value output into all subsequent layers via learned sigmoid gates to combat attention concentration",
+    "Switching compression from zstd-22 to stdlib lzma, achieving 2-5% tighter compression on quantized weights enabling larger MLP and BigramHash capacity under 16MB limit"
+  ],
+  "artifact_size": "15.89 MB"
+}

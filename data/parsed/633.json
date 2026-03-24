@@ -1,0 +1,201 @@
+{
+  "pr_number": 633,
+  "title": "PROTEUS v9 \u2014 11L INT6 + single-epoch LoRA TTT (mean val_bpb=1.1526, 3 seeds)",
+  "author": "MatoTeziTanka",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1526,
+  "architecture": "Transformer",
+  "quantization": "INT6 GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "INT6 GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross self-attention on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets and 128 dimension",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with base 50K and NTK-aware eval scaling",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth-scaled residual",
+        "description": "Residual scaling by 1/sqrt(layer_idx + 1) per block",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x expansion and relu\u00b2 activation",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "applied_to": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "frequency": "every step"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "batch_size": 64,
+          "min_document_length": 512,
+          "single_epoch": true,
+          "targets": [
+            "Q projections",
+            "V projections",
+            "LM head"
+          ]
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iterations": 3000,
+          "type": "wallclock-based"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_value": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "percentage": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-then-train single-epoch test-time training (TTT) to avoid training on evaluation tokens",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Single-epoch test-time training (TTT) with score-then-train pattern to comply with rules against multi-epoch TTT",
+    "Use of INT6 GPTQ-lite quantization with 5 clip percentiles per row and selection by lowest MSE",
+    "Combination of LoRA TTT targeting Q, V projections and LM head with single epoch scoring",
+    "Architecture modifications including SmearGate, BigramHash, RoPE with NTK-aware scaling, depth-scaled residuals, and U-Net skip connections",
+    "Use of Muon optimizer with matrix_lr and AdamW for embeddings/scalars",
+    "Artifact compression using zstd-22 achieving ~15.4 MB artifact size within 16MB budget"
+  ],
+  "artifact_size": "15.4 MB"
+}

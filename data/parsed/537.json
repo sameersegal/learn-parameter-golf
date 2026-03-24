@@ -1,0 +1,179 @@
+{
+  "pr_number": 537,
+  "title": "Non-Record: BPB 1.13872 \u2014 LeakyReLU(0.5)\u00b2 + Per-Layer LR Legal TTT (3 seeds)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.13872,
+  "architecture": "Transformer (11L depth recurrence with 10 unique BlockCores, LeakyReLU(0.5)\u00b2 MLP)",
+  "quantization": "int6 QAT with zstd-22 compression",
+  "optimizer": "Muon (hidden/attn) + Adam (embeddings/scalars) for training; SGD with momentum=0.9 for TTT",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2 MLP",
+        "description": "Replaced ReLU\u00b2 with LeakyReLU(0.5)\u00b2 activation in MLP to preserve negative gradient flow and improve pre-TTT BPB",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "11 logical layers with 10 unique shared BlockCores for weight-efficient depth",
+        "parameters": {
+          "layers": 11,
+          "unique_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings with NTK-aware scaling",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "128-dimensional value embeddings applied on layers 9-10 with per-layer scale initialization",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token-mixing gate applied on input embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 features and 128-dimensional embeddings",
+        "parameters": {
+          "features": 2048,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Residual connections across layer pairs",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale with 1/sqrt(layer+1) depth scaling",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "all model weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 4650
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "base_learning_rate": 0.002,
+          "per_layer_lr": {
+            "mlp.proj": 3.0,
+            "mlp.fc": 0.5
+          },
+          "intra_chunk_cosine_decay": true,
+          "epochs_per_chunk": 30,
+          "chunk_size_tokens": 32768,
+          "stride": 64,
+          "frozen_blocks": 2,
+          "trainable_params": 19911748,
+          "total_params": 24634452
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "intra_chunk": true,
+          "inter_chunk": true,
+          "formula": "0.5 \u00d7 (1 + cos(\u03c0 \u00d7 step / total_steps))"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "Muon": "used for hidden and attention parameters",
+          "Adam": "used for embeddings and scalar parameters"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of LeakyReLU(0.5)\u00b2 activation in MLP replacing ReLU\u00b2 to improve pre-TTT BPB by ~0.0035",
+    "Application of per-layer learning rates during test-time training (TTT) with mlp.proj at 3\u00d7 LR and mlp.fc at 0.5\u00d7 LR",
+    "Intra-chunk cosine learning rate decay within each chunk's 30 TTT epochs",
+    "Integration of legal score-first TTT protocol with freezing first 2 blocks and 30 epochs per chunk",
+    "Demonstration that TTT modifications (per-layer LR and intra-chunk cosine) did not improve TTT gain in this architecture, with all final BPB improvement coming from pre-TTT model changes"
+  ],
+  "artifact_size": "15.36 MB"
+}

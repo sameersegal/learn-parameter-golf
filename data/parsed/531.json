@@ -1,0 +1,155 @@
+{
+  "pr_number": 531,
+  "title": "Record: 11L + XSA4 + EMA + Late QAT + GPTQ-lite (1.1325 BPB)",
+  "author": "pragnyanramtha",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.13243,
+  "architecture": "GPT with GQA (8 heads, 4 KV heads)",
+  "quantization": "mixed int6/int5/int8 with GPTQ-lite and QAT",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA4",
+        "description": "Cross-layer Shared Attention with post-attention geometric subtraction on last 4 layers to save parameters",
+        "parameters": {
+          "layers": 4,
+          "active_layers": [
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Layer count",
+        "description": "Increased number of layers from 9 to 11 (5 encoder + 6 decoder with skip connections)",
+        "parameters": {
+          "num_layers": 11,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped Query Attention with 8 heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Embeddings",
+        "description": "Tied embeddings with Bigram hash",
+        "parameters": {
+          "vocab_size": 10240,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Attention",
+        "description": "Flash Attention 3 with RoPE and SmearGate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "start_step": 0,
+          "duration": "full training"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "weights during backward pass when LR < 15% peak"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "attention layers int6, MLP int5, rest int8 or pass-through"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr_matrix": 0.02,
+          "lr_embedding": 0.03,
+          "lr_scalar": 0.02,
+          "grad_accum_steps": 8
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Compile with fullgraph=True to enable full-graph compilation without graph breaks, saving compilation overhead and enabling more training steps",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "XSA4: Cross-layer Shared Attention with zero new parameters via geometric subtraction on last 4 layers to save ~800K parameters",
+    "Increasing model depth to 11 layers enabled by XSA4 parameter savings to fit 16MB budget",
+    "Full-duration EMA with decay 0.997 maintaining float32 running average on CPU applied at end of training",
+    "Late Quantization-Aware Training (QAT) activating only when learning rate drops below 15% of peak, quantizing weights to int6 during backward pass",
+    "GPTQ-lite with 5-percentile MSE search for optimal clipping levels applied selectively to attention and MLP layers",
+    "Fullgraph=True compilation enabled by subclass design to avoid graph breaks, improving compilation speed and allowing more training steps within time budget"
+  ],
+  "artifact_size": "16.9-17.4 MB"
+}

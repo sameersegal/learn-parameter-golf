@@ -1,0 +1,118 @@
+{
+  "pr_number": 637,
+  "title": "Non-record submission: BigramDim160 + 10% Prune + SWA (1.14767 bpb, 2 seeds)",
+  "author": "bryjudy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.14767,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 with zstd-22",
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP (int5/int6), attention (int6)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram embedding with reduced dimension to control artifact size",
+        "parameters": {
+          "dim": 160,
+          "vocab_buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Replaces standard LayerNorm gating",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "OrthoInit",
+        "description": "Orthogonal initialization for better initial weight structure",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped Query Attention reduces parameter count while maintaining quality",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.5,
+          "checkpoints_averaged": 23
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embed_lr": 0.03,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight pruning",
+        "parameters": {
+          "amount": "10%",
+          "scope": "non-embedding linear weights",
+          "timing": "post-SWA, pre-quantization"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Reduced BigramHash embedding dimension from 192 to 160 to reliably fit artifact size under 16MB across seeds",
+    "Applied 10% weight pruning on non-embedding linear weights post-SWA to improve compressibility without hurting quality",
+    "Demonstrated artifact size variance between seeds as a key challenge, emphasizing reliability over raw quality",
+    "Used SWA starting halfway through training (start_frac=0.5) averaging 23 checkpoints",
+    "Maintained SOTA techniques like SmearGate, OrthoInit, GQA, and mixed int6/int5 quantization with zstd compression"
+  ],
+  "artifact_size": "approximately 15.8MB to 15.9MB"
+}

@@ -1,0 +1,12 @@
+{
+  "number": 557,
+  "title": "Non-record: 10L + Batched LoRA TTT (val_bpb=1.1160)",
+  "author": "hypery11",
+  "body": "## Summary\n\n10-layer transformer with batched per-document LoRA test-time training.\n\n- **Base val_bpb: 1.1476** (10 min train)\n- **TTT val_bpb: 1.1160** (8.3 min eval)\n- **Artifact: 15.75 MB**\n\n### Base Model\n- 10L, 512 dim, 8/4 GQA, 3x MLP with LeakyReLU(0.5)^2\n- BigramHash 10240, SmearGate, value residual, gated attention\n- Mixed int5/int6 quantization + zstd-22, 5% pruning\n\n### LoRA TTT\n- Rank-8 on Q/V/LM-head across all layers\n- 64 documents batched in parallel\n- Per-doc reset, Adam lr=0.01, 256-token chunks, 3 epochs\n- Score on final epoch, documents split by BOS boundaries\n\nSingle seed. 3-seed validation coming.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-23T17:18:36Z",
+  "updated_at": "2026-03-23T17:18:36Z",
+  "submission_readme": "# 10L + Batched LoRA TTT\n\n10-layer transformer with batched per-document LoRA adaptation at eval time.\n\n## Results\n\n| Seed | Base val_bpb | TTT val_bpb | TTT time |\n|------|-------------|-------------|----------|\n| 42   | 1.1476      | 1.1160      | 495s     |\n\nArtifact size: 15.75 MB. Single seed, more seeds coming.\n\n## Architecture\n\n- 10 layers, 512 dim, 8/4 GQA heads\n- 3x MLP with LeakyReLU(0.5)^2\n- BigramHash (10240 buckets, 128 dim)\n- SmearGate, value residual, gated attention\n- U-Net skip connections, tied embeddings\n- Mixed int5 (MLP) / int6 (attention) quantization + zstd-22\n- 5% magnitude pruning\n- EMA weight averaging (decay=0.995)\n\n## Training\n\n- Muon optimizer (lr=0.02, momentum=0.99, WD=0.04) + AdamW\n- 10 minutes on 8xH100 SXM, ~5800 steps\n\n## LoRA TTT\n\n- Rank-8 LoRA on Q, V projections + LM head (all layers)\n- 64 documents batched in parallel\n- Per-document fresh initialization + optimizer reset\n- Adam (lr=0.01, betas 0.9/0.95), 256-token chunks, 3 epochs\n- Score on final epoch only\n- Documents split by BOS boundaries\n"
+}

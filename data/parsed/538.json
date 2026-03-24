@@ -1,0 +1,95 @@
+{
+  "pr_number": 538,
+  "title": "FP8 + Arithmetic Coding + SWA (1.1511 BPB)",
+  "author": "cruz-andr",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1511,
+  "architecture": "Transformer",
+  "quantization": "FP8 training via TransformerEngine (E4M3 fwd / E5M2 bwd)",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate + BigramHash",
+        "description": "SmearGate gating mechanism and BigramHash embedding with vocab size 10240 and dim 128",
+        "parameters": {
+          "layers": 10,
+          "dimensions": 512,
+          "mlp_multiplier": 3,
+          "bigram_vocab_size": 10240,
+          "bigram_dim": 128,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 4500,
+          "checkpoint_interval": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "TF32 matmul precision for non-FP8 operations",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "custom arithmetic coder replacing zstd-22",
+  "novel_contributions": [
+    "FP8 training using TransformerEngine with hybrid E4M3 forward and E5M2 backward formats for increased throughput",
+    "Custom pure Python 32-bit integer arithmetic coder exploiting per-tensor empirical histograms to approach Shannon entropy, replacing zstd-22",
+    "Early start of Stochastic Weight Averaging at step 4500 for more averaging during warmdown",
+    "Use of TF32 precision for matmul operations outside FP8",
+    "Architecture modifications including SmearGate and BigramHash embeddings with large vocab size",
+    "FP8Linear wrapper isolating Muon optimizer from TransformerEngine's internal weight caches",
+    "Custom binary format eliminating torch.save pickle overhead"
+  ],
+  "artifact_size": null
+}

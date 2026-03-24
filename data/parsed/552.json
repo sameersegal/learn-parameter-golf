@@ -1,0 +1,118 @@
+{
+  "pr_number": 552,
+  "title": "Non-record subimission: RecurrentTiedDepth_8x2_FiLM records",
+  "author": "loveless2001",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1634,
+  "architecture": "Transformer with recurrent tied-depth and FiLM conditioning",
+  "quantization": "int6 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "8 unique transformer blocks looped 2 times (16 effective layers) with FiLM scale/shift conditioning per iteration",
+        "parameters": {
+          "unique_blocks": 8,
+          "loops": 2,
+          "effective_layers": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FiLM conditioning",
+        "description": "Learned scale and shift parameters per loop iteration to condition the recurrent blocks",
+        "parameters": {
+          "params_count": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash + TrigramHash",
+        "description": "Hashed 2- and 3-token lexical sidecars for richer local context",
+        "parameters": {
+          "bigram_vocab_size": 20480,
+          "trigram_vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Collect skip connections during loop 0 and inject during loop 1",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "activation",
+        "description": "LeakyReLU(0.5) squared activation in MLP",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV heads",
+        "description": "4 KV heads with GQA",
+        "parameters": {
+          "kv_heads": 4,
+          "attention_heads": 8
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 24
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of recurrent tied-depth transformer blocks (8 unique blocks looped 2 times) with FiLM conditioning per iteration",
+    "Augmentation with BigramHash and TrigramHash lexical sidecars for richer local context",
+    "Exploration of L(N) optimization frontier by reusing fewer parameters more times and allocating budget to lexical memory",
+    "Demonstration that trigram hashing provides the strongest lexical leverage with significant BPB improvement",
+    "Finding that recurrence is viable and stable with competitive BPB at smaller artifact sizes",
+    "Identification of failure modes for test-time training (TTT) and EMA in recurrent setups",
+    "Discovery of a sweet spot for hash table size where trigram 8192 outperforms 12288"
+  ],
+  "artifact_size": "15.34MB"
+}

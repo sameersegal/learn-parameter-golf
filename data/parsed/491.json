@@ -1,0 +1,94 @@
+{
+  "pr_number": 491,
+  "title": "Value Residual + DenseFormer DWA + TTT",
+  "author": "ahmettrkck",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual (ResFormer)",
+        "description": "Cache first layer's value vectors and blend into all subsequent layers to reduce parameter count and prevent attention concentration",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DenseFormer DWA",
+        "description": "Replace U-Net skip connections with learned depth-weighted averaging over all previous layer outputs",
+        "parameters": {
+          "scalar_params": 65,
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "epochs_per_window": 10,
+          "learning_rate": 0.0001,
+          "train_on_scored_tokens_only": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "decay": 0.4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate + BigramHash",
+        "description": "Use SmearGate and BigramHash(10240, dim=128) in architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Value Residual (ResFormer): caching and blending first layer's value vectors into subsequent layers for zero parameter overhead and ~10% parameter efficiency gain",
+    "DenseFormer DWA: replacing U-Net skip connections with learned depth-weighted averaging over all previous layer outputs (~65 scalar params for 10 layers)",
+    "Test-Time Training (TTT): score-then-train strategy using AdamW fine-tuning on already-scored validation tokens during sliding window evaluation"
+  ],
+  "artifact_size": null
+}

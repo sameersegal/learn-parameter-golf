@@ -1,0 +1,192 @@
+{
+  "pr_number": 553,
+  "title": "10L + GatedXSA + EMA + TrigramHash + QuadgramHash + SwiGLU (val_bpb=TBD)",
+  "author": "Vighaneshs",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated XSA",
+        "description": "Exclusive Self Attention with learned per-layer sigmoid gate replacing hard projection removal, allowing adaptive self-value suppression per layer",
+        "parameters": {
+          "gate_init": 4.0,
+          "layers": 10,
+          "sigmoid_gate": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Exponential moving average replacing SWA, with decay=0.997 and GPU shadow copy updated every step",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hashing token triples into learned embedding tables added at input, providing explicit n-gram context at zero attention overhead",
+        "parameters": {
+          "buckets": 1024,
+          "embedding_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QuadgramHash",
+        "description": "Hashing token quadruples into learned embedding tables added at input, complementing trigram and bigram hashes",
+        "parameters": {
+          "buckets": 1024,
+          "embedding_dim": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replacing relu\u00b2 activation with SwiGLU in MLP with mlp_mult=2.0, maintaining parameter count",
+        "parameters": {
+          "mlp_mult": 2.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash with 10240 buckets restored to original size due to 10L model size budget",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int8",
+        "bits": null,
+        "scope": "MLP weights (int5), attention and n-gram projections (int6), embedding tables (int8)"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "embedding_optimizer": "AdamW",
+          "embedding_wd": 0.04,
+          "warmup_steps": 20,
+          "warmdown_iters": 3000,
+          "grad_clip": 0.3,
+          "magnitude_pruning": 0.03
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP output scaling applied to XSA layers"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections with 5 encoder and 6 decoder layers",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tied embeddings",
+        "description": "Weight tying between input and output embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Gated XSA with learned per-layer sigmoid gate for adaptive self-value suppression",
+    "EMA with decay=0.997 replacing SWA for continuous weight averaging",
+    "TrigramHash embedding providing explicit 3-gram context at input layer",
+    "QuadgramHash embedding providing explicit 4-gram context at input layer",
+    "Use of SwiGLU activation replacing relu\u00b2 in MLP with maintained parameter count",
+    "Restoration of BigramHash bucket size to 10240 due to 10L model size budget",
+    "Mixed quantization scheme with int5 for MLP, int6 for attention and n-gram projections, int8 for embedding tables",
+    "U-Net style skip connections with encoder-decoder layers",
+    "Orthogonal initialization with muP output scaling applied to XSA layers"
+  ],
+  "artifact_size": "16MB"
+}

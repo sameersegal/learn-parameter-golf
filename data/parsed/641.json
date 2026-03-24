@@ -1,0 +1,154 @@
+{
+  "pr_number": 641,
+  "title": "Notable Non-Record Submission: 1.1239 BPB - 106.2M Binary Asymmetric U-Net + NeoMuon + 4xrelu\u00b2MLP + Smear + Fact Tied Emb + Poly5 Softcap + YaRN2048 + 8192BPE + FP8 + Bit-packing LZMA + Stride-16 Eval - 2h",
+  "author": "CiprianFlorin-Ifrim",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1239,
+  "architecture": "Asymmetric Binary U-Net Transformer",
+  "quantization": "1-bit binary quantisation (weights {-1,+1}), per-group (128) absmean scaling",
+  "optimizer": "NeoMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "1-bit binary quantisation",
+        "bits": 1,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "causal cumulative mean blending with learned tanh gate, zero-init for safe residual start",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Factored tied embedding",
+        "description": "8192\u00d7254 bottleneck with learned projections",
+        "parameters": {
+          "vocab_size": 8192,
+          "embedding_dim": 254
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "YaRN positional encoding",
+        "description": "max_len=2048, ROPE_BASE=5000",
+        "parameters": {
+          "max_len": 2048,
+          "rope_base": 5000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net encoder/decoder",
+        "description": "15 transformer layers (7 encoder, 8 decoder) with learned skip weights (ones-init) and per-block residual mix from input embedding",
+        "parameters": {
+          "layers": 15,
+          "dim": 768,
+          "heads": 8,
+          "kv_heads": 4,
+          "head_dim": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "4x expansion with relu\u00b2 activation, fused gate+up projection",
+        "parameters": {
+          "expansion_factor": 4,
+          "hidden_dim": 3072,
+          "activation": "relu\u00b2"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NeoMuon",
+        "weight_decay": 0.0,
+        "momentum": 0.95,
+        "other_params": {
+          "muon_backend_steps": 3,
+          "muon_momentum_warmup_start": 0.85,
+          "muon_momentum_warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16,
+          "temperature_scaling": 0.9
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "bit-packing + LZMA",
+        "level": 9
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "Polynomial softcap with Z-loss regularisation",
+        "parameters": {
+          "degree": 5,
+          "cap": 10,
+          "z_loss_weight": 0.0001
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "No EMA used as it hurts quality by 0.03 bpb despite clean binary roundtrip math",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.2
+        }
+      }
+    }
+  ],
+  "compression": "bit-packing + LZMA (preset=9)",
+  "novel_contributions": [
+    "Demonstration of 1-bit binary quantisation enabling 106.2M parameters in 15.67MB artifact, packing 60% more parameters per MB than ternary quantisation",
+    "Use of SmearGate: causal cumulative mean blending with learned tanh gate to improve performance despite added compute overhead",
+    "4x relu\u00b2 MLP expansion shown to strictly dominate relu and outperform 3x width MLPs at matched budget",
+    "Factored tied embedding with bottleneck dimension 254 for 8192 vocab size",
+    "Use of NeoMuon optimizer with 3 Newton-Schulz steps for training",
+    "Sliding window evaluation with stride 16 and temperature scaling (T=0.90) for improved evaluation accuracy",
+    "Bit-packing combined with LZMA compression to achieve artifact size under 16MB",
+    "Demonstration that extended training (50k steps, ~2.15h) surpasses ternary quantisation quality despite slower convergence",
+    "No EMA used as it degrades quality in this binary quantised setting"
+  ],
+  "artifact_size": "15.67MB"
+}

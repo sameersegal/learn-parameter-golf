@@ -1,0 +1,197 @@
+{
+  "pr_number": 634,
+  "title": "Record: 11L XSA-all + Full GPTQ + Parallel Muon + Selective Pruning (val_bpb: 1.1171)",
+  "author": "raahilshah",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1171,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ with amax-aligned QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied on all 11 layers to force cross-position mixing from layer 0",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2",
+        "description": "Activation function to prevent dead neurons and double effective MLP capacity",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial Rotary Positional Embeddings with NTK-aware scaling",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Temporal gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets and 128-dim embedding",
+        "parameters": {
+          "buckets": 2048,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections with 5 encoder and 6 decoder layers",
+        "parameters": {
+          "encoder_skips": 5,
+          "decoder_skips": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "8 heads with 4 KV heads (GQA)",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Weight tying of embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full Hessian GPTQ with amax-aligned QAT",
+        "bits": 6,
+        "scope": "all block weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr_matrices": 0.025,
+          "lr_embeddings": 0.035,
+          "Newton-Schulz_steps": 5,
+          "gradient_clip": 0.3,
+          "batch_tokens": 786432,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "EMA_decay": 0.997,
+          "SWA_frequency_steps": 50,
+          "SWA_scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_factor": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective \u00b11 magnitude pruning post-GPTQ to zero least impactful \u00b11 quantized values until target artifact size",
+        "parameters": {
+          "target_size_MB": 15.9
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal initialization",
+        "description": null
+      }
+    }
+  ],
+  "compression": "lzma-6",
+  "novel_contributions": [
+    "Applying Exclusive Self-Attention (XSA) on all 11 layers instead of last 4 to improve cross-position mixing",
+    "Full Hessian GPTQ with 256-sample calibration and Cholesky error compensation for int6 quantization",
+    "amax-aligned QAT with row-maximum clipping matching export quantizer",
+    "Parallel Muon optimizer with parameter banking and 3-phase overlapped optimizer step to eliminate DDP overhead and speed training",
+    "Selective \u00b11 magnitude pruning post-GPTQ to reduce artifact size with minimal reconstruction error",
+    "Use of LZMA compression (preset 6) for better compression ratio on int6 weights",
+    "LeakyReLU(0.5)^2 activation to prevent dead neurons and double effective MLP capacity",
+    "Combination of EMA and Tight SWA for weight averaging",
+    "Partial RoPE with NTK-aware scaling and other architectural tweaks like SmearGate, BigramHash, U-Net skips"
+  ],
+  "artifact_size": "15.92MB"
+}

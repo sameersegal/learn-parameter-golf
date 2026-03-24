@@ -1,0 +1,127 @@
+{
+  "pr_number": 509,
+  "title": "Non-record: Cosine TTT 30ep on SwiGLU + U-Net (1xH100, val_bpb=1.1175)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1175,
+  "architecture": "SwiGLU + U-Net gated skip architecture",
+  "quantization": "int6 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "11-layer SwiGLU MLP with hidden dimension 1792",
+        "parameters": {
+          "layers": 11,
+          "hidden": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net gated skips",
+        "description": "U-Net skip connections with learned sigmoid gating",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 8192 buckets and 128 dimension embeddings",
+        "parameters": {
+          "buckets": 8192,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate mechanism included",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9985
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Int6 QAT",
+        "bits": 6,
+        "scope": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial Rotary Positional Embeddings applied to 16 dims",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale applied as 1/sqrt(layer+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 30,
+          "lr_schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Extending PR #462's SwiGLU + U-Net architecture with 30-epoch cosine learning rate decay during test-time training (TTT) instead of default 10 epochs",
+    "Demonstrated significant val_bpb improvement from 1.2531 to 1.1175 (-10.8%) on 1xH100 by increasing TTT epochs",
+    "Confirmed consistency with prior PRs (#481 and #486) on benefits of cosine TTT scheduling and longer TTT epochs",
+    "Provided timing estimates and plans for 8xH100 verification and tuning of TTT epochs for quality/time tradeoff"
+  ],
+  "artifact_size": "7.5 MB"
+}

@@ -1,0 +1,110 @@
+{
+  "pr_number": 494,
+  "title": "Non-record: Phase 1 Legal Score-First TTT + Meta-TTT (FOMAML) \u2014 awaiting compute",
+  "author": "george11642",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "U-Net Transformer",
+  "quantization": "int6 QAT + GPTQ-lite",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer self-attention applied on all 11 layers (extended from 4 layers in baseline)",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Star-ReLU",
+        "description": "Star-ReLU activation with learned scale and bias",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing embedding with 8192 buckets and 128 dimensions",
+        "parameters": {
+          "buckets": 8192,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate gating mechanism in architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial Rotary Positional Embeddings applied on 16/64 dimensions",
+        "parameters": {
+          "train_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT + GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 30,
+          "learning_rate_groups": {
+            "MLP_output": 3.0,
+            "input_projections": 0.5,
+            "others": 1.0
+          },
+          "cosine_schedule": true,
+          "legal_score_first_protocol": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPTQ-lite optimal clip percentile search with 6 candidates per row to minimize quantization error",
+        "parameters": {
+          "candidates_per_row": 6
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Meta-TTT (FOMAML): first-order MAML inner loops during training to optimize model for test-time training adaptability",
+        "parameters": {
+          "meta_learning_method": "first-order MAML",
+          "status": "in development"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Legal score-first TTT protocol enforcing evaluation before training on tokens",
+    "Meta-TTT (FOMAML): applying meta-learning (first-order MAML) to optimize model for test-time training adaptability, a novel technique not used in prior submissions"
+  ],
+  "artifact_size": null
+}

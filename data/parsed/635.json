@@ -1,0 +1,227 @@
+{
+  "pr_number": 635,
+  "title": "Non-record: 11L MLP3.5x LeakyReLU(0.5)^2 + Full SOTA Stack (mean val_bpb=1.1330, 8xH100 SXM)",
+  "author": "aryanbhosale",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.133,
+  "architecture": "Transformer",
+  "quantization": "int6 uniform + GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 uniform + GPTQ-lite",
+        "bits": 6,
+        "scope": "all except tied embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP 3.5x with LeakyReLU(0.5)^2",
+        "description": "Expanded MLP hidden dimension with squared LeakyReLU activation",
+        "parameters": {
+          "expansion_factor": 3.5,
+          "activation": "LeakyReLU(0.5)^2",
+          "hidden_dim": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism applied in architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 10240 buckets and 128 dimensions",
+        "parameters": {
+          "buckets": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Trigram hashing with 4096 buckets and 128 dimensions",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual (ResFormer)",
+        "description": "Caching and blending value vectors from layer 0 via learned lambda",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gating with bias initialized to 4.0",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA all 11 layers",
+        "description": "Exclusive self-attention applied on all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially on 16 of 64 head dimensions",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tied FP16 embeddings",
+        "description": "Weight tying of embeddings in FP16 precision",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections inspired by U-Net architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization of weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "momentum_schedule": "0.92->0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.03
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_value": 0.3
+        }
+      }
+    },
+    {
+      "category": "training_techniques",
+      "data": {
+        "description": "Late QAT via STE applied during final 15% of training",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of MLP 3.5x expansion with LeakyReLU(0.5)^2 activation",
+    "Integration of SmearGate gating mechanism",
+    "Combination of BigramHash and TrigramHash embeddings",
+    "Value Residual (ResFormer) caching and blending of layer 0 values",
+    "Gated Attention with per-head sigmoid gating and bias initialization",
+    "Exclusive self-attention (XSA) applied on all 11 layers",
+    "Partial RoPE applied on a subset of head dimensions (16/64)",
+    "Late Quantization Aware Training (QAT) via STE in final 15% of training",
+    "Use of Muon optimizer with momentum scheduling",
+    "Orthogonal initialization (OrthoInit) of weights",
+    "U-Net style skip connections in Transformer architecture",
+    "Int6 uniform quantization combined with GPTQ-lite and per-row 5-percentile clipping"
+  ],
+  "artifact_size": null
+}

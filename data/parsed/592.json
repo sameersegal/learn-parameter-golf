@@ -21,7 +21,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "BigramHash",
-        "description": "Expanded from 2048 to 10240 buckets, XOR hash of consecutive token pairs into learned 128-dim embeddings to reduce collisions and improve bigram signal",
+        "description": "Expanded from 2048 to 10240 buckets, XOR hash of consecutive token pairs into learned 128-dim embeddings to reduce collisions and improve bigram-level signal",
         "parameters": {
           "buckets": 10240,
           "embedding_dim": 128
@@ -31,27 +31,25 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "SmearGate",
-        "description": "SmearGate applied",
-        "parameters": null
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
-        "component": "OrthoInit",
-        "description": "Orthogonal initialization of weights",
-        "parameters": null
-      }
-    },
-    {
-      "category": "architecture_modification",
-      "data": {
         "component": "XSA",
-        "description": "Cross-layer self-attention applied on last 4 layers",
+        "description": "Cross-layer self-attention applied on last 4 layers (layers 8-11)",
         "parameters": {
-          "layers": 4
+          "layers": 4,
+          "layer_indices": [
+            8,
+            9,
+            10,
+            11
+          ]
         }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applied SmearGate gating mechanism",
+        "parameters": null
       }
     },
     {
@@ -62,6 +60,14 @@
         "parameters": {
           "dimensions": 16
         }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "OrthoInit",
+        "description": "Orthogonal initialization of weights",
+        "parameters": null
       }
     },
     {
@@ -92,7 +98,7 @@
     {
       "category": "architecture_modification",
       "data": {
-        "component": "Weight tying",
+        "component": "Embedding",
         "description": "Tied FP16 embeddings",
         "parameters": null
       }
@@ -128,11 +134,10 @@
       }
     },
     {
-      "category": "quantization",
+      "category": "compression",
       "data": {
-        "method": "GPTQ-lite clip search",
-        "bits": null,
-        "scope": "all weights"
+        "method": "zstd",
+        "level": 22
       }
     },
     {
@@ -145,35 +150,11 @@
       }
     },
     {
-      "category": "compression",
-      "data": {
-        "method": "zstd",
-        "level": 22
-      }
-    },
-    {
-      "category": "regularization",
-      "data": {
-        "method": "weight decay",
-        "parameters": {
-          "weight_decay": 0.04
-        }
-      }
-    },
-    {
       "category": "lr_schedule",
       "data": {
-        "method": "warmup",
+        "method": "warmup and warmdown",
         "parameters": {
-          "warmup_steps": 1500
-        }
-      }
-    },
-    {
-      "category": "lr_schedule",
-      "data": {
-        "method": "warmdown",
-        "parameters": {
+          "warmup_steps": 1500,
           "late_QAT_start_scale": 0.15
         }
       }
@@ -184,11 +165,11 @@
     "Mixed Int5/Int6 quantization with MLP weights at Int5 and Attention weights at Int6 to save artifact size",
     "Addition of a 12th transformer layer funded by Int5 MLP compression",
     "Expansion of BigramHash embedding buckets from 2048 to 10240 to reduce hash collisions and improve bigram-level signal",
-    "Use of SmearGate and OrthoInit initialization",
+    "Use of SmearGate gating mechanism and OrthoInit initialization",
     "Application of cross-layer self-attention (XSA) on last 4 layers",
     "Partial RoPE applied on 16 dimensions",
-    "Value embeddings added on layers 10 and 11",
-    "Combination of EMA, SWA, and GPTQ-lite clip search with late QAT for quantization-aware training"
+    "Late Quantization-Aware Training (QAT) combined with GPTQ-lite clip search",
+    "Use of EMA and SWA weight averaging techniques"
   ],
   "artifact_size": "15,497,769 bytes"
 }

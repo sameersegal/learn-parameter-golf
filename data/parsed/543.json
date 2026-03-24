@@ -1,0 +1,174 @@
+{
+  "pr_number": 543,
+  "title": "Non-record: 11L Partial RoPE + XSA4 + VE128 + Tight SWA + GPTQ-lite (val_bpb=1.1804)",
+  "author": "rarce",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1804,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 with GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8 with GPTQ-lite",
+        "bits": null,
+        "scope": "layers 1-9 int6, layers 0 and 10 int8, FP16 embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Position-free 75% of head dims, rotary embeddings on 16/64 dims",
+        "parameters": {
+          "rotary_dims": 16,
+          "total_dims": 64,
+          "position_free_ratio": 0.75
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm output scaled by 1/sqrt(layer_idx+1) to damp deeper layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention on last 4 layers removes self-value bias via GQA-aware orthogonal projection",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared VE128",
+        "description": "Value embedding injection shared across layers 9 and 10",
+        "parameters": {
+          "embedding_dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dim gate blending current and previous token embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "5 encoder and 6 decoder skip connections",
+        "parameters": {
+          "encoder_skips": 5,
+          "decoder_skips": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP hidden size",
+        "description": "Reduced MLP hidden dimension to 1408 for faster training and artifact size fit",
+        "parameters": {
+          "hidden_dim": 1408
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "momentum_warmup": "0.92 to 0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embed_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": {
+          "scale_threshold": 0.2,
+          "checkpoints_averaged": 6,
+          "checkpoint_interval": 50,
+          "quality_penalty": "zero"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "Late QAT",
+        "parameters": {
+          "activation_lr_scale_threshold": 0.1,
+          "step_activated": 4070,
+          "lr_halved_on_activation": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "MLP hidden=1408 vs 1536: narrower MLP fits in 16MB artifact size while enabling ~33% more training steps, resulting in better val_bpb despite reduced per-step capacity",
+    "Tight SWA with scale threshold <0.2 eliminates quality penalty seen in standard SWA",
+    "Late QAT activation timing at lr_scale <0.1 avoids disrupting Muon momentum and provides minimal but effective quantization-aware training adaptation",
+    "GPTQ-lite clip ratio search is a zero training cost method that improves quantization reconstruction error by selecting optimal per-tensor clipping"
+  ],
+  "artifact_size": "15.95MB"
+}

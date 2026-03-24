@@ -1,0 +1,180 @@
+{
+  "pr_number": 526,
+  "title": "Non-record: 11L + 30-Epoch Legal TTT (BPB 1.14252)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.14252,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd",
+  "optimizer": "SGD with momentum",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "11 logical layers with 10 unique BlockCores reused at different depths with independent normalization",
+        "parameters": {
+          "logical_layers": 11,
+          "unique_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary Position Embeddings applied to only 16 of 64 dimensions per head with NTK-aware scaling",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "128-dim learned value embeddings added to value projection on layers 9 and 10",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SwiGLU-style activation with gating",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embeddings with 2048 features",
+        "parameters": {
+          "features": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Layer-Norm Scale",
+        "description": "Layer-wise scaling of residual outputs by 1/sqrt(layer_idx + 1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 4650,
+          "checkpoints": 12
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 30,
+          "chunk_size": 32768,
+          "frozen_blocks": 2,
+          "trainable_params": 19911748
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "freeze early layers",
+        "parameters": {
+          "frozen_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Legal score-first TTT protocol using torch.inference_mode() to prevent gradient leakage during scoring",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Demonstrated large TTT gains by increasing SGD epochs per chunk from 3 to 30 in legal score-first TTT",
+    "Showed SGD with momentum outperforms AdamW for legal TTT due to better convergence with limited steps per chunk",
+    "Introduced depth recurrence with 11 logical layers but only 10 unique BlockCores to save parameters",
+    "Applied Partial RoPE to only 16 of 64 dimensions per head with NTK-aware scaling for better length generalization",
+    "Added 128-dim value embeddings only on deep layers (9 and 10) to bypass residual bottleneck",
+    "Used layer-norm depth scaling to stabilize training under depth recurrence",
+    "Implemented legal score-first TTT protocol strictly enforcing scoring before training with torch.inference_mode()",
+    "Freezing first 2 blocks during TTT to prevent catastrophic overfitting and improve adaptation"
+  ],
+  "artifact_size": "15.48 MB"
+}

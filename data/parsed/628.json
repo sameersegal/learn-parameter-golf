@@ -5,9 +5,9 @@
   "status": "open",
   "is_record": true,
   "val_bpb": 1.0983,
-  "architecture": "GEPA",
-  "quantization": "int6 per-row quantization with GPTQ-lite clip search",
-  "optimizer": "Muon (matrix LR) and Adam (scalar LR) for training; SGD with momentum for TTT",
+  "architecture": "11-layer GEPA Transformer variant",
+  "quantization": "pure int6 per-row quantization with GPTQ-lite clip search",
+  "optimizer": "SGD with momentum",
   "training_techniques": [
     {
       "category": "quantization",
@@ -37,7 +37,7 @@
       "category": "architecture_modification",
       "data": {
         "component": "BigramHash",
-        "description": "2048 buckets, 128-dim embeddings",
+        "description": "2048 buckets with 128-dim embeddings",
         "parameters": {
           "buckets": 2048,
           "embedding_dim": 128
@@ -51,7 +51,7 @@
         "description": "Partial RoPE with 16/64 dims and YARN scaling",
         "parameters": {
           "partial_dims": "16/64",
-          "train_seq": 2048
+          "train_seq_length": 2048
         }
       }
     },
@@ -109,17 +109,12 @@
     {
       "category": "optimizer_technique",
       "data": {
-        "method": "Muon and Adam",
+        "method": "SGD",
         "weight_decay": 0.04,
-        "momentum": null,
+        "momentum": 0.9,
         "other_params": {
-          "matrix_lr": 0.025,
-          "scalar_lr": 0.025,
-          "embed_lr": 0.035,
-          "decoder_lr_mult": 2.0,
-          "grad_clip": 0.3,
-          "ema_decay": 0.997,
-          "late_qat": false
+          "learning_rate": 0.002,
+          "lr_schedule": "cosine decay with 5% warmup"
         }
       }
     },
@@ -140,6 +135,17 @@
       }
     },
     {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "chunk_size": 32768,
+          "epochs_per_chunk": 10
+        }
+      }
+    },
+    {
       "category": "test_time_training",
       "data": {
         "method": "score-first TTT",
@@ -152,26 +158,19 @@
           "stride": 64,
           "frozen_blocks": 2,
           "gradient_clip": 1.0,
-          "total_chunks": 1893
+          "lr_warmup_percent": 5
         }
       }
     },
     {
       "category": "lr_schedule",
       "data": {
-        "method": "warmdown with cosine anneal",
+        "method": "warmdown",
         "parameters": {
           "warmdown_start_step": 12000,
-          "warmdown_end_step": 20000,
-          "warmup_steps": 20
+          "warmdown_steps": 8000,
+          "type": "cosine anneal"
         }
-      }
-    },
-    {
-      "category": "sequence_length",
-      "data": {
-        "train_length": 2048,
-        "eval_length": null
       }
     },
     {
@@ -184,20 +183,23 @@
       }
     },
     {
-      "category": "other",
+      "category": "regularization",
       "data": {
-        "description": "Legal score-first test-time training with sliding windows and SGD momentum",
-        "parameters": null
+        "method": "freeze early layers during TTT",
+        "parameters": {
+          "frozen_blocks": 2,
+          "total_blocks": 11
+        }
       }
     }
   ],
   "compression": "zstd-22",
   "novel_contributions": [
-    "Extended training to 20000 steps with 8000-step cosine warmdown, showing warmdown length as dominant lever for float base improvement",
-    "Pure int6 per-row quantization with 15-candidate GPTQ-lite clip search and zstd-22 compression achieving smallest artifact size (14.22 MB)",
-    "Legal score-first test-time training (TTT) using SGD with momentum and learning rate warmup, achieving \u22120.044 BPP gain",
-    "Demonstrated that longer warmdown phase produces significant float base BPP decline (from ~1.216 to 1.1153)",
-    "Combined multiple architecture modifications including XSA on last 4 layers, SmearGate, BigramHash embeddings, Partial RoPE, and ReLU\u00b2 MLP"
+    "Demonstrated that warmdown is a first-class training variable delivering the majority of gains after peak LR plateau, with an 8000-step warmdown driving float base BPP from ~1.216 to 1.1153.",
+    "Achieved smallest artifact size (14.29 MB) with pure int6 per-row quantization combined with GPTQ-lite clip search over 15 percentile candidates and zstd-22 compression.",
+    "Showed that SGD with momentum outperforms AdamW for legal score-first test-time training (TTT), delivering 2.4\u00d7 the TTT gain on the same base model.",
+    "Identified freezing early layers during TTT as active regularization improving adaptation, not just catastrophic forgetting defense.",
+    "Found that as base model quality improves, the relative contribution of TTT to final gain shrinks, emphasizing investing in base model training after choosing the right TTT regime."
   ],
   "artifact_size": "14.29 MB"
 }

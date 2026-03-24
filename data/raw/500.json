@@ -1,0 +1,12 @@
+{
+  "number": 500,
+  "title": "Submission/2026 03 22 Sliding Window + WARMDOWN + AttnRes + PhiSimple (mean 1.1925 BPB)",
+  "author": "ikermoel",
+  "body": " Mean TTT LoRA val_bpb: 1.1925 (3 seeds: 1337, 42, 7)\r\n\r\n  Techniques added on top of the baseline:\r\n  - WARMDOWN_ITERS=20000: always-decaying LR schedule for better int8 quantization\r\n  - Sliding window evaluation (EVAL_STRIDE=64): every token scored with 960+ context\r\n  - Block AttnRes: learned attention over previous block outputs at block boundaries\r\n  - PhiAlpha Simple: per-layer learnable scale on relu\u00b2 activation\r\n\r\n  Built with help from ChatGPT(OpenAI) and Claude (Anthropic). I'm a high school student \u2014 this is my first ML competition submission, and first time using that many compute in a project ",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-23T04:25:10Z",
+  "updated_at": "2026-03-23T04:25:10Z",
+  "submission_readme": "# Sliding Window + WARMDOWN + AttnRes + PhiAlpha Simple\n\n**Mean TTT LoRA val_bpb: 1.1925** (3 seeds)\n\n## Key Techniques\n\n1. **Always-decaying LR schedule** (`WARMDOWN_ITERS=20000`): LR decays from the first step, producing tighter weight distributions with fewer outliers. Reduces int8 quantization penalty significantly.\n\n2. **Sliding window evaluation** (stride=64, seq_len=1024): Every token scored with 960+ context instead of 0-1023 average. Compiled `forward_logits` method for efficient batch inference.\n\n3. **Block AttnRes**: At block boundaries (every 3 layers), learned attention over all previous block outputs replaces fixed residual aggregation. Adds ~1,024 parameters (2 boundary queries \u00d7 512 dim).\n\n4. **PhiAlpha Simple**: Per-layer learnable scale on relu\u00b2 activation: `relu\u00b2(x) * (1 + alpha)`, alpha initialized to 0. Near-zero overhead vs baseline.\n\n## Results\n\n| Seed | val_bpb (sliding window) | TTT LoRA val_bpb | Steps | ms/step |\n|------|--------------------------|------------------|-------|---------|\n| 1337 | 1.1901 | 1.1932 | 12271 | 48.90 |\n| 42   | 1.1902 | 1.1929 | 12273 | 48.89 |\n| 7    | 1.1889 | 1.1914 | 12279 | 48.86 |\n| **Mean** | **1.1897** | **1.1925** | **12274** | **48.88** |\n\nArtifact: ~14.9 MB | Eval time: ~77s (TTT LoRA) + ~37s (sliding window)\n\n## Reproduction\n\n```bash\nWARMDOWN_ITERS=20000 EVAL_STRIDE=64 USE_ATTN_RES=1 USE_PHI_ALPHA_SIMPLE=1 SEED=1337 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

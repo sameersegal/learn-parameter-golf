@@ -1,0 +1,189 @@
+{
+  "pr_number": 631,
+  "title": "submission: XSA-all + Soft-Round QAT + Full GPTQ + MLP 3.5x + AdamW TTT",
+  "author": "senstar-hsoleimani",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with Full GPTQ and Soft-Round",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-position information mixing on all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP expansion",
+        "description": "MLP expansion increased to 3.5x (1792 hidden units)",
+        "parameters": {
+          "expansion_factor": 3.5,
+          "hidden_units": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "8192-bucket bigram hash table to reduce token-pair collisions",
+        "parameters": {
+          "buckets": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MHA",
+        "description": "Multi-head attention with 8 heads and 8 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Soft-Round QAT",
+        "bits": 6,
+        "scope": "all large weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full GPTQ with Hessian-aware column-reordered Cholesky error compensation",
+        "bits": 6,
+        "scope": "all large weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Selective \u00b11 magnitude pruning",
+        "bits": 6,
+        "scope": "post-GPTQ pruning to fit size target"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0001,
+          "grouped_lr": true,
+          "cosine_schedule": true,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size_tokens": 131072,
+          "epochs_per_chunk": 3,
+          "cosine_lr_decay": true,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "Tight SWA"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with slope 0.5 squared",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "5 encoder + 6 decoder skip connections",
+        "parameters": {
+          "encoder_skips": 5,
+          "decoder_skips": 6
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization of weights"
+      }
+    }
+  ],
+  "compression": "lzma-6",
+  "novel_contributions": [
+    "Applying XSA on all 11 layers instead of 4 for better cross-position mixing",
+    "Soft-Round QAT with tanh-based differentiable rounding and alpha annealing from 1 to 16",
+    "Full GPTQ with Hessian-aware column-reordered Cholesky error compensation replacing naive int6 quantization",
+    "Increasing MLP expansion to 3.5x (1792 hidden units) and full MHA 8/8 heads",
+    "Using a larger BigramHash vocabulary of 8192 buckets to reduce token-pair collisions",
+    "Replacing SGD with AdamW optimizer for legal score-first test-time training with grouped learning rates and cosine schedule",
+    "Selective \u00b11 magnitude pruning post-GPTQ to meet artifact size target",
+    "Combining multiple improvements from prior PRs (#606, #609) onto the official SOTA base (#549)"
+  ],
+  "artifact_size": "\u226415.9 MB"
+}

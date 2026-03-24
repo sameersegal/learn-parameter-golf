@@ -1,0 +1,181 @@
+{
+  "pr_number": 507,
+  "title": "Record: 1.1558 BPB \u2014 11L U-Net + Catalytic + SwiGLU + SW64",
+  "author": "skarakulak",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1558,
+  "architecture": "11-layer Transformer with gated U-Net skip connections",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "gated U-Net skip connections",
+        "description": "Sigmoid-gated blending between encoder and decoder layers",
+        "parameters": {
+          "layers": 11,
+          "encoder_layers": 5,
+          "mid_layers": 1,
+          "decoder_layers": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Catalytic residuals",
+        "description": "Learned per-dimension gates on attention and MLP outputs, initialized to 1.0",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Gated linear unit with SiLU activation and 3\u00d7 expansion factor",
+        "parameters": {
+          "expansion_factor": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value residual (ResFormer)",
+        "description": "Blend first-layer value vectors into all subsequent layers for better gradient flow",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)",
+          "applied_to": "RMSNorm inputs"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "applied_to": "scalar parameters"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP and bigram weights at 5-bit, rest at 6-bit"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram-conditioned token embeddings via hash-based lookup",
+        "parameters": {
+          "buckets": 4096,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to 25% of head dimensions",
+        "parameters": {
+          "percentage": 25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-self attention applied on last 4 layers with gated attention",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9985
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Decoder learning rate multiplier of 2\u00d7 applied for both Muon and Adam optimizers",
+        "parameters": {
+          "multiplier": 2
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of 11-layer Transformer with gated U-Net skip connections for blending encoder and decoder layers",
+    "Introduction of Catalytic residuals with learned per-dimension gates on attention and MLP outputs",
+    "Application of SwiGLU MLP with 3\u00d7 expansion factor",
+    "Value residual blending first-layer value vectors into all subsequent layers (ResFormer style)",
+    "Layerwise LN scale dampening with 1/sqrt(layer_idx+1) on RMSNorm inputs",
+    "Decoder learning rate multiplier of 2\u00d7 for Muon and Adam optimizers",
+    "Mixed int5/int6 quantization combined with zstd-22 compression",
+    "Sliding window evaluation with stride 64 and sequence length 1024 for improved val_bpb",
+    "BigramHash embeddings with 4096 buckets and 128 dimensions",
+    "Partial RoPE applied to 25% of head dimensions",
+    "Cross-self attention (XSA) with gated attention on last 4 layers",
+    "Use of EMA with decay 0.9985 for weight averaging"
+  ],
+  "artifact_size": "15.1 MB"
+}

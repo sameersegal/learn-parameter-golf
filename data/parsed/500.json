@@ -1,0 +1,62 @@
+{
+  "pr_number": 500,
+  "title": "Submission/2026 03 22 Sliding Window + WARMDOWN + AttnRes + PhiSimple (mean 1.1925 BPB)",
+  "author": "ikermoel",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1925,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 20000,
+          "description": "always-decaying LR schedule from first step for better int8 quantization"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 960
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Block AttnRes",
+        "description": "learned attention over previous block outputs at block boundaries replacing fixed residual aggregation",
+        "parameters": {
+          "block_boundary_interval": 3,
+          "added_parameters": 1024,
+          "query_count": 2,
+          "dimension": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "PhiAlpha Simple",
+        "description": "per-layer learnable scale on relu\u00b2 activation: relu\u00b2(x) * (1 + alpha), alpha initialized to 0",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Always-decaying learning rate schedule (WARMDOWN_ITERS=20000) to improve int8 quantization by producing tighter weight distributions with fewer outliers",
+    "Sliding window evaluation with stride 64 to score every token with 960+ context instead of average 0-1023 context",
+    "Block AttnRes: learned attention over previous block outputs at block boundaries replacing fixed residual aggregation, adding ~1024 parameters",
+    "PhiAlpha Simple: per-layer learnable scale on relu\u00b2 activation with near-zero overhead"
+  ],
+  "artifact_size": "14.9 MB"
+}
