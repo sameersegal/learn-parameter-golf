@@ -40,7 +40,15 @@ function slugify(str) {
 }
 
 // Read all parsed submissions
+if (!fs.existsSync(PARSED_DIR)) {
+  console.log("No data/parsed directory found, keeping existing data files");
+  process.exit(0);
+}
 const files = fs.readdirSync(PARSED_DIR).filter((f) => f.endsWith(".json"));
+if (files.length === 0) {
+  console.log("No parsed files found, keeping existing data files");
+  process.exit(0);
+}
 const submissions = files
   .map((f) => {
     try {
