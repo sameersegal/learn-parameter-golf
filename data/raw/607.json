@@ -1,0 +1,12 @@
+{
+  "number": 607,
+  "title": "11L AttnRes + Gated Attention + Looped Blocks + EMA + Cosine + QAT",
+  "author": "Neopolita",
+  "body": "## Summary\n- **Block Attention Residuals** (arXiv 2603.15031) replacing fixed skip_weights with learned depth routing\n- **Per-head gated attention** preventing attention-sink pathology\n- **Looped middle blocks** (layers 4-7 x2) for zero-param compute depth\n- **EMA** (0.995), **cosine LR decay**, **QAT** (last 15%)\n- 11L, 3x MLP, 26.5M params, ~13.7MB artifact\n\n## Status\nH100 run pending \u2014 requesting compute credits. Local M4 Max validation (500 steps): val_bpb 1.475 (float).\n\n## Test plan\n- [ ] Run on 8x H100 for 10 minutes\n- [ ] Update submission.json with final val_bpb and bytes_total\n- [ ] Add training log\n- [ ] Mark PR as ready for review",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-24T09:55:53Z",
+  "updated_at": "2026-03-24T12:18:00Z",
+  "submission_readme": "# AttnRes + Gated Attention + Looped Blocks\n\n### Architecture changes\n- **11 layers, 3x MLP** \u2014 increased capacity matching top submissions\n- **Block Attention Residuals** (Moonshot AI, arXiv 2603.15031) \u2014 replaces fixed `skip_weights` with softmax attention over all encoder outputs using per-decoder-layer pseudo-queries\n- **Per-head gated attention** \u2014 learnable `sigmoid(gate)` per attention head, prevents attention-sink pathology\n- **Looped middle blocks** \u2014 layers 4-7 run twice per forward pass, adding compute depth without parameters\n\n### Training changes\n- **EMA** (decay=0.995) \u2014 exponential moving average weights for final eval/export\n- **Cosine LR decay** \u2014 replaces linear warmdown\n- **QAT** (last 15%) \u2014 simulates int8 per-row quantization to reduce roundtrip degradation\n\n## Local validation (M4 Max, 500 steps)\n- val_bpb: 1.475 (float), int8 roundtrip: 1.648\n- Artifact size: 13.7MB (2.3MB under 16MB cap)\n- Full H100 run pending\n\n## Config\n- 26.5M params, 11 layers, 512 dim, 8 heads, 4 KV heads, 3x MLP, tied embeddings\n- Estimated artifact: ~13.7MB after int8+zlib\n"
+}

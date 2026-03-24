@@ -1,0 +1,184 @@
+{
+  "pr_number": 601,
+  "title": "Non-record: VR + GA + Late QAT + Full GPTQ \u2014 1.1418 BPB, 15.7 MB",
+  "author": "anantdgoel",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1418,
+  "architecture": "11-layer GPT",
+  "quantization": "int6 QAT with Full GPTQ and Int5 MLP re-quantization",
+  "optimizer": "Muon (matrix_lr=0.025, momentum=0.99) and Adam (lr=0.025/0.035)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT + Full GPTQ + Int5 MLP re-quantization + GPTQ-lite",
+        "bits": 6,
+        "scope": "all weights with Int5 applied to MLP weights post-training"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual (VR)",
+        "description": "Layer-0 V vector shortcut blended with current layer V to improve deep attention signal flow",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention (GA)",
+        "description": "Per-head learned sigmoid gate after scaled dot-product attention to modulate head contributions",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash embeddings",
+        "description": "Bigram hash embeddings with 1024 buckets",
+        "parameters": {
+          "buckets": 1024,
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA (cross-sequence attention)",
+        "description": "Cross-sequence attention applied in first 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially (16 dims)",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Attention gating mechanism from community meta-stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr_scalars": 0.025,
+          "lr_embeddings": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization of weights"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Late QAT (STE fake-quantize)",
+        "bits": 6,
+        "scope": "all linear layers during final ~5% of training"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 128
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "SGD TTT (legal, cosine, per-layer)",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Value Residual (VR): Layer-0 V vector shortcut for deep attention signal flow improving BPB by -0.015",
+    "Gated Attention (GA): Per-head learned sigmoid gate after SDPA improving BPB by -0.003",
+    "Late QAT: LR-threshold-based fake-quantize during final ~5% of training to adapt weights to int6 quantization",
+    "Full GPTQ + Int5 MLP post-training quantization: Hessian-aware quantization with int5 MLP re-quantization improving BPB by -0.028 and reducing artifact size by 3.6 MB",
+    "Finding that Test-Time Training (TTT) hurts performance on GPTQ-quantized models due to incompatibility with gradient-based adaptation"
+  ],
+  "artifact_size": "15.7 MB"
+}

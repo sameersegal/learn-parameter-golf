@@ -1,0 +1,88 @@
+{
+  "pr_number": 615,
+  "title": "Record: Residual Input Mixing + mixed int6 GPTQ + grouped TTT + MLP 3.5x",
+  "author": "danialht",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1169,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6 GPTQ",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Residual Input Mixing",
+        "description": "Each transformer block sees a learned mix of the current stream, earlier block outputs, and the original x0, creating a denser residual path and enabling reuse of longer-range intermediate features.",
+        "parameters": {
+          "layers": 11,
+          "dimension": 512,
+          "MHA": "8/8",
+          "MLP": "3.5x (1792)",
+          "BigramHash": 8192,
+          "XSA": "all layers",
+          "mixed residuals": "each layer from 2 previous layers"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "grouped": true,
+          "stronger matrix/head adaptation": true,
+          "standard clipping": true,
+          "per-chunk warmup": "removed"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk": 131072,
+          "last 2 blocks plus control params unfrozen": true,
+          "optimizer": "Legal score-first AdamW"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Changed TTT from a flat optimizer to grouped AdamW with stronger matrix/head adaptation, restoring standard clipping and removing per-chunk warmup.",
+    "Made residual connections denser by changing block input formation so each transformer block sees a learned mix of current stream, earlier block outputs, and original input x0.",
+    "Used mixed int6 per-row GPTQ quantization with clip_range=15, Early QAT with threshold 0.5, and EMA decay 0.997.",
+    "Increased MLP size to 3.5x (1792) in the architecture."
+  ],
+  "artifact_size": "15.6 MB"
+}

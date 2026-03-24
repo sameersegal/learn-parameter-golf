@@ -1,0 +1,169 @@
+{
+  "pr_number": 563,
+  "title": "Add submission: 10L Enhanced with BigramHash(12240) + SOTA techniques",
+  "author": "instax-dutta",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1428,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "int5 for MLP weights, int6 for attention weights, fp16 for tied embeddings and last-layer key projections"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash consecutive token pairs into a larger embedding table to reduce collisions",
+        "parameters": {
+          "vocab_size": 12288,
+          "embedding_dim": 128,
+          "projection_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Token-level recurrence for lightweight bigram signal",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3\u00d7 expansion and ReLU\u00b2 activation",
+        "parameters": {
+          "expansion_factor": 3,
+          "hidden_dim": 1536,
+          "activation": "ReLU\u00b2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections in U-Net style",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Weight tying between input and output embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "4 KV heads with GQA",
+        "parameters": {
+          "kv_heads": 4,
+          "attention_heads": 8,
+          "model_dim": 512,
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500,
+          "adamw_weight_decay": 0.04,
+          "adamw_scope": "embeddings/scalars",
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "average_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay_value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_percent": 3
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP scaling for output projections"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed int5/int6 quantization with int5 for MLP weights and int6 for attention weights to save artifact size",
+    "Increased BigramHash vocabulary size from 10240 to 12288 to reduce hash collisions and improve bigram signal",
+    "Use of SmearGate for token-level recurrence to enhance bigram signal",
+    "Orthogonal initialization with muP scaling for output projections",
+    "Muon optimizer with specific weight decay and momentum settings",
+    "SWA starting from last 40% of training with averaging every 50 steps",
+    "Sliding window evaluation with stride 64 for better context handling",
+    "Combination of zstd-22 compression with 3% magnitude pruning to fit within 16MB artifact size limit"
+  ],
+  "artifact_size": "within 16MB limit"
+}

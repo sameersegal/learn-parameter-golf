@@ -1,0 +1,145 @@
+{
+  "pr_number": 623,
+  "title": "[10min/16MB]  AWQ + Cyclic Momentum + ReLU\u00b2 + 11L Shared \u2014 1.1507 bpb",
+  "author": "SPThole",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1507,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int8",
+        "bits": null,
+        "scope": "MLP weights (int5), Attention weights (int6), Bigram embeddings (int6), Token embeddings (int8)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "11L Shared",
+        "description": "10 unique weight sets, last block reused to save depth",
+        "parameters": {
+          "num_layers": 11,
+          "unique_layers": 10,
+          "shared_last_layer": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Sparser MLP activations, better for small models",
+        "parameters": {
+          "mlp_activation": "relu_sq"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "momentum": "cyclic 0.85\u20130.95",
+          "lr": 0.025,
+          "momentum_warmup": "0.92 \u2192 cyclic over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr_embeds": 0.035,
+          "lr_scalars": 0.025,
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.2,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "AWQ: Activation-aware weight scaling before quantization to reduce quantization error on high-activation channels",
+        "parameters": {
+          "alpha": 0.5,
+          "calibration_batches": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Cyclic Muon Momentum: Triangle wave momentum between 0.85\u20130.95 with period=50 steps after warmup to escape sharp minima",
+        "parameters": {
+          "momentum_range": "0.85\u20130.95",
+          "period": 50,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Activation-aware weight quantization (AWQ) with alpha=0.5 scaling before int5/int6 quantization, reducing quantization gap significantly",
+    "Cyclic Muon Momentum optimizer with triangle wave momentum schedule (0.85\u20130.95) to escape sharp minima",
+    "Use of ReLU\u00b2 activation in MLP layers for sparser activations beneficial for small models",
+    "11-layer model with last block weight sharing to save depth without increasing parameters"
+  ],
+  "artifact_size": "15.4 MB"
+}

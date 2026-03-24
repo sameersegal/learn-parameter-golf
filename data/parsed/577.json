@@ -1,0 +1,120 @@
+{
+  "pr_number": 577,
+  "title": "GPTQ + Short TTT \u2014 val_bpb 1.1207 (seed 1337)",
+  "author": "newjordan",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1207,
+  "architecture": "11L/512d/8H/4KV/3xMLP (relu\u00b2), U-Net skip, Partial RoPE (16/64), XSA last 4, BigramHash(2048), VE128 on layers 9-10, SmearGate",
+  "quantization": "int6 QAT with GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT + GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially with NTK scaling",
+        "parameters": {
+          "scaling": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism in MLP layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashing mechanism with 2048 buckets for bigrams",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross self-attention applied in last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995,
+          "usage": "previous submission #508 (disabled in this PR)"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT with SGD",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "max_train_chunks": 50,
+          "EMA_decay": 0,
+          "freeze_blocks": 2,
+          "optimizer": "SGD"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Short TTT strategy: SGD-based test-time training with no EMA smoothing and stopping after 50 chunks to avoid late-chunk degradation",
+    "Demonstrated that EMA smoothing in TTT can wash out adaptation gains",
+    "Proper use of zstd-22 compression to reduce artifact size by ~2MB compared to previous fallback",
+    "Disabled int8_sensitive flag to stay within 16MB artifact size limit",
+    "Sharing detailed TTT chunk trajectory analysis showing adaptation and distribution shift effects",
+    "Maintained same base architecture and GPTQ pipeline while improving val_bpb marginally from previous submission"
+  ],
+  "artifact_size": "15.60 MB"
+}

@@ -1,0 +1,241 @@
+{
+  "pr_number": 569,
+  "title": "Record: 11L VRL + LeakyReLU\u00b2 + Full GPTQ (3-seed mean val_bpb=1.1175)",
+  "author": "gowtham0992",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1175,
+  "architecture": "Transformer",
+  "quantization": "Full GPTQ int6 per-row with int8 embeddings",
+  "optimizer": "Muon (matrix params), AdamW (embeddings and scalars)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full GPTQ",
+        "bits": 6,
+        "scope": "all large weights (MLP, attention, bigram, VE projections); int8 for embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual Learning (VRL)",
+        "description": "Layer 0's V output added to all subsequent layers via learned sigmoid gates",
+        "parameters": {
+          "learned_alphas": 10,
+          "sigmoid_init": 0.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2",
+        "description": "Replaces relu\u00b2, preserves negative gradient flow, doubles effective MLP capacity",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA-all",
+        "description": "Exclusive Self Attention on all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned interpolation between current and previous token",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048 buckets, dim=128, projected to model_dim=512",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128,
+          "model_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE + NTK-aware scaling",
+        "description": "Partial Rotary Positional Embeddings on 16/64 dims with NTK scaling base=10000",
+        "parameters": {
+          "partial_dims": [
+            16,
+            64
+          ],
+          "ntk_base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "Per-layer learned scale on attention and MLP outputs",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embedding",
+        "description": "Dim=128, shared between layers 9 and 10 with per-layer learned scales",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tied embeddings",
+        "description": "Weight tying with init std=0.005",
+        "parameters": {
+          "init_std": 0.005
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for matrix weights, zero-init for output projections"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "momentum_warmup": "0.92 to 0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "frequency": "every step"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": {
+          "frequency": "every 50 steps",
+          "condition": "when LR scale < 0.2"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500,
+          "type": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_value": 0.3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT-export alignment",
+        "bits": null,
+        "scope": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "2% magnitude pruning post-quantization",
+        "bits": null,
+        "scope": "int6 weights"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "First non-TTT Value Residual Learning (VRL) result on standard architecture",
+    "Use of LeakyReLU(0.5)\u00b2 activation replacing relu\u00b2 to preserve negative gradient flow and double effective MLP capacity",
+    "Full GPTQ implementation with Hessian-aware int6 quantization and Cholesky inverse error compensation",
+    "QAT-export alignment with STE clip quantile(0.9995) matching GPTQ export quantizer",
+    "2% magnitude pruning post-quantization for improved zstd compressibility",
+    "Extending Exclusive Self Attention (XSA) to all 11 layers",
+    "Combination of multiple advanced techniques (EMA, Tight SWA, Late QAT) for improved training stability and quantization",
+    "Custom raw binary serialization with no torch.save overhead"
+  ],
+  "artifact_size": "\u226415.94 MB"
+}

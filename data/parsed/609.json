@@ -1,0 +1,133 @@
+{
+  "pr_number": 609,
+  "title": "Record: 11L XSA-all + Full GPTQ + Selective Pruning (val_bpb=1.1154, 3-seed)",
+  "author": "saml212",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1154,
+  "architecture": "Transformer",
+  "quantization": "Full Hessian GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Position Self-Attention applied on all 11 layers instead of last 4, forcing cross-position information mixing from layer 0",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Selective \u00b11 magnitude pruning",
+        "description": "Post-GPTQ pruning of \u00b11 quantized values sorted by reconstruction error, zeroing least-impactful values first until artifact fits",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2 MLP 3x",
+        "description": "MLP with LeakyReLU activation squared, repeated 3 times",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2",
+          "repeats": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary Positional Embeddings applied partially with parameters 16/64",
+        "parameters": {
+          "partial_rope": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate architectural component",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections inspired by U-Net architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full Hessian GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Applying Cross-Position Self-Attention (XSA) on all 11 layers instead of the standard last 4 layers, improving BPB by -0.0016 without adding parameters.",
+    "Selective \u00b11 magnitude pruning post-GPTQ by sorting \u00b11 quantized values by reconstruction error and zeroing the least impactful first until artifact fits, targeting minimal reconstruction damage."
+  ],
+  "artifact_size": "15.94 MB"
+}

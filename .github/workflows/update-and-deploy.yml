@@ -50,6 +50,17 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
+      - name: Bundle data
+        run: node scripts/bundle-data.js
+
+      - name: Commit data to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/ web/src/data/submissions.json web/src/data/technique-index.json
+          git diff --staged --quiet || git commit -m "chore: update scraped & parsed data [skip ci]"
+          git push origin main
+
       - name: Install web dependencies
         working-directory: web
         run: npm ci

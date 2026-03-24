@@ -1,0 +1,198 @@
+{
+  "pr_number": 624,
+  "title": "Rajat submission",
+  "author": "Rajat123456789",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer (custom with LeakyReLU, U-Net skip connections, Grouped Query Attention, partial RoPE, Cross-Self Attention, BigramHash embedding, RMSNorm, parameter banking)",
+  "quantization": "mixed int6/int8 with Full GPTQ and GPTQ-lite fallback",
+  "optimizer": "Muon (for 2D weights) + AdamW (for embeddings/scalars)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Full GPTQ int6 with GPTQ-lite fallback",
+        "bits": 6,
+        "scope": "attention and MLP weights (Full GPTQ), output projections and MLP down-projections (GPTQ-lite), embeddings and small tensors (int8)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2 activation",
+        "description": "Squared LeakyReLU activation with negative slope 0.5",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "5 encoder + 6 decoder layers with skip connections",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Grouped Query Attention with partial RoPE",
+        "description": "Grouped Query Attention using partial Rotary Positional Embeddings on 16/64 dims",
+        "parameters": {
+          "partial_rope_dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Cross-Self Attention (XSA)",
+        "description": "Cross-Self Attention applied on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash embedding",
+        "description": "Embedding with vocabulary size 3072 and dimension 128",
+        "parameters": {
+          "vocab": 3072,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embedding",
+        "description": "Value embedding applied on layers 9-10 with dimension 128",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RMSNorm with learnable scale",
+        "description": "Root Mean Square Layer Normalization with learnable scaling parameter",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parameter banking",
+        "description": "All 2D weights stored in contiguous 3D banks",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "decay": 0.95,
+          "start_step": 800
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Soft-Round QAT",
+        "bits": 6,
+        "scope": "CastedLinear layers during warmdown QAT phase"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "alpha": 16,
+          "projections": "Q/K/V/O",
+          "optimizer": "AdamW",
+          "epochs_per_chunk": 3,
+          "chunk_size_tokens": 32000,
+          "learning_rate_schedule": "cosine annealed"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Entropy-coded compression (Huffman + LZMA fallback to plain LZMA)",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "Sliding window with legal score-first TTT protocol",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown with warmup",
+        "parameters": {
+          "warmup_steps": 200,
+          "warmdown_fraction": 0.26
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with soft-rounding activated at warmdown scale < 0.18",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "Entropy-coded compression (Huffman + LZMA fallback)",
+  "novel_contributions": [
+    "Full GPTQ Quantization with Hessian-guided column-by-column error compensation replacing GPTQ-lite clip search",
+    "Soft-Round QAT using differentiable soft-rounding with tanh-based smooth approximation and temperature annealing",
+    "LoRA-Based Test-Time Training with low-rank adapters (rank-8, \u03b1=16) on Q/K/V/O projections trained with AdamW to prevent catastrophic forgetting",
+    "Entropy-Coded Compression using Huffman coding pre-pass before LZMA with automatic fallback to plain LZMA"
+  ],
+  "artifact_size": null
+}

@@ -1,0 +1,98 @@
+{
+  "pr_number": 619,
+  "title": "non-record 16MB A100 SXM run (10L mixed int5/int6 + EMA + QAT)",
+  "author": "zeal175",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.42223098,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 with QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 with QAT",
+        "bits": null,
+        "scope": "int5 for MLP weights, int6 for attention/bigram-sensitive weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds bigram hashing to vocabulary embedding",
+        "parameters": {
+          "BIGRAM_VOCAB_SIZE": 10240,
+          "BIGRAM_DIM": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion",
+        "parameters": {
+          "layers": 10,
+          "MLP_MULT": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9999
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "MATRIX_LR": 0.02,
+          "SCALAR_LR": 0.04,
+          "TIED_EMBED_LR": 0.04
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 160
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Mixed quantization using int5 for MLP weights and int6 for attention/bigram-sensitive weights",
+    "Use of EMA (Exponential Moving Average) for export-time weights with high decay",
+    "Final-fraction QAT (Quantization Aware Training) with QAT_FINAL_FRAC=0.15",
+    "Incorporation of BigramHash embedding with large bigram vocab size and dimension",
+    "3x MLP expansion in a 10-layer Transformer",
+    "Use of Muon optimizer with specific learning rates and momentum tuning"
+  ],
+  "artifact_size": "15,576,677 bytes"
+}

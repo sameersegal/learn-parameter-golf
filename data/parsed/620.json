@@ -1,0 +1,156 @@
+{
+  "pr_number": 620,
+  "title": "Record: LeakyReLU(0.5)\u00b2 + Per-Document LoRA TTT (mean val_bpb=0.9443, 3 seeds)",
+  "author": "robinojw",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9443,
+  "architecture": "U-Net",
+  "quantization": "int8 per-row with 99.99984th percentile clipping",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2",
+        "description": "Single-line activation swap replacing torch.relu(x) with F.leaky_relu(x, 0.5), preserves negative gradient flow and prevents dead neurons in squared activation",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending via sigmoid gate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Embedding with 2048 buckets and dimension 128",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth-scaled residuals",
+        "description": "Residual connections scaled by 1/sqrt(layer+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.02,
+          "momentum_warmup": "0.92\u21920.99"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.03,
+          "lr_scalars": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "decay": 0.999
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "Per-document LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "epochs": 3,
+          "chunk": 256,
+          "min_doc_len": 512,
+          "learning_rate": 0.01,
+          "adapted_layers": "Q, V projections and LM head",
+          "fresh_lora_per_document": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Use of LeakyReLU(0.5)\u00b2 activation replacing ReLU to preserve negative gradient flow and prevent dead neurons in squared activation",
+    "Per-document backward-looking LoRA test-time training (TTT) with rank-8 LoRA applied on Q, V projections and LM head",
+    "SmearGate learned token blending via sigmoid gate",
+    "BigramHash embedding with 2048 buckets and 128 dimensions",
+    "Depth-scaled residuals scaled by 1/sqrt(layer+1)",
+    "Combination of Muon optimizer with Adam for embeddings and scalars",
+    "Use of SWA with decay 0.999",
+    "Artifact quantized with int8 per-row and compressed with zstd-22",
+    "Known issue with TTT scoring only on final epoch and proposed 1-line fix to score on every epoch"
+  ],
+  "artifact_size": "15,430,887 B"
+}

@@ -1,0 +1,203 @@
+{
+  "pr_number": 628,
+  "title": "Non-record: 11L GEPA + 20k Steps + Pure Int6 + Legal TTT (val_bpb=1.0983): unlimited compute: 4\u00d7A100-40GB, ~2.8 hours",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0983,
+  "architecture": "GEPA",
+  "quantization": "int6 per-row quantization with GPTQ-lite clip search",
+  "optimizer": "Muon (matrix LR) and Adam (scalar LR) for training; SGD with momentum for TTT",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 per-row with GPTQ-lite clip search",
+        "bits": 6,
+        "scope": "all model tensors including embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention on last 4 layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token-mixing gate on input embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048 buckets, 128-dim embeddings",
+        "parameters": {
+          "buckets": 2048,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial RoPE with 16/64 dims and YARN scaling",
+        "parameters": {
+          "partial_dims": "16/64",
+          "train_seq": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "3\u00d7 expansion with ReLU\u00b2 activation",
+        "parameters": {
+          "expansion_factor": 3,
+          "hidden_dim": 1536,
+          "activation": "ReLU\u00b2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "128d on layers 9\u201310 with per-layer scale initialized at 0.1",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ],
+          "init_scale": 0.1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale with 1/sqrt(layer+1) depth scaling",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Residual connections across layer pairs",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tied Embeddings",
+        "description": "Weight tying of embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon and Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "embed_lr": 0.035,
+          "decoder_lr_mult": 2.0,
+          "grad_clip": 0.3,
+          "ema_decay": 0.997,
+          "late_qat": false
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs_per_chunk": 10,
+          "chunk_size": 32768,
+          "stride": 64,
+          "frozen_blocks": 2,
+          "gradient_clip": 1.0,
+          "total_chunks": 1893
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown with cosine anneal",
+        "parameters": {
+          "warmdown_start_step": 12000,
+          "warmdown_end_step": 20000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Legal score-first test-time training with sliding windows and SGD momentum",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Extended training to 20000 steps with 8000-step cosine warmdown, showing warmdown length as dominant lever for float base improvement",
+    "Pure int6 per-row quantization with 15-candidate GPTQ-lite clip search and zstd-22 compression achieving smallest artifact size (14.22 MB)",
+    "Legal score-first test-time training (TTT) using SGD with momentum and learning rate warmup, achieving \u22120.044 BPP gain",
+    "Demonstrated that longer warmdown phase produces significant float base BPP decline (from ~1.216 to 1.1153)",
+    "Combined multiple architecture modifications including XSA on last 4 layers, SmearGate, BigramHash embeddings, Partial RoPE, and ReLU\u00b2 MLP"
+  ],
+  "artifact_size": "14.29 MB"
+}

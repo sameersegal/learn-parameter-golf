@@ -1,0 +1,132 @@
+{
+  "pr_number": 600,
+  "title": "Non-record: TTT-LoRA Base \u2014 HumanAI Convention (val_bpb=1.2364)",
+  "author": "humanaiconvention",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.23637747,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 128,
+          "learning_rate": null,
+          "chunk_size": 64,
+          "adam_steps_per_chunk": 4,
+          "batch_size": 64,
+          "eval_cap_seconds": 480
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learnable residual mixing gate in each transformer block allowing interpolation between full-residual and full-hidden-state",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Orthogonal initialisation",
+        "description": "All matrix parameters initialized orthogonally to improve gradient flow and training stability",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Bigram hash embeddings",
+        "description": "2048-bucket bigram hash table added to token embeddings providing cheap local context without extra parameters counted against 16MB budget",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA (Grouped-Query Attention)",
+        "description": "8 query heads and 4 KV heads to reduce KV cache and allow higher batch throughput during TTT evaluation",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "steps": 5065,
+          "decay": 0.4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.04,
+          "embed_lr": 0.05,
+          "muon_weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 512
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Per-document Test-Time Training (TTT) via LoRA adapters trained during evaluation time",
+    "Use of fresh rank-128 LoRA adapters per validation document trained on preceding chunks before predicting next chunk",
+    "Exploitation of separate 10-minute evaluation budget for test-time adaptation",
+    "Orthogonal initialization of all matrix parameters",
+    "SmearGate residual mixing gate in transformer blocks",
+    "Bigram hash embeddings providing local context without extra parameter cost",
+    "Grouped-Query Attention (GQA) with 8 query and 4 KV heads to reduce KV cache",
+    "Stochastic Weight Averaging (SWA) over final training steps",
+    "int6 quantization with QAT and zstd level-22 compression achieving 5.14\u00d7 compression ratio"
+  ],
+  "artifact_size": "15.67MB"
+}

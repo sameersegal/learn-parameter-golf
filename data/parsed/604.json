@@ -1,0 +1,96 @@
+{
+  "pr_number": 604,
+  "title": "GolfStudent 14L: Hybrid GatedMLP+Attn, d=288, vocab=1024, Muon+EMA, INT8+zlib",
+  "author": "whitestone1121-web",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 136.56,
+  "architecture": "Hybrid GatedMLP + Flash Attention",
+  "quantization": "Per-row INT8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid GatedMLP + Flash Attention",
+        "description": "14-layer model with 10 causal-shift GatedMLP layers and 4 Flash Attention layers every 3rd layer, SwiGLU FFN with 3x expansion, RoPE on attention layers, weight-tied embedding and lm_head",
+        "parameters": {
+          "layers": 14,
+          "d_model": 288,
+          "vocab_size": 1024,
+          "attention_layers": 4,
+          "gated_mlp_layers": 10,
+          "ffn_expansion": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup": true,
+          "adam_for_embeddings_scalars": true,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "update_frequency": "every step"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.13,
+          "warmdown_steps": 200,
+          "wallclock_aware": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal weight initialization",
+        "description": "Orthogonal initialization applied to weights"
+      }
+    }
+  ],
+  "compression": "zlib level=9",
+  "novel_contributions": [
+    "Hybrid architecture combining causal-shift GatedMLP and Flash Attention layers every 3rd layer",
+    "Use of Muon optimizer with momentum warmup and Adam for embeddings/scalars",
+    "EMA checkpointing with decay=0.997 updated every step",
+    "Per-row INT8 quantization combined with zlib compression to fit size constraints",
+    "Wallclock-aware learning rate warmdown in the last ~13% of training budget",
+    "Weight tying of embedding and lm_head to reduce parameter count",
+    "Use of SwiGLU FFN with 3x expansion",
+    "RoPE positional embeddings applied only on attention layers"
+  ],
+  "artifact_size": "10,505,386 bytes (approx 10.5MB)"
+}

@@ -1,0 +1,192 @@
+{
+  "pr_number": 579,
+  "title": "The Frugendorff: Recursive Weight Sharing for Transformer Compression (1.1478 BPB, 15.19MB)",
+  "author": "newjordan",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1355,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row with GPTQ Hessian-aware quantization",
+  "optimizer": "Muon (matrices) and AdamW (embeddings and scalars)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 per-row with GPTQ Hessian-aware quantization",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "recursive weight sharing",
+        "description": "K unique transformer blocks applied N times in sequence to produce deeper effective networks from fewer stored parameters",
+        "parameters": {
+          "unique_blocks": 6,
+          "loops": 2,
+          "effective_depth": 12,
+          "MLP_expansion": "4x"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "asymmetric weight sharing (Micro Crawler)",
+        "description": "4 unique flat blocks run once, then 2 shared crawler blocks run twice with orthogonal positions to isolate gradient conflict",
+        "parameters": {
+          "flat_blocks": 4,
+          "crawler_blocks": 2,
+          "crawler_loops": 2,
+          "effective_depth": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "bidirectional persistent deliberation gate",
+        "description": "Learned consensus parameter with bidirectional gradient flow between recursive firings to improve communication and model quality",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP expansion",
+        "description": "4x MLP expansion enabled by parameter savings from weight sharing",
+        "parameters": {
+          "hidden_dim": 2560,
+          "activation": "relu-squared"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention",
+        "description": "GQA with 10 heads and 5 KV heads, XSA on last 2 blocks",
+        "parameters": {
+          "num_heads": 10,
+          "num_kv_heads": 5,
+          "XSA_layers": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "input conditioning",
+        "description": "BigramHash (2048 buckets) for Frugendorff Squared; TrigramHash (8192 buckets, 3 orthogonal hash primes) for Micro Crawler",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "position embeddings",
+        "description": "QR-initialized orthogonal vectors, one per loop iteration",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Within each loop iteration",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon (matrices) and AdamW (embeddings and scalars)",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "Muon_lr": 0.025,
+          "AdamW_embeddings_lr": 0.035,
+          "AdamW_scalars_lr": 0.025,
+          "gradient_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA and EMA",
+        "parameters": {
+          "SWA_frequency": "every 50 steps when scale < 0.2",
+          "EMA_decay": 0.997,
+          "EMA_applied_after_distillation": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_factor": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT: int6 fake-quantization applied when learning rate scale < 0.15",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late Training Replay: 2-epoch replay of last 100 training batches at 10% learning rate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Self-distillation with EMA teacher, 50 steps, temperature=2.0, alpha=0.7",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Recursive weight sharing architecture applying K unique transformer blocks N times to create deeper effective networks with fewer parameters",
+    "Asymmetric weight sharing (Micro Crawler) isolating gradient conflict to fewer blocks to improve quality and quantization robustness",
+    "Bidirectional persistent deliberation gate enabling communication between recursive firings with gradient flow in both directions",
+    "Reinvestment of saved parameter budget into wider 4x MLP layers enabled by fractal weight sharing",
+    "Demonstration that steps matter more than depth due to faster training steps with recursive sharing",
+    "Use of GPTQ Hessian-aware quantization to significantly reduce quantization gap for shared weights"
+  ],
+  "artifact_size": "15.19 MB"
+}

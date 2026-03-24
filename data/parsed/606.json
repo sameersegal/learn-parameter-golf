@@ -1,0 +1,170 @@
+{
+  "pr_number": 606,
+  "title": "Record: int5 GPTQ + Soft-Round QAT (3-seed mean 1.1162)",
+  "author": "EthanYangTW",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1162,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5 GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross Self-Attention on all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism applied in architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 8192 buckets",
+        "parameters": {
+          "buckets": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary Positional Embeddings applied partially with 16/64",
+        "parameters": {
+          "partial_rope": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "MLP scaled 3.5x with relu\u00b2 activation",
+        "parameters": {
+          "scale": 3.5,
+          "activation": "relu\u00b2"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.0001
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 131072,
+          "epochs_per_chunk": 3,
+          "optimizer": "AdamW",
+          "learning_rate": 0.0001,
+          "weight_decay": 0.0,
+          "unfrozen_params": "last 2 blocks + norms + lm_head (~5.8M / 33.6M)",
+          "cosine_lr_decay": true,
+          "every_token_scored_before_update": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization of weights"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Soft-Round QAT: differentiable tanh-based rounding replacing STE with alpha annealing from 1 to 16",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPTQ error compensation with Hessian-aware column reordering and Cholesky error redistribution using 256-sample calibration",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Early QAT clipping at threshold 0.5 matched to int5 range",
+        "parameters": {
+          "threshold": 0.5,
+          "QAT_steps": 1750
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "int5 quantization with 31 unique values stored as int8, achieving ~0.46 bytes/param after zstd compression, enabling a 33.6M parameter model under 16MB",
+    "GPTQ error compensation using Hessian-aware column reordering and Cholesky error redistribution calibrated on 256 samples",
+    "Soft-Round QAT: differentiable tanh-based rounding function replacing STE with alpha annealing from 1 to 16 for better gradient flow and training quality at zero computational cost",
+    "Legal score-first Test-Time Training (TTT) with AdamW optimizer and cosine learning rate decay, scoring every token before any gradient update",
+    "Use of early QAT clipping at 0.5 threshold matched to int5 range and EMA with decay 0.997",
+    "Architecture modifications including 11 layers with 8 heads/8 KV heads MHA, BigramHash 8192, MLP scaled 3.5x with relu\u00b2 activation, Partial RoPE 16/64, SmearGate, OrthoInit"
+  ],
+  "artifact_size": "under 16MB"
+}

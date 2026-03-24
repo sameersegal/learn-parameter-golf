@@ -1,0 +1,96 @@
+{
+  "pr_number": 575,
+  "title": "Add 10min/16MB record: skinny RLM seq2048 (int8+zlib val_bpb 1.1750)",
+  "author": "k-oconnor",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.17503786,
+  "architecture": "Looped Transformer (RLM)",
+  "quantization": "int8 STE fake-quant",
+  "optimizer": "Muon (matrix) + Adam (scalars)",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence, weight tying, tied embeddings, RoPE, ReLU\u00b2 MLP 3\u00d7, GQA",
+        "description": "Looped Transformer with prefix and suffix as 6 distinct blocks, middle uses 2 weight-tied blocks applied 3 times; uses GQA attention, RoPE positional embeddings, ReLU squared MLP with 3\u00d7 expansion, tied embeddings",
+        "parameters": {
+          "layers": 6,
+          "loop_blocks": 2,
+          "loop_iters": 3,
+          "embed_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 8,
+          "mlp_expansion": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "MATRIX_LR": 0.02,
+          "SCALAR_LR": 0.02,
+          "TIED_EMBED_LR": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "MUON_WD": 0.04,
+          "decoupled": true,
+          "purpose": "compression headroom"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 200,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Use of looped transformer architecture with 2 weight-tied blocks applied 3 times in the middle layers",
+    "Skinny RLM with 512d embedding and 6 layers, sequence length 2048",
+    "Combination of Muon optimizer for matrix parameters and Adam for scalar parameters with specific learning rates",
+    "Embedding quantization using 8-bit STE fake-quant",
+    "Achieving a final int8+zlib compressed model artifact under 16MB with val_bpb ~1.175",
+    "Use of ReLU squared MLP with 3\u00d7 expansion and GQA attention",
+    "Decoupled weight decay tuned for compression headroom"
+  ],
+  "artifact_size": "14.9MB"
+}

@@ -1,0 +1,194 @@
+{
+  "pr_number": 592,
+  "title": "Submission: 12L Int5-MLP BigramHash10K EMA (1.1476 BPB)",
+  "author": "Skytuhua",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.14760365,
+  "architecture": "Transformer",
+  "quantization": "mixed Int5/Int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed Int5/Int6 QAT",
+        "bits": null,
+        "scope": "MLP weights Int5, Attention weights Int6"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Expanded from 2048 to 10240 buckets, XOR hash of consecutive token pairs into learned 128-dim embeddings to reduce collisions and improve bigram signal",
+        "parameters": {
+          "buckets": 10240,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate applied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "OrthoInit",
+        "description": "Orthogonal initialization of weights",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer self-attention applied on last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially on 16 dimensions",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embed",
+        "description": "Value embeddings added on layers 10 and 11 with dimension 128",
+        "parameters": {
+          "layers": [
+            10,
+            11
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP expansion",
+        "description": "MLP expansion factor 3x (hidden=1536)",
+        "parameters": {
+          "expansion_factor": 3,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Weight tying",
+        "description": "Tied FP16 embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": "last 20% of warmdown",
+          "frequency_steps": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite clip search",
+        "bits": null,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup",
+        "parameters": {
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "late_QAT_start_scale": 0.15
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed Int5/Int6 quantization with MLP weights at Int5 and Attention weights at Int6 to save artifact size",
+    "Addition of a 12th transformer layer funded by Int5 MLP compression",
+    "Expansion of BigramHash embedding buckets from 2048 to 10240 to reduce hash collisions and improve bigram-level signal",
+    "Use of SmearGate and OrthoInit initialization",
+    "Application of cross-layer self-attention (XSA) on last 4 layers",
+    "Partial RoPE applied on 16 dimensions",
+    "Value embeddings added on layers 10 and 11",
+    "Combination of EMA, SWA, and GPTQ-lite clip search with late QAT for quantization-aware training"
+  ],
+  "artifact_size": "15,497,769 bytes"
+}
