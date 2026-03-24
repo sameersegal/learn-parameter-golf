@@ -59,9 +59,10 @@ const submissions = files
     }
   })
   .filter(Boolean)
+  .filter((s) => s.val_bpb != null && s.val_bpb <= 1.9)
   .sort((a, b) => a.pr_number - b.pr_number);
 
-console.log(`Loaded ${submissions.length} submissions`);
+console.log(`Loaded ${submissions.length} submissions (filtered: val_bpb <= 1.9)`);
 
 // Build technique index
 // Map: "category:normalizedMethod" -> TechniqueCard data
