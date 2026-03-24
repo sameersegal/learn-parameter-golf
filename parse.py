@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 RAW_DIR = Path("data/raw")
 PARSED_DIR = Path("data/parsed")
 PROMPT_PATH = Path("prompts/parse_submission.txt")
-MODEL = "gpt-4.1-mini"
+MODEL = "gpt-5.4-mini"
 
 
 def load_prompt_template():
