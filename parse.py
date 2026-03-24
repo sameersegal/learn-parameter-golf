@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from pathlib import Path
@@ -85,6 +86,10 @@ def main():
 
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    if not os.environ.get("OPENAI_API_KEY"):
+        log.warning("OPENAI_API_KEY not set, skipping parse")
+        return
 
     PARSED_DIR.mkdir(parents=True, exist_ok=True)
     template = load_prompt_template()
