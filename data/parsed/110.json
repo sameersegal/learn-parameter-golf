@@ -1,0 +1,107 @@
+{
+  "pr_number": 110,
+  "title": "Submission: Top-Heavy FFN Allocation + Packed Int6 Export | pending eval",
+  "author": "mr-ashish-panday",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2243657,
+  "architecture": "Transformer",
+  "quantization": "packed int6 with per-row fp16 scales; fp16 tied embedding",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Replaces uniform FFN width with OpenELM-style layer-wise top-heavy FFN scaling so later layers have larger feed-forward dimensions than earlier layers.",
+        "parameters": {
+          "layers": 9,
+          "ffn_schedule": [
+            768,
+            960,
+            1152,
+            1344,
+            1536,
+            1728,
+            1920,
+            2112,
+            2304
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input embedding and output projection weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "large 2D matrices; fp16 for tied embedding"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "higher_momentum": true,
+          "lower_lr": true,
+          "warmdown": true,
+          "gradient_clipping": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CPU dry-run mode for local smoke testing without CUDA.",
+        "parameters": {
+          "dry_run": true,
+          "steps": 10
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Top-heavy FFN allocation using OpenELM-style layer-wise scaling instead of a uniform 3x FFN.",
+    "Exact packed int6 export path with per-row fp16 scales.",
+    "Keeping the tied embedding in fp16 to preserve quantization-sensitive weights.",
+    "Self-contained artifact export that avoids relying on external zstd at evaluation time.",
+    "Sliding-window evaluation for improved scoring.",
+    "CPU DRY_RUN=1 mode for local verification without GPU access."
+  ],
+  "artifact_size": "4,273,390 bytes"
+}

@@ -1,0 +1,14 @@
+{
+  "number": 92,
+  "title": "Record: 8192 Vocab, Sliding Window Eval, Selective Quantization; 1.194 val_bpb",
+  "author": "saikrishnarallabandi",
+  "body": "## Submission: 8192 Vocab + Sliding Window Eval + Selective Quantization\n\n**Track:** 10min / 16MB  \n**Post-quant val_bpb:** 1.1938 (pre-quant: 1.1791)  \n**Model size (w6e8+zlib):** 14,715,057 bytes (14.7 MB)  \n\n### Approach\n- **SP-8192 tokenizer** for better token compression\n- **NorMuon optimizer** with improved convergence\n- **Sliding window evaluation** (stride=256) for more accurate val_bpb\n- **Selective quantization (w6e8):** INT6 weights, INT8 embeddings + zlib\n- 8-layer model, TRAIN_SEQ_LEN=4096, WARMDOWN_ITERS=3000\n\n### Key Metrics\n- Steps: 5467/20000 (wallclock capped at 600s)\n- Step avg: 109.76ms\n- Hardware: 8\u00d7H100 SXM (Vast.ai)\n\n### vs Baseline\n| | Baseline | This submission |\n|---|---|---|\n| val_bpb | 1.2244 | **1.1938** |\n| Size | 15.9 MB | **14.7 MB** |\n| Vocab | 1024 | 8192 |\n\nImproves on the baseline by ~0.031 bpb while using ~1.2 MB less space.",
+  "state": "open",
+  "merged": false,
+  "labels": [
+    "does not beat SOTA"
+  ],
+  "created_at": "2026-03-19T15:33:09Z",
+  "updated_at": "2026-03-21T16:37:14Z",
+  "submission_readme": "This record captures the `8192 Vocab + Sliding Window Eval + Selective Quantization` submission.\n\n## Approach\n\nKey modifications from the baseline:\n- **SP-8192 tokenizer** \u2014 larger vocabulary for better compression per token\n- **NorMuon optimizer** \u2014 normalized Muon with improved convergence\n- **Sliding window evaluation** \u2014 stride-256 sliding window for more accurate val_bpb measurement\n- **Selective quantization (w6e8)** \u2014 INT6 for weight matrices, INT8 for embeddings, achieving better compression while preserving quality\n- **8-layer model** with `TRAIN_SEQ_LEN=4096`\n\nConfiguration:\n- Layout: `VOCAB_SIZE=8192 NUM_LAYERS=8 TRAIN_SEQ_LEN=4096`\n- Warmdown: `WARMDOWN_ITERS=3000`\n- Sliding window eval: stride=256\n- Quantization: selective w6e8 (INT6 weights, INT8 embeddings) + zlib\n\nCommand (track-relevant params):\n```bash\nNCCL_IB_DISABLE=1 \\\nRUN_ID=v8192_sw \\\nVOCAB_SIZE=8192 \\\nNUM_LAYERS=8 \\\nTRAIN_SEQ_LEN=4096 \\\nWARMDOWN_ITERS=3000 \\\nMAX_WALLCLOCK_SECONDS=600 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt_v8192_sw.py\n```\n\nKey metrics (from `train.log`):\n- Training stopped at `5467/20000` steps due to wallclock cap\n- Pre-quant eval at stop: `val_bpb: 1.1791`\n- Post-quant (w6e8+zlib) eval: `val_bpb: 1.1938`\n- Step average: `109.76ms`\n- Serialized model w6e8+zlib: `14,715,057 bytes` (14.7 MB)\n- Code size: `56,813 bytes`\n- Total submission size: `14,715,057 bytes`\n\nHardware:\n- 8\u00d7H100 SXM (Vast.ai, Iowa)\n- 10-minute wallclock cap\n\nIncluded files:\n- `train_gpt.py` (code snapshot used for the run)\n- `train.log` (exact remote training log)\n- `submission.json` (leaderboard metadata)\n"
+}

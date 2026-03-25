@@ -1,0 +1,88 @@
+{
+  "pr_number": 115,
+  "title": "felix_v1: int6+zstd, fp16 embed, MLP 3x, seq4096, sliding window eval",
+  "author": "felix-ab",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 with fp16 embedding passthrough",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "body weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increases MLP width multiplier from 2x to 3x to use freed artifact budget for a larger model body.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Keeps tied embedding / lm_head weights in fp16 passthrough rather than quantizing them.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adds forward_logits() for logit access without loss reduction to support sliding-window evaluation.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "int6 quantization for body weights to reduce artifact size",
+    "zstd level-22 compression instead of zlib",
+    "fp16 embedding passthrough for quality-sensitive embeddings",
+    "MLP width increased to 3x within the artifact budget",
+    "training with sequence length 4096",
+    "sliding window evaluation with stride 512 for improved bpb measurement"
+  ],
+  "artifact_size": "~14.6MB"
+}

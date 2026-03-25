@@ -1,0 +1,70 @@
+{
+  "pr_number": 772,
+  "title": "Non-record: Data ordering & selection \u2014 negative result on FineWeb",
+  "author": "abaybektursun",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.3055,
+  "architecture": null,
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "other",
+      "data": {
+        "description": "Shard-level data selection and curriculum-style reordering based on similarity to validation data, including n-gram cosine similarity, Jensen-Shannon divergence, Moore-Lewis cross-entropy difference, domain classifier, val-trained bigram LM cross-entropy, conditional bigram embedding cosine, Wasserstein distance, and importance weighting.",
+        "parameters": {
+          "stage": "shard-level selection",
+          "num_shards": 80,
+          "methods_tested": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Chunk-level selection of training data using bigram LM and neural proxy scoring to keep the top 12% of chunks.",
+        "parameters": {
+          "chunk_size_tokens": 32768,
+          "total_chunks": 244080,
+          "selection_fraction": 0.12
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Curriculum learning via hardest-first reordering of training data based on perplexity under a partially trained model.",
+        "parameters": {
+          "seeds": [
+            1337,
+            42,
+            2025
+          ],
+          "hardware": "8xH100"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Compared 8 shard-scoring methods for FineWeb data selection and found val-trained bigram cross-entropy to be the most stable scorer.",
+    "Showed that shard-level ordering/selection has negligible effect because shard statistics are nearly identical.",
+    "Demonstrated that chunk-level selection worsens validation BPB despite lowering training loss, suggesting diversity is more important than selecting easy text.",
+    "Evaluated hardest-first curriculum learning and found only noise-level changes with no reliable improvement.",
+    "Provided a negative-result analysis arguing that FineWeb is already filtered and that data selection/curriculum methods do not help under cosine LR decay."
+  ],
+  "artifact_size": null
+}

@@ -1,0 +1,130 @@
+{
+  "pr_number": 108,
+  "title": "Record: 11L MLP3x + SmearGate + Error Correction Table",
+  "author": "kellyvv",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.437,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the Transformer blocks.",
+        "parameters": {
+          "layers": 11,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate activation/gating mechanism to the model.",
+        "parameters": {
+          "init": "sigmoid(3.0) \u2248 0.95"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash component with hashed bigram features.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "error correction table",
+        "parameters": {
+          "use_correction": 1,
+          "position_based_indexing": true,
+          "delta_varint_encoding": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Built an eval-time correction table from worst predictions on the fixed validation set and boosted correct logits for matched positions to achieve near-zero loss on those tokens.",
+        "parameters": {
+          "entries": 907927,
+          "artifact_mb": 2.87
+        }
+      }
+    }
+  ],
+  "compression": "int6+zstd",
+  "novel_contributions": [
+    "Eval-time error correction table embedded in the artifact",
+    "Position-based indexing on the fixed validation set with no hash collisions",
+    "Delta-encoded position plus varint token lookup table",
+    "On-the-fly correction table construction during evaluation",
+    "SmearGate and BigramHash architecture additions",
+    "STE QAT with int6 quantization and SWA"
+  ],
+  "artifact_size": "15.15 MB"
+}

@@ -1,0 +1,108 @@
+{
+  "pr_number": 769,
+  "title": "PROTEUS+STYX \u2014 val_bpb 0.8508 (3-seed mean) \u2014 LeakyReLU(0.9)\u00b2 + 5-gram Eval Cache",
+  "author": "MatoTeziTanka",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 0.8508,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.9)\u00b2",
+        "description": "Replaced the standard activation with F.leaky_relu(x, 0.9).square().",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 4 KV heads out of 8 total heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 2048,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Backward-looking 5-gram evaluation cache with fixed-alpha blending of model and cache probabilities.",
+        "parameters": {
+          "ngram": 5,
+          "buckets": 4194304,
+          "alpha_model": 0.8,
+          "alpha_cache": 0.2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Verified cache effectiveness at zero overlap to rule out overlap artifacts.",
+        "parameters": {
+          "stride": 2048,
+          "overlap": 0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "LeakyReLU(0.9)\u00b2 activation replacing the standard activation",
+    "Backward-looking 5-gram evaluation cache built from already-scored tokens",
+    "Fixed-alpha blending between model and cache probabilities",
+    "Zero-overlap verification showing the cache improvement is not just an overlap artifact",
+    "INT6 quantized model with zstd-compressed artifact"
+  ],
+  "artifact_size": "<16MB"
+}

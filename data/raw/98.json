@@ -1,0 +1,14 @@
+{
+  "number": 98,
+  "title": "Experiment and [WIP] record attempt: Weight decay reduces quantization gap and artifact size",
+  "author": "leloykun",
+  "body": "<img width=\"2000\" height=\"800\" alt=\"image\" src=\"https://github.com/user-attachments/assets/6e487eda-f705-42e5-a62f-6cfcc46cc739\" />\r\n\r\nThis PR includes:\r\n\r\n1. Experimental evidence that weight decay (statistically) significantly reduces (1a) the pre- vs. post-quantization validation loss/bpb gap; and (1b) the quantized artifact size. I used paired one-sided t-tests (on 6 seeds) to validate these claims, but (1b) is obvious from the plot above. A neat consequence of (1b) is that it allows us to use larger models. And hence:\r\n2. WIP record attempt using aggressive weight decay and a deeper model. Preliminary results on A100s shows promising results. But sadly, I haven't been able to access 8xH100s yet as no GPU providers have capacity at the moment.\r\n\r\nI'm currently writing a write-up explaining this phenomenon. I'll update this PR as soon as it's ready.",
+  "state": "open",
+  "merged": false,
+  "labels": [
+    "not ready for review"
+  ],
+  "created_at": "2026-03-19T16:29:19Z",
+  "updated_at": "2026-03-19T22:25:50Z",
+  "submission_readme": "This record implements weight decay with scaled up model depth (9 to 12 layers), and smaller batch size (524288 to 131072 tokens) to fit within the 10-minute wallclock limit for the main leaderboard track.\n\n> NOTE: This is a work-in-progress to be used for requesting feedback and compute grants from OpenAI.\n> NOTE: I cannot yet confirm my results on 8xH100s due lack of access (all providers are currently sold out of H100s). I will update this record with H100 results as soon as I can.\n\n---\n\nKey findings:\n- Weight decay significantly reduces (1) quantized artifact file size; and (2) the pre- vs. post-quantization validation loss and bits-per-byte gap.\n  - Paired one-sided t-test on 6 seeds yielded `p=0.01226` for the reduction in quantization gap.\n- With `weight_decay=0.1`, the reduction in artifact size is ~20%, allowing us to use larger models within the 16MB artifact size limit.\n\n![](weight_decay_reduces_quantization_gap_and_artifact_size.png)\n\n---\n\nTrainer changes in this snapshot:\n- added weight decay to the trainer\n\nCommand (track-relevant params):\n```bash\nNCCL_IB_DISABLE=1 \\\nRUN_ID=hf_verify_sp1024_8gpu_leloykun_weightdecayzip \\\nDATA_PATH=/root/code/parameter-golf/data/datasets/fineweb10B_sp1024 \\\nTOKENIZER_PATH=/root/code/parameter-golf/data/tokenizers/fineweb_1024_bpe.model \\\nVOCAB_SIZE=1024 \\\nMAX_WALLCLOCK_SECONDS=600 \\\nTRAIN_LOG_EVERY=50 \\\nVAL_LOSS_EVERY=200 \\\nWEIGHT_DECAY=0.1 \\\nNUM_LAYERS=12 \\\nMATRIX_LR=0.02 \\\nTRAIN_BATCH_TOKENS=131072 \\\ntorchrun --standalone --nproc_per_node=8 /root/code/parameter-golf/train_gpt.py\n```\n"
+}

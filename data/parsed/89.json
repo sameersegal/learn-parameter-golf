@@ -1,0 +1,107 @@
+{
+  "pr_number": 89,
+  "title": "record:  val_bpb=1.1622, NorMuon + int6 STE + SWA + sliding window",
+  "author": "vmfunc",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1622,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT / STE",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "per-row block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings / logit head"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP with 3x hidden size (1536) enabled by int6 compression savings",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "muon_momentum_warmup_steps": 1500,
+          "muon_momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 7,
+          "checkpoint_interval_steps": 200
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 1024
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Per-row int6 fake quantization with straight-through estimator to reduce post-training quantization gap",
+    "Keeping the tied embedding/logit head in fp16 to avoid quantization sensitivity",
+    "Using a wider 3x MLP made possible by int6 compression savings",
+    "Replacing Muon with NorMuon row-normalized Newton-Schulz updates",
+    "Applying stochastic weight averaging over the final warmdown checkpoints",
+    "Using sliding-window evaluation with stride 64 to improve measured val_bpb"
+  ],
+  "artifact_size": "15.5MB"
+}

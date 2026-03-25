@@ -1,0 +1,162 @@
+{
+  "pr_number": 126,
+  "title": "Non-record: BitNet b1.58 + depth recurrence + NorMuon (1.7510 BPB, 3.78 MB)",
+  "author": "Athenox14",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.751,
+  "architecture": "Transformer",
+  "quantization": "BitNet b1.58 ternary QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 2,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "4 unique transformer blocks are reused 3 times each for 12 effective layers, with U-Net style skip connections between encoder and decoder halves.",
+        "parameters": {
+          "unique_layers": 4,
+          "recurrence_factor": 3,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-norm",
+        "description": "Applies RMSNorm to Q and K before RoPE.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcapping",
+        "description": "Uses tanh-based softcapping on logits.",
+        "parameters": {
+          "cap": 30.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses NTK-aware RoPE base scaling with YaRN-style sequence length warmup.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "row_wise_rms_normalization": true,
+          "newton_schulz_orthogonalization": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": "seq_len // 2",
+          "skip_cold_start_tokens": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "proj zero-init",
+        "description": "Output projections of attention and MLP are zero-initialized so each block starts as identity."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid_mix",
+        "description": "Learnable per-block mixing of current hidden state with original embedding, initialized to [1, 0]."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup + constant + cosine cooldown",
+        "parameters": {
+          "warmup_steps": 100,
+          "cooldown_steps": 2000,
+          "final_lr_multiplier": 0.1
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Sequence length warmup from 128 to 1024 over 2000 steps with NTK-aware RoPE base scaling (YaRN-style).",
+        "parameters": {
+          "start_length": 128,
+          "end_length": 1024,
+          "warmup_steps": 2000
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "BitNet b1.58 ternary quantization with packed 2-bit weights and zlib compression",
+    "Depth recurrence with 4 unique transformer blocks reused 3 times for 12 effective layers",
+    "U-Net style skip connections across recurrent block passes",
+    "Learnable resid_mix parameter to blend recurrent hidden state with original embedding",
+    "NorMuon optimizer with per-neuron row-wise RMS normalization after Newton-Schulz orthogonalization",
+    "Sequence length warmup combined with YaRN / NTK-aware RoPE scaling",
+    "Sliding-window evaluation with cold-start token skipping",
+    "QK-norm and logit softcapping"
+  ],
+  "artifact_size": "3.78 MB"
+}

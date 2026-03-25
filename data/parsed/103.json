@@ -1,0 +1,148 @@
+{
+  "pr_number": 103,
+  "title": "Non-record: Looped Transformer + LoRA + Skip Connections + NorMuon + SWA + Int6 + Sliding Window",
+  "author": "MatthewHRockwell",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.5,
+  "architecture": "Transformer",
+  "quantization": "int6 with fp16 embedding and LoRA passthrough",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "5 unique transformer blocks are looped to create 30 virtual layers, increasing effective depth without storing all layers.",
+        "parameters": {
+          "unique_layers": 5,
+          "virtual_depth": 30
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "skip connections",
+        "description": "Encoder-decoder style skip connections store tensors in the first half of virtual layers and consume them in reverse in the decoder half via learned skip weights.",
+        "parameters": {
+          "encoder_layers": 15,
+          "decoder_layers": 15
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Per-virtual-layer LoRA adapters on Q and V projections differentiate each virtual layer with low parameter overhead.",
+        "parameters": {
+          "rank": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "residual mixing",
+        "description": "Learned blend of hidden state with original embedding at each layer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input/output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "warmup_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 7
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "block weights with fp16 embedding and fp16 LoRA passthrough"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "wallclock_aware": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 1.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Looped transformer depth recurrence with 5 stored blocks expanded to 30 virtual layers",
+    "Encoder-decoder skip connections across virtual layers with learned skip weights",
+    "Per-virtual-layer LoRA adapters to specialize each repeated layer",
+    "Residual mixing with the original embedding at each layer",
+    "NorMuon optimization with wallclock-aware warmdown",
+    "Stochastic Weight Averaging over 7 checkpoints",
+    "Int6 quantization with fp16 embedding and LoRA passthrough",
+    "Sliding-window evaluation with stride 64"
+  ],
+  "artifact_size": "14.9 MB"
+}

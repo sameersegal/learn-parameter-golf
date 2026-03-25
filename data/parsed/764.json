@@ -1,0 +1,102 @@
+{
+  "pr_number": 764,
+  "title": "Record: Curriculum Learning + LeakyReLU(0.9)\u00b2 + 7-gram Backoff (val_bpb=0.9633)",
+  "author": "ndokutovich",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9633,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT + GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer with 3x MLP and LeakyReLU(0.9)^2 activation; also includes XSA, BigramHash, SmearGate, SWA, EMA.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "gqa": "8/4"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT + GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "7-gram backoff",
+        "parameters": {
+          "order": 7
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3,
+          "freeze_last_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Curriculum learning via shard reordering by model perplexity, hardest shards first.",
+        "parameters": {
+          "shard_ordering": "hardest_first"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU slope optimization from 0.5 to 0.9.",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Curriculum learning via shard reordering by model perplexity",
+    "LeakyReLU(0.9)^2 slope optimization",
+    "7-gram backoff evaluation cache",
+    "Legal score-first test-time training",
+    "Built on PR #753 with combined improvements"
+  ],
+  "artifact_size": "15.56 MB"
+}

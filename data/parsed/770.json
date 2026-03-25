@@ -1,0 +1,142 @@
+{
+  "pr_number": 770,
+  "title": "Record: 11L + Multi-Order N-gram Backoff + Entropy-Adaptive Alpha (val_bpb=0.6672)",
+  "author": "minh-stakc",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.6672,
+  "architecture": "11L Transformer",
+  "quantization": "Int6 + GPTQ-lite",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers of the 11-layer model.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings with a 16/64 split.",
+        "parameters": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate as part of the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds BigramHash with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-order n-gram backoff cache interpolation during evaluation, using orders 2 through 7 with highest-order-first cascading on miss.",
+        "parameters": {
+          "min_order": 2,
+          "max_order": 7
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive interpolation weight alpha based on model entropy for blending LM and n-gram cache predictions.",
+        "parameters": {
+          "formula": "alpha = 0.05 + 0.55 * sigmoid(2 * (H - 4.0))"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Multi-order n-gram backoff cache interpolation (orders 2-7)",
+    "Entropy-adaptive alpha for blending neural and n-gram predictions",
+    "Score-first, backward-looking n-gram cache built only from previously scored tokens",
+    "Single blended prediction per token without min(NLL) selection"
+  ],
+  "artifact_size": "15.0 MB"
+}

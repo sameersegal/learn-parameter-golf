@@ -1,0 +1,141 @@
+{
+  "pr_number": 175,
+  "title": "Record: 11L LeakyReLU\u00b2 + VRL + lzma \u2014 val_bpb 1.1229 (3-seed mean)",
+  "author": "anthony-maio",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1229,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP to 3x width with LeakyReLU(0.5)^2 activation instead of standard ReLU^2.",
+        "parameters": {
+          "expansion": 3,
+          "hidden_dim": 1536,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning: layer 0 value output is blended into subsequent attention layers via learned sigmoid gates.",
+        "parameters": {
+          "layers": 11,
+          "gate_init": -1.5,
+          "initial_mixing": 0.18
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash embeddings to improve token representation capacity.",
+        "parameters": {
+          "dimensions": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary positional embeddings only partially across dimensions.",
+        "parameters": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA4 attention variant.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "tight": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for model weights."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(i+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with STE threshold 0.15.",
+        "parameters": {
+          "threshold": 0.15
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "LeakyReLU(0.5)^2 activation swap to preserve negative gradient flow and improve BPB",
+    "Value Residual Learning (VRL) with sigmoid-gated mixing of layer 0 values into later attention layers",
+    "Switch from zstd to lzma compression to recover artifact headroom",
+    "Restoring MLP 3x expansion and BigramHash 2048 capacity within the 16MB limit"
+  ],
+  "artifact_size": "~15.89 MB"
+}

@@ -1,0 +1,108 @@
+{
+  "pr_number": 99,
+  "title": "submission: Int6 MLP3x + Late-K Passthrough + SlidingWindow (val_bpb: 1.1605)",
+  "author": "takhir-iota",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1605036,
+  "architecture": "GPT",
+  "quantization": "mixed int6/int8 with fp16 passthrough",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": ".mlp., .attn.c_q., .attn.c_v., .attn.proj. in int6; .attn.c_k. mostly grouped int8; selected late-layer c_k and tok_emb in fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion to widen the hidden layer within the byte budget.",
+        "parameters": {
+          "mlp_mult": 3,
+          "num_layers": 9,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "tie_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "QK gain init",
+        "description": "Uses QK_GAIN_INIT=1.7 for attention initialization scaling."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective late-layer K preservation keeps blocks.7.attn.c_k.weight and blocks.8.attn.c_k.weight in fp16 while other c_k matrices use grouped int8.",
+        "parameters": {
+          "group_size": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Int6 mixed quantization of MLP and attention projections",
+    "3x MLP expansion to improve score under the byte budget",
+    "Selective preservation of late-layer attention K weights in fp16",
+    "Grouped int8 quantization for remaining K matrices with group size 64",
+    "Sliding-window evaluation with stride 64 for near-full context"
+  ],
+  "artifact_size": "15,844,924 bytes"
+}

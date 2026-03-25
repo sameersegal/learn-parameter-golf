@@ -1,0 +1,79 @@
+{
+  "pr_number": 96,
+  "title": "Sliding Window + Long-Context Training: val_bpb=1.1764",
+  "author": "saml212",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1764,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embedding parameters with a separate learning rate.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Training at 2048 tokens performs identically to 4096 tokens under sliding-window evaluation, so shorter training sequences are preferable within the time budget.",
+    "A narrow gradient clipping sweet spot was found for long-sequence training, with 0.3 outperforming other tested values.",
+    "Batch size 786,432 tokens was identified as the best tradeoff for training at 2048-token sequences.",
+    "Quantization-aware warmdown from an earlier PR reduces post-quantization penalty, but only at higher base learning rates."
+  ],
+  "artifact_size": "15.88MB"
+}

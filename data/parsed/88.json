@@ -1,0 +1,121 @@
+{
+  "pr_number": 88,
+  "title": "Record: Int6 MLP3x + MTP + Sliding Window Eval (val_bpb=1.1605)",
+  "author": "seanward",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1605,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization with zstd compression",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all large 2D weight matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size from baseline 1024 to 1536 (3x expansion) enabled by int6 artifact savings.",
+        "parameters": {
+          "MLP_HIDDEN": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MTP auxiliary head",
+        "description": "Added a training-only multi-token prediction head predicting token i+2 from hidden state i; excluded from exported artifact.",
+        "parameters": {
+          "num_heads": 1,
+          "loss_weight": 0.01
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept tied embedding matrix in fp16 during export instead of quantizing it.",
+        "parameters": {
+          "fp16_export": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "muon_momentum_warmup_steps": 1500,
+          "muon_momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Co-optimized training dynamics with lower learning rate, higher momentum, and longer warmdown to improve quantization behavior.",
+        "parameters": {
+          "matrix_lr": 0.02,
+          "muon_momentum": 0.99,
+          "warmdown_iters": 3000
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 per-row quantization with zstd-22 compression to reduce artifact size",
+    "3x wider MLP enabled by quantization savings",
+    "Training-only MTP auxiliary head excluded from the artifact",
+    "FP16 tied embedding passthrough to avoid quantization error on shared embeddings",
+    "Sliding window evaluation with stride 512 for near-full-context scoring",
+    "Long-context training at sequence length 4096",
+    "Training dynamics tuned for better int6 quantization behavior"
+  ],
+  "artifact_size": "15.28 MB"
+}

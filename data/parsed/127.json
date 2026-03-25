@@ -1,0 +1,139 @@
+{
+  "pr_number": 127,
+  "title": "Non-record: Depth recurrence + widening + QAT + sliding window eval",
+  "author": "matt-wright86",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 physical transformer blocks are looped 3 times to create 9 effective layers.",
+        "parameters": {
+          "layers": 3,
+          "loops": 3,
+          "effective_layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Per-loop rank-4 LoRA adapters on Q/K/V/O for specialization across recurrence iterations.",
+        "parameters": {
+          "rank": 4,
+          "targets": [
+            "Q",
+            "K",
+            "V",
+            "O"
+          ],
+          "loops": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "widening",
+        "description": "Model widened to 768 dimensions with 12 query heads and 4 KV heads using grouped-query attention.",
+        "parameters": {
+          "dimension": 768,
+          "query_heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Factorized ALBERT-style embedding with tied output projection.",
+        "parameters": {
+          "vocab_size": 4096,
+          "embedding_dim": 128,
+          "model_dim": 768
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_orthogonalization": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "eval_length": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware RoPE scaling used for evaluation-time length extension.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "style": "cosine"
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth recurrence with 3 physical transformer blocks looped 3 times",
+    "Per-loop rank-4 LoRA adapters on Q/K/V/O",
+    "Widened transformer with GQA (12 query heads, 4 KV heads)",
+    "Factorized ALBERT-style embedding for SP4096 vocabulary",
+    "Int6-range quantization with zlib compression",
+    "STE-based QAT with amax-based fake quantization",
+    "Sliding window evaluation with stride 64",
+    "NTK-aware RoPE scaling for longer evaluation contexts"
+  ],
+  "artifact_size": "~12.7MB"
+}

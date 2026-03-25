@@ -1,0 +1,156 @@
+{
+  "pr_number": 85,
+  "title": "Record (pending): 92-experiment autoresearch + sliding window eval, pre-quant val_bpb=1.2156",
+  "author": "hydeh3r3",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.2156,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "RoPE extrapolation used to train at 1024 and evaluate at 2048 via a larger rope base.",
+        "parameters": {
+          "rope_base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP2x",
+        "description": "Uses a 2x MLP width configuration.",
+        "parameters": {
+          "mlp_multiplier": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "relu\u00b2",
+        "description": "Uses squared ReLU activation for cleaner int8 quantization.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RMSNorm",
+        "description": "Uses plain RMSNorm instead of WeightedRMSNorm for better quantization behavior.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "grad_clip_norm": 1.0,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_end": 0.99,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Autoresearch loop used to run 92+ automated local experiments and select the best configuration.",
+        "parameters": {
+          "experiments": 92
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training on validation shard was enabled.",
+        "parameters": {
+          "train_on_val": 1
+        }
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "92+ automated local experiments via an autoresearch loop",
+    "Sliding window evaluation with stride 64",
+    "RoPE extrapolation to evaluate at 2048 context length",
+    "relu\u00b2 activation and plain RMSNorm chosen for cleaner int8 quantization",
+    "Muon optimizer with separate AdamW for embeddings",
+    "Training on validation shard to improve score",
+    "Quantization pipeline using int8 with zlib compression"
+  ],
+  "artifact_size": null
+}

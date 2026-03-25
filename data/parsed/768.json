@@ -1,0 +1,154 @@
+{
+  "pr_number": 768,
+  "title": "Non-record: 1.1201 BPB - Shared ValueEmbedding (tok_emb reuse, layers 5-10) + Legal TTT",
+  "author": "mradassaad",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1201,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Reuses the tied token embedding (tok_emb) for ValueEmbedding instead of training a separate embedding table, with learned projection and per-layer scales.",
+        "parameters": {
+          "layers": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ValueEmbedding",
+        "description": "Expanded ValueEmbedding coverage from 2 layers to 6 layers by freeing parameter budget through shared tok_emb reuse.",
+        "parameters": {
+          "layers": [
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with LeakyReLU(0.5)^2 as part of the base stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes BigramHash as part of the architecture.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE partially to a subset of dimensions.",
+        "parameters": {
+          "dimensions": [
+            16,
+            64
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50,
+          "type": "Tight SWA"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "chunk_tokens": 32768,
+          "batch_seqs": 32,
+          "freeze_blocks": 0,
+          "grad_clip": 1.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Reuses tied tok_emb as the ValueEmbedding source instead of training a separate embedding table.",
+    "Expands ValueEmbedding from layers 9-10 to layers 5-10 using the freed parameter budget.",
+    "Combines shared ValueEmbedding with Legal TTT on top of the PR #549 stack.",
+    "Achieves 1.1201 bpb 3-seed mean with consistent sub-16MB artifacts."
+  ],
+  "artifact_size": "~15.9 MB"
+}

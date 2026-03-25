@@ -1,0 +1,128 @@
+{
+  "pr_number": 114,
+  "title": "Record: val_bpb=1.1574 \u2014 Int6 + MLP 3x + selective precision + optimized long-context training",
+  "author": "saml212",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1574,
+  "architecture": "Transformer",
+  "quantization": "int6 post-training quantization with selective fp16 preservation",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embedding and last 2 layers' key projections"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Tripled MLP hidden dimension to fit within artifact budget enabled by int6 compression.",
+        "parameters": {
+          "mlp_hidden": 1536,
+          "default_mlp_hidden": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input embedding and output projection share the same weight matrix.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Model uses 4 KV heads with 8 attention heads and 9 layers.",
+        "parameters": {
+          "layers": 9,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective precision preservation for sensitive tensors, including fp16 tied embedding and fp16 passthrough for late-layer key projections.",
+        "parameters": {
+          "fp16_tied_embedding": true,
+          "fp16_late_k_passthrough_layers": 2
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Int6 post-training quantization to reduce artifact size and free space for a 3x larger MLP.",
+    "Selective precision preservation for the tied embedding and last two layers' key projections.",
+    "Training at sequence length 2048 instead of 4096 while retaining performance under sliding-window evaluation.",
+    "Gradient clipping at 0.3 to stabilize long-sequence training.",
+    "Batch size of 786,432 tokens found to be optimal for train@2048.",
+    "Sliding-window evaluation with stride 256, which improved val_bpb and reduced eval time versus smaller strides."
+  ],
+  "artifact_size": "15.98MB"
+}

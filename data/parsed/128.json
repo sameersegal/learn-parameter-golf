@@ -1,0 +1,118 @@
+{
+  "pr_number": 128,
+  "title": "Record: Int6 MLP3x + STE QAT + Sliding Window (val_bpb=1.1594)",
+  "author": "rsavitt",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1594,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with mixed fp16 passthrough for tied embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights; tied embeddings kept fp16"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x baseline using int6 savings",
+        "parameters": {
+          "mlp_mult": 3.0,
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept tied token embedding/output head in fp16 passthrough to avoid quantization penalty",
+        "parameters": {
+          "tie_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tuned training dynamics with wallclock-limited training and large batch token count",
+        "parameters": {
+          "train_batch_tokens": 393216,
+          "max_wallclock_seconds": 600
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 per-row quantization plus zstd-22 compression to fit a wider model within the 16MB budget",
+    "3x MLP expansion enabled by quantization savings",
+    "STE fake int6 quantization-aware training to improve post-quantization robustness",
+    "fp16 tied embedding passthrough to preserve output head quality",
+    "Sliding window evaluation with stride 64 for near-full-context scoring",
+    "Co-optimized training dynamics including Muon momentum tuning and warmdown schedule"
+  ],
+  "artifact_size": "15,162,777 bytes"
+}

@@ -1,0 +1,195 @@
+{
+  "pr_number": 761,
+  "title": "Record: Score-First TTT + N-gram Backoff (3-seed mean val_bpb=0.9581)",
+  "author": "Asukabot0",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9581,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied on all 11 layers to remove self-position bias.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU^2",
+        "description": "Uses leaky_relu(x, 0.5).square() to preserve negative gradient flow.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Layer 0 value output is mixed into subsequent layers via learned sigmoid gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gates on attention output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature with 4096 buckets.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary positional embeddings to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x wider MLP.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections inspired by U-Net are used in the transformer stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used with SmearGate."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 per-row",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 16
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size_tokens": 131000,
+          "learning_rate": 0.0001,
+          "epochs": 4,
+          "freeze_first_blocks": 2,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-order n-gram backoff cache with entropy-adaptive alpha mixing, using orders 2-7 and backward-looking cache updates only.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-16",
+  "novel_contributions": [
+    "Score-first test-time training compliant with the issue constraints",
+    "Multi-order n-gram backoff cache with entropy-adaptive alpha",
+    "XSA applied to all 11 layers",
+    "LeakyReLU(0.5)^2 activation",
+    "Value Residual and Gated Attention integration",
+    "Int6 per-row quantization with zstd compression"
+  ],
+  "artifact_size": "~15.7 MB"
+}

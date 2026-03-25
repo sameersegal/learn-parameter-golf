@@ -1,0 +1,112 @@
+{
+  "pr_number": 131,
+  "title": "[WIP] add combined optimization, waiting for 8 gpu train",
+  "author": "Billy1900",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2701,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 with optional STE QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Replaces the baseline ReLU-square MLP with a gated SwiGLU feedforward block.",
+        "parameters": {
+          "hidden": 1024
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "transformer block weights; embeddings use int8"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "transformer block weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "matrix_lr": 0.025,
+          "tied_embedding_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay with linear warmup",
+        "parameters": {
+          "warmup_steps": 200,
+          "min_lr_ratio": 0.05
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adaptive training configuration that changes sequence length, gradient accumulation, batch tokens, and evaluation stride based on GPU count.",
+        "parameters": {
+          "train_seq_len_1_gpu": 1024,
+          "train_seq_len_8_gpu": 2048,
+          "grad_accum_steps_1_gpu": 2,
+          "grad_accum_steps_8_gpu": 1
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "SwiGLU MLP replacing the baseline ReLU-square MLP",
+    "Mixed int6/int8 post-training quantization",
+    "Optional STE fake-int6 quantization-aware training",
+    "Cosine learning rate schedule with warmup",
+    "Sliding window evaluation with configurable stride",
+    "Adaptive training configuration for 1 GPU vs 8 GPU runs",
+    "Tuned Muon optimizer hyperparameters",
+    "Tied input/output embeddings"
+  ],
+  "artifact_size": "15.4MB"
+}

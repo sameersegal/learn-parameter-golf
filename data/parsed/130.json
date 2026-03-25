@@ -1,0 +1,96 @@
+{
+  "pr_number": 130,
+  "title": "Non-record: Muon-Aware QAT + LAWA + Adaptive LR Scheduling (7 toggleable improvements)",
+  "author": "mohosy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.6372,
+  "architecture": "Transformer",
+  "quantization": "Muon-aware QAT (STE or Gaussian noise), targeting int8/int6 quantization sensitivity",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "large matrices (>65K params)"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "LAWA",
+        "parameters": {
+          "start_frac": 0.8,
+          "checkpoint_interval_steps": 200,
+          "avg_last_fraction": 0.2
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown with LR floor and cooldown fraction schedule",
+        "parameters": {
+          "lr_floor_fraction": 0.1,
+          "cooldown_fraction": 0.6,
+          "qat_lr_reduction": 0.5,
+          "qat_start_frac": 0.75
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 256,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Muon-aware QAT with two modes: STE and Gaussian noise, activated late to preserve Muon's momentum subspace",
+        "parameters": {
+          "modes": [
+            "STE",
+            "Gaussian noise"
+          ],
+          "qat_start_frac": 0.75,
+          "lr_reduction_on_qat_start": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Higher learning rates for matrix, scalar, and tied embedding parameters",
+        "parameters": {
+          "matrix_lr": 0.06,
+          "scalar_lr": 0.06,
+          "tied_embed_lr": 0.08
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Muon-aware QAT designed to reduce quantization noise amplification in Muon's orthogonalized updates",
+    "Two QAT modes: standard STE and Gaussian noise mode",
+    "Late-start QAT activation with automatic learning-rate reduction",
+    "LAWA (Latest Weight Averaging) over late-stage checkpoints",
+    "Learning-rate floor to avoid freezing into sharp minima",
+    "Cooldown-fraction-based LR scheduling",
+    "Sequence length warmup from 256 to 1024 tokens",
+    "Adaptive artifact compression using zstd or Brotli",
+    "Higher default learning rates for matrix, scalar, and tied embedding parameters"
+  ],
+  "artifact_size": null
+}

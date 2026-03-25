@@ -1,0 +1,103 @@
+{
+  "pr_number": 102,
+  "title": "Int6 MLP3x + Tuned LR + SmearGate + SlidingWindow (val_bpb: 1.1618)",
+  "author": "unnir",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1618,
+  "architecture": "GPT",
+  "quantization": "mixed int6 quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weight matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP hidden dimension from 1024 to 1536 (3x model_dim) to improve capacity.",
+        "parameters": {
+          "mlp_mult": 3,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blends each token embedding with the previous token embedding before the first transformer layer.",
+        "parameters": {
+          "gate_type": "sigmoid",
+          "cost_params": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "warmdown_iters": 3000,
+          "grad_clip_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 1024
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Per-row int6 quantization of MLP and attention weights with fp16 passthrough for tied embeddings",
+    "Using freed compression budget to expand the MLP to 3x width",
+    "Tuned Muon optimizer hyperparameters including lower learning rates, momentum warmup, warmdown, and gradient clipping",
+    "SmearGate pre-attention module that mixes current and previous token embeddings",
+    "Sliding-window evaluation with stride 64 to score tokens with near-full context"
+  ],
+  "artifact_size": "15,144,136 bytes"
+}

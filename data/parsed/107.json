@@ -1,0 +1,133 @@
+{
+  "pr_number": 107,
+  "title": "Int6+zstd MLP1488 + Sliding Window + QAT + Tuned LR (val_bpb=1.1648)",
+  "author": "m0at",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1648,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 quantization with fp16 tied embedding passthrough and STE QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6 quantization",
+        "bits": 6,
+        "scope": "MLP/Q/V/proj weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "post-training quantization-aware training"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Widened MLP hidden size to improve capacity under the artifact budget.",
+        "parameters": {
+          "hidden_size": 1488
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept the tied embedding/output head in fp16 instead of quantizing it.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "grad_clip_norm": 0.3,
+          "qk_gain_init": 1.7
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fallback from FA3 to SDPA when FA3 is unavailable.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed int6 quantization of MLP/Q/V/proj weights to fit a larger model under the artifact budget",
+    "Wider MLP hidden size (1488) enabled by quantization savings",
+    "Sliding-window evaluation with stride 64 to use more context per scored position",
+    "Post-training QAT with STE to reduce quantization penalty",
+    "Tuned learning rates for matrix, scalar, and tied embedding parameters",
+    "Kept tied embedding in fp16 to avoid quantizing the most sensitive tensor",
+    "Longer warmdown schedule to better match the short training budget",
+    "FA3 fallback to SDPA for robustness"
+  ],
+  "artifact_size": "15.93MB"
+}
