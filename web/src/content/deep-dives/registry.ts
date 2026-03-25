@@ -1,5 +1,7 @@
 import { DeepDive } from "@/lib/types";
 import { quantizationFundamentals } from "./quantization-fundamentals";
+import { testTimeTraining } from "./test-time-training";
+import { evaluationStrategies } from "./evaluation-strategies";
 
 export const DEEP_DIVES: DeepDive[] = [
   quantizationFundamentals,
@@ -35,14 +37,7 @@ export const DEEP_DIVES: DeepDive[] = [
     sections: [],
     order: 5,
   },
-  {
-    slug: "test-time-training",
-    title: "Test-Time Training",
-    subtitle: "LoRA TTT and per-document adaptation",
-    category: "test_time_training",
-    sections: [],
-    order: 6,
-  },
+  testTimeTraining,
   {
     slug: "learning-rate-schedules",
     title: "Learning Rate Schedules",
@@ -67,14 +62,7 @@ export const DEEP_DIVES: DeepDive[] = [
     sections: [],
     order: 9,
   },
-  {
-    slug: "evaluation-strategies",
-    title: "Evaluation Strategies",
-    subtitle: "Sliding window eval and scoring techniques",
-    category: "evaluation_technique",
-    sections: [],
-    order: 10,
-  },
+  evaluationStrategies,
 ];
 
 export function getDeepDive(slug: string): DeepDive | undefined {
