@@ -1,0 +1,96 @@
+{
+  "pr_number": 355,
+  "title": "Add non-record BigramHash4096 + MLP992 + LR0.08 + Slide64 submission",
+  "author": "josusanmartin",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.19286858,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib with fp16 tied-embedding export",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a hashed bigram embedding side channel to the model.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP width reduction",
+        "description": "Uses a narrower feed-forward network than the naive baseline.",
+        "parameters": {
+          "mlp_hidden": 992
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tok_emb.weight"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "CUDA variant of the baseline trainer for an 8xH100 run",
+    "BigramHash(4096,64) side channel",
+    "MLP_HIDDEN=992 narrower FFN",
+    "MATRIX_LR=0.08 higher matrix learning rate",
+    "Sliding-window evaluation with stride 64",
+    "fp16 tied-embedding export",
+    "Non-record submission targeting track_non_record_16mb due to artifact size over the cap"
+  ],
+  "artifact_size": "16,179,102 bytes"
+}

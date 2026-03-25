@@ -1,0 +1,193 @@
+{
+  "pr_number": 333,
+  "title": "11L XSA4 + SmearGate + BigramHash + SWA + RoPE50K (mean val_bpb=1.1565, 3 seeds)",
+  "author": "mahsumaktas",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1565,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 4 transformer layers with GQA-compatible value expansion.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate added together with BigramHash to provide bigram-aware embedding/context handling.",
+        "parameters": {
+          "bigram_vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embedding weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Late-K FP16",
+        "description": "Keeps the last K layers in FP16 for improved quantization behavior.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "start_frac": 0.4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses a larger RoPE base for longer-context modeling.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used with SmearGate/BigramHash."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Overtone SVD init",
+        "description": "Spectral embedding initialization based on SVD."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "phase-transition residual mixing",
+        "description": "Residual mixing strategy used during initialization/training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 2.75x (hidden size 1408), near the 3x regime but smaller to fit artifact constraints.",
+        "parameters": {
+          "multiplier": 2.75,
+          "hidden_size": 1408
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.02
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer Transformer with XSA on the last 4 layers",
+    "SmearGate combined with BigramHash(2048) and OrthoInit",
+    "INT6 per-row quantization with zstd-22 compression",
+    "SWA every 50 steps with fp32 accumulation",
+    "Muon optimizer tuning with RoPE base 50K",
+    "Overtone SVD initialization and phase-transition residual mixing",
+    "MLP expansion set to 2.75x to stay under the 16MB artifact limit",
+    "Magnitude pruning before quantization",
+    "Empirical finding that EMA performs much worse than SWA for this stack"
+  ],
+  "artifact_size": "15.9 MB"
+}

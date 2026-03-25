@@ -1,0 +1,150 @@
+{
+  "pr_number": 363,
+  "title": "Non-record: Depth Recurrence in Parameter-Constrained Transformers \u2014 What Works, What Doesn't, and Why",
+  "author": "evangelinehelsinki",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 2.4402,
+  "architecture": "Transformer",
+  "quantization": "mixed int8/int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shares transformer block weights across multiple cycles to create more effective depth within the parameter budget.",
+        "parameters": {
+          "unique_blocks": 4,
+          "cycles": 3,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into embedding buckets to add bigram context.",
+        "parameters": {
+          "buckets": 4096,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied on the last virtual layers to reduce self-value bias.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA adapters",
+        "description": "Per-virtual-layer low-rank adapters to let shared blocks specialize across cycles.",
+        "parameters": {
+          "rank": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating component tested in ablations; reported to hurt with recurrence.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "partial RoPE",
+        "description": "Uses rotary positional embeddings only partially in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention / reduced KV heads in the transformer blocks.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int8/int6",
+        "bits": null,
+        "scope": "shared/recycled weights int8, single-use tensors int6"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "late quantization-aware training on the full pipeline"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "grad clip",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Depth recurrence / weight sharing across transformer blocks to fit more effective depth into the parameter budget",
+    "Noisy QAT: differentiable uniform noise matching int8 quantization error on recurrent core blocks",
+    "Empirical finding that quantization error compounds strongly through recurrence, motivating mixed-precision storage",
+    "Ablation result that 3x3 recurrent layouts outperform 2x5 loops in this setting",
+    "BigramHash as a strong additive feature for recurrent transformers",
+    "Documented negative results across multiple attempted techniques and hyperparameter variants"
+  ],
+  "artifact_size": "~1.5 MB"
+}

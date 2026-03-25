@@ -1,0 +1,132 @@
+{
+  "pr_number": 332,
+  "title": "Record: 12L Gradient-Guided Quant + Partial RoPE + LN Scale + EMA + XSA4 (val_bpb: 1.1320)",
+  "author": "saml212",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.132,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int7",
+        "bits": 5,
+        "scope": "all weights with gradient-guided per-tensor allocation"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary embeddings to only part of the head dimensions; remaining dimensions use position-free attention.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention removes self-value bias from attention output via orthogonal projection.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale_rule": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstandard",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Gradient-guided adaptive quantization ranks tensors by squared gradient magnitude during warmdown and assigns precision based on sensitivity.",
+        "parameters": {
+          "top_10_percent": "int7",
+          "middle_70_percent": "int6",
+          "bottom_20_percent": "int5"
+        }
+      }
+    }
+  ],
+  "compression": "zstandard",
+  "novel_contributions": [
+    "Gradient-guided adaptive quantization with per-tensor sensitivity ranking",
+    "Mixed-precision allocation across tensors (int7/int6/int5) to save artifact size",
+    "12-layer model enabled by quantization savings",
+    "Reduced batch size to increase optimization steps within the wallclock budget",
+    "Partial RoPE applied to only 16 of 64 dimensions",
+    "Layer-wise RMSNorm scaling (LN scale)",
+    "Exclusive Self Attention on the last 4 layers",
+    "EMA replacing SWA",
+    "Negative finding that Late QAT hurts at 12 layers due to throughput cost"
+  ],
+  "artifact_size": "15.7 MB"
+}

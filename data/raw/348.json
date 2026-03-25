@@ -1,0 +1,12 @@
+{
+  "number": 348,
+  "title": "Submission/qat bigram12k stride32",
+  "author": "EthanYangTW",
+  "body": "QAT + BigramHash(12288) + Stride 32 \u2014 1.1444 bpb\r\n\r\n  Body:\r\n  ## Summary\r\n  - QAT with STE (int5 MLP / int6 attn) reduces post-quantization degradation\r\n  - BigramHash increased from 10240 to 12288\r\n  - Eval stride reduced from 64 to 32\r\n  - Magnitude pruning 5%, SWA every 25 steps\r\n  - Artifact: 15.90MB\r\n\r\n  ## Results\r\n  - seed=2024: **val_bpb=1.14443**\r\n  - 8xH100 SXM, 6549 steps in 600s\r\n\r\n  ## Base\r\n  Built on `records/track_10min_16mb/2026-03-20_10L_Int5MLP_MuonWD04_SWA50`\r\n\r\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T15:22:55Z",
+  "updated_at": "2026-03-22T03:29:55Z",
+  "submission_readme": "# QAT + BigramHash(12288) + Stride 32\n\n## Summary\n\nBuilt on the current SOTA (`10L_Int5MLP_MuonWD04_SWA50`) with the following improvements:\n\n- **QAT (Quantization-Aware Training):** STE fake-quantize during training \u2014 int5 for MLP layers, int6 for attention. Reduces post-quantization degradation.\n- **BigramHash 12288:** Increased from 10240 to 12288 buckets for better bigram coverage.\n- **Eval stride 32:** Reduced from 64 to 32 for more overlapping context windows during evaluation.\n- **Magnitude pruning 5%:** Increased from 3% to improve compression ratio.\n- **SWA every 50 steps:** Checkpoint averaging during warmdown.\n\n## Architecture\n\n- 10 transformer layers, dim=512, 8 heads, 4 KV heads\n- 3x MLP with SmearGate\n- BigramHash(12288) with bigram_dim=128\n- Mixed quantization: int5 MLP, int6 attention\n- zstd-22 compression\n\n## Results\n\n```\nseed=2024: val_bpb=1.14443, artifact=15,902,583 bytes\n```\n\n## Command\n\n```bash\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

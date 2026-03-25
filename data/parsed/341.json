@@ -1,0 +1,139 @@
+{
+  "pr_number": 341,
+  "title": "Add Hybrid Depth-Recurrent Transformer submission",
+  "author": "tobiascanavesi",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.3323,
+  "architecture": "Hybrid Depth-Recurrent Transformer",
+  "quantization": "int8 quantization with FP16 tied embedding passthrough and hybrid shared/unique weights",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights with FP16 tied embedding passthrough"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Hybrid depth-recurrent transformer with 1 unique entry layer, 4 shared blocks looped 5 times, and 1 unique exit layer to reduce quantization compounding.",
+        "parameters": {
+          "unique_entry_layers": 1,
+          "shared_blocks": 4,
+          "loops": 5,
+          "unique_exit_layers": 1,
+          "effective_layers": 22
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections across the full effective depth.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-layer scalars",
+        "description": "Per-virtual-layer scalars controlling attention, MLP, residual mixing, and quantization gain.",
+        "parameters": {
+          "scalars": [
+            "attn_scale",
+            "mlp_scale",
+            "resid_mix",
+            "q_gain"
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.03,
+          "scalar_lr": 0.03,
+          "tied_embed_lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 1024
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Overtone spectral embedding initialization using SVD power-law spectrum shaping."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition residual mixing initialization with sigmoid-scheduled resid_mix."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FP16 tied embedding passthrough during int8 quantization.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Hybrid depth-recurrent transformer that keeps entry and exit layers unique while sharing only middle blocks",
+    "Reduction of int8 quantization error compounding in depth recurrence",
+    "Near-zero quantization gap compared with pure depth recurrence",
+    "U-Net skip connections across the full effective depth",
+    "Per-virtual-layer scalar controls for attention, MLP, residual mixing, and quantization gain",
+    "FP16 tied embedding passthrough during int8 quantization",
+    "Overtone spectral embedding initialization",
+    "Phase-transition residual mixing initialization"
+  ],
+  "artifact_size": "14.2 MB"
+}

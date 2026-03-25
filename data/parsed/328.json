@@ -1,0 +1,141 @@
+{
+  "pr_number": 328,
+  "title": "Non-record: MLX prototyping harness with validated technique stack (val_bpb=1.9588, Mac)",
+  "author": "kingjulio8238",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.9588,
+  "architecture": "Transformer",
+  "quantization": "int8+zlib with int6 per-row quantization and FP16 tied embedding passthrough",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses KV2 / GQA-style attention with reduced key/value heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expands MLP width to 3x, improving BPB versus 2x.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "decoupled_weight_decay": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral embedding init",
+        "description": "Overtone spectral embedding initialization using an SVD power-law spectrum."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition residual mixing initialization."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "compiled forward",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02,
+          "decoupled": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-eval mode with multiple evaluation configs per training run.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "VAL_MAX_TOKENS used for fast directional experiments.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Validated a technique stack on Mac MLX before H100-scale validation",
+    "Found near-zero quantization gap when combining FP16 tied embeddings with Muon weight decay",
+    "Demonstrated MLP 3x expansion improves BPB over MLP 2x",
+    "Validated sliding-window compiled evaluation for full FineWeb validation",
+    "Documented negative results for depth recurrence, DenseFormer DWA, eval-time loop scaling, and NTK-RoPE extrapolation",
+    "Explored multi-eval training runs and fast directional evaluation via VAL_MAX_TOKENS"
+  ],
+  "artifact_size": "12.3MB"
+}

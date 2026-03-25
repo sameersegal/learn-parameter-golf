@@ -1,0 +1,132 @@
+{
+  "pr_number": 681,
+  "title": "Non-record: BigramHash(4096) + Cosine EMA + LZMA-9",
+  "author": "Alfaxad",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4775,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Expanded bigram hash embedding table to capture richer local context.",
+        "parameters": {
+          "vocab_size": 4096
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "schedule": "cosine",
+          "start_decay": 0.99,
+          "end_decay": 0.999
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Earlier late QAT activation to adapt sooner during warmdown.",
+        "parameters": {
+          "threshold": 0.1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times MLP with LeakyReLU squared activation.",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Expanded BigramHash vocabulary from 2048 to 4096",
+    "Replaced fixed EMA decay with a cosine EMA schedule from 0.99 to 0.999",
+    "Activated late QAT earlier by lowering the threshold from 0.15 to 0.10",
+    "Increased LZMA compression preset from 6 to 9",
+    "Used ShinkaEvolve with GPT-5.4 and Gemini 3 Pro as mutation operators"
+  ],
+  "artifact_size": "7.9MB"
+}

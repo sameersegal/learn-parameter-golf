@@ -1,0 +1,170 @@
+{
+  "pr_number": 367,
+  "title": "Non-record: BitNet b1.58 - 68M ternary params, val_bpb=1.1770, systematic analysis of ternary limitations",
+  "author": "ksang123",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.177,
+  "architecture": "Transformer",
+  "quantization": "ternary QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary QAT",
+        "bits": 2,
+        "scope": "all projections"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BitLinear",
+        "description": "Ternary {-1, 0, 1} linear layers used for all attention and MLP projections with per-group absmax STE.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3.25x",
+        "description": "Widened MLP from 3x to 3.25x to add parameters at low artifact cost.",
+        "parameters": {
+          "hidden": 2496
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 6 KV heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Added skip connections in the network.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Used tied fp16 embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with a large base.",
+        "parameters": {
+          "base": 200000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Applied logit softcap to outputs.",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "longer_warmdown": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA/SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used in some ablations; found to have no effect for ternary models."
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Base-3 packing of ternary weights at 1.6 bits/parameter.",
+        "parameters": {
+          "bits_per_param": 1.6
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "fp16 scale simulation during training to match serialization precision and reduce roundtrip gap.",
+        "parameters": {
+          "roundtrip_gap": 0.0016
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Systematic negative-results analysis of techniques that break or do not help ternary models",
+    "Near-lossless ternary quantization roundtrip via fp16 scale simulation during training",
+    "Demonstrated that ternary prefers higher learning rate, no regularization, and longer warmdown",
+    "Showed that base-3 packing can store 68M ternary parameters in 15.88MB",
+    "Suggested int4 with late QAT as an unexplored middle ground"
+  ],
+  "artifact_size": "15.88MB"
+}

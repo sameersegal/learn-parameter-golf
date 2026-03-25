@@ -1,0 +1,158 @@
+{
+  "pr_number": 688,
+  "title": "Record: 5-expert Hedge Mixer + TTT (3-seed mean val_bpb=1.0745)",
+  "author": "RoyiRa",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0745,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram table used as part of the 5-expert context mixer / model additions.",
+        "parameters": {
+          "size": 6144,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied across all layers.",
+        "parameters": {
+          "layers": 11,
+          "window_size": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with LeakyReLU activation.",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 enabled in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0001,
+          "chunk_tokens": 131072,
+          "epochs": 3,
+          "polyak_decay": 0.998,
+          "frozen_blocks": 9
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 131072,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "adaptive_lr_max_mult": 3.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "5-expert Hedge/multiplicative-weights logistic context mixer blending neural, unigram, bigram, trigram, and entropy experts in log-probability space.",
+        "parameters": {
+          "eta": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "5-expert Hedge-based logistic context mixer",
+    "Online GPU-vectorized context mixing in log-probability space",
+    "Incremental n-gram tables built only from already-scored tokens",
+    "Score-first test-time training pipeline",
+    "GPTQ-calibrated model with int5 quantization and zstd compression"
+  ],
+  "artifact_size": "<15.5 MB"
+}

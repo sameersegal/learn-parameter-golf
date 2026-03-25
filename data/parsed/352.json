@@ -1,0 +1,194 @@
+{
+  "pr_number": 352,
+  "title": "Memory Tokens + Mixed Quantization (val_bpb: 1.1659)",
+  "author": "sp00mm",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1659,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT with fp16 embeddings and zstd roundtrip",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Memory Tokens",
+        "description": "64 learnable embedding vectors overwrite/prepend the first K positions of each sequence to provide a global context scratchpad accessible through causal attention.",
+        "parameters": {
+          "num_memory_tokens": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion in the transformer blocks.",
+        "parameters": {
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs to inject local context via BigramHashEmbedding.",
+        "parameters": {
+          "vocab_size": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned blend with the previous token at the embedding level.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position encoding to only part of the head dimensions, leaving the rest content-only.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN Scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "update_every_steps": 10
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 QAT",
+        "bits": null,
+        "scope": "MLP weights int5, attention weights int6, embeddings fp16"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128,
+          "seq_len": 1024,
+          "batched_windows": 256,
+          "compiled_forward_logits": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MTP auxiliary heads used during training and stripped before export.",
+        "parameters": {
+          "k": 2,
+          "alpha": 0.2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with fake int6 quantization (STE) when lr_scale < 0.1.",
+        "parameters": {
+          "quantization": "int6",
+          "method": "STE QAT"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Memory tokens: 64 learnable embedding vectors used as a global context scratchpad",
+    "A/B tested improvement from memory tokens (-0.014 BPB)",
+    "Mixed quantization with int5 MLP weights and int6 attention weights",
+    "Late QAT with fake int6 quantization",
+    "Batched sliding window evaluation with compiled forward_logits"
+  ],
+  "artifact_size": "15,070,662 bytes"
+}

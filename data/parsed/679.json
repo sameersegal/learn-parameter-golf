@@ -1,0 +1,91 @@
+{
+  "pr_number": 679,
+  "title": "Non-record: ASQU activation, Mixture of Convolutions, BankedLinear",
+  "author": "andrewmouldon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2164,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ASQU",
+        "description": "Asymmetric Squared Unit activation that learns a per-channel scaling for the negative branch, replacing ReLU^2.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Short Conv",
+        "description": "Applies short convolutions to the QKV path as a low-parameter architectural enhancement.",
+        "parameters": {
+          "k": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MoC",
+        "description": "Mixture of Convolutions: token-conditioned dynamic convolution formed as a mixture over shared basis kernels, applied to QKV.",
+        "parameters": {
+          "k": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BankedLinear",
+        "description": "Replaces QKV projections with a shared weight bank across layers, mixing learned matrices with fixed random projections.",
+        "parameters": {
+          "layers": 9,
+          "learned_projections": 3,
+          "fixed_random_projections": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP expansion adjustment",
+        "description": "Adjusted MLP multiplier to keep models within the 16MB limit while comparing architectural variants.",
+        "parameters": {
+          "baseline_mlp_mult": 2.0,
+          "bankedlinear_mlp_mult": 2.6
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "depth-aware initialization",
+        "description": "Depth-aware initialization of BankedLinear mixing coefficients on learned layers."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Explored learning the exponent in the squared activation instead of fixing it, with depth-dependent learned exponents.",
+        "parameters": {
+          "early_layers": 1.4,
+          "middle_layers": 1.8,
+          "late_layers": 2.2
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "ASQU activation: a per-channel generalization of ReLU^2 with learned negative-branch scaling.",
+    "Mixture of Convolutions (MoC): token-conditioned dynamic short convolutions using basis interpolation over shared kernels.",
+    "BankedLinear: shared weight bank across layers combining learned projections with fixed random projections.",
+    "Depth-aware initialization for BankedLinear mixing coefficients.",
+    "Empirical comparison of these architectural changes under a fixed 10k-step training budget."
+  ],
+  "artifact_size": "16MB"
+}

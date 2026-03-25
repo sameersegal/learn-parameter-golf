@@ -1,0 +1,12 @@
+{
+  "number": 370,
+  "title": "Add submission: Mixed Quantization + BigramHash + SWA (val_bpb 1.2421)",
+  "author": "SergheiBrinza",
+  "body": "10-layer Transformer with ReLU\u00b2 MLP 3x, BigramHash embeddings, mixed INT6 quantization with STE, Stochastic Weight Averaging, and zstd-22 compression.\r\n\r\n- val_bpb: 1.2421 (post-roundtrip)\r\n- Artifact: 13.28 MB\r\n- Training: 11,070 steps in 600s on 8xH100 SXM",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T20:43:26Z",
+  "updated_at": "2026-03-21T20:43:26Z",
+  "submission_readme": "# Optimized Baseline with Mixed Quantization and BigramHash\n\nTried a bunch of things on top of the baseline script. Some worked, some didn't. Here's what stuck.\n\n## What I changed\n\n**Architecture:**\n- Bumped to 10 layers (from 9) with U-Net skip connections\n- ReLU\u00b2 MLP with 3x expansion (hidden=1536) \u2014 same param count per layer as SwiGLU but faster since it's only 2 matmuls\n- Added BigramHash embeddings \u2014 hash table of 10240 bigram pairs mapped to 128-dim vectors, projected to model dim. Gives the model cheap access to \"what was the previous token\" without burning attention compute on it\n- Orthogonal init for all weight matrices, SVD-based init for embeddings\n\n**Quantization:**\n- Mixed precision: INT6 for all weight matrices, INT8 for embeddings\n- Straight-Through Estimator during training so the model learns to deal with quantization from the start\n- zstd level 22 compression instead of zlib \u2014 squeezes out a few more percent\n\n**Training:**\n- Muon optimizer with weight decay 0.04 and gradient clipping at 0.3\n- Stochastic Weight Averaging over the last 50% of training (every 50 steps) \u2014 this smooths out the weight distribution which helps quantization a lot\n- Momentum warmup from 0.85 to 0.99 over 1500 steps\n\n## Result\n\n- **val_bpb: 1.2421** (post-roundtrip)\n- Pre-roundtrip was 1.1924, so quantization costs about 0.05 bpb\n- 11,070 steps in 600 seconds on 8xH100 SXM (~54 ms/step)\n- Artifact: 13.28 MB (well under 16 MB limit)\n\n## What I'd do differently\n\nThe main bottleneck is quantization degradation. Pre-roundtrip score is 1.19 which would be competitive, but INT6 quantization adds ~0.05 bpb. The top submissions get this down to 0.01-0.02. I think better STE scheduling or per-channel quantization could help here.\n\nAlso didn't get to try longer training with 80 shards \u2014 only used 10 due to disk constraints on the cloud setup. More data would probably help.\n"
+}

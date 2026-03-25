@@ -1,0 +1,128 @@
+{
+  "pr_number": 345,
+  "title": "Non-record: DART - Differential Attention Recurrent Transformer (Student submission, Kerala)",
+  "author": "anandks2006",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.85221128,
+  "architecture": "Differential Attention Recurrent Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shared-weight recurrent transformer block reused across multiple loops instead of stacking independent layers.",
+        "parameters": {
+          "loops": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Differential Attention V2",
+        "description": "Uses two attention calculations and subtracts one from the other to suppress irrelevant tokens.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "low-rank Q delta",
+        "description": "Per-loop low-rank query modifications to specialize each recurrent pass.",
+        "parameters": {
+          "loops": 4,
+          "parameters": 65536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "resid_mix",
+        "description": "Learned balance between current hidden state and original input to reduce drift across loops.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "loop position embeddings",
+        "description": "Adds a learned embedding indicating which recurrent pass the block is on.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Early loop hidden states are saved and later loops receive them in reverse order.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "memory tokens",
+        "description": "Learned global tokens that carry information across loops like a shared notepad.",
+        "parameters": {
+          "count": 16
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Deep supervision with loss computed after every recurrent loop, not only the final output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "dropout",
+        "parameters": {
+          "loop_dropout": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 256,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Shared-weight recurrent transformer design for repeated computation over the same block",
+    "Differential Attention V2 integration",
+    "Per-loop low-rank Q delta specialization",
+    "resid_mix mechanism to stabilize recurrent passes",
+    "Loop position embeddings",
+    "U-Net style skip connections across loops",
+    "Global memory tokens shared across loops",
+    "Deep supervision at every loop",
+    "Quantization-aware training matched to int8 submission quantization",
+    "Loop dropout discovered as a fix for shared-weight gradient conflict"
+  ],
+  "artifact_size": "3.55MB"
+}

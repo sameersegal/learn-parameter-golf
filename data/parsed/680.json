@@ -1,0 +1,151 @@
+{
+  "pr_number": 680,
+  "title": "Add non-record 10min/16MB submission: Wavelet-Lite PR549 Parallel Muon (1.1483)",
+  "author": "bro4all",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1482555,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "wavelet-lite mixer",
+        "description": "Adds a tiny causal Haar-style wavelet-lite mixer inside each residual block, splitting the first 16 post-attention channels into low/high bands using the current token and a one-token lagged copy, with a learned low-band drift scale.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Trims the bigram table to fit the byte budget by using a reduced bigram vocabulary.",
+        "parameters": {
+          "bigram_vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TTT disabled",
+        "description": "Removes test-time training from the final budgeted run.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "enabled": true,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "wavelet init",
+        "description": "Uses WAVELET_INIT=0.25 for the wavelet-lite mixer."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses gated attention, value residuals, late QAT thresholding, and local NVMe staging for data/tokenizer to meet the 10-minute training budget.",
+        "parameters": {
+          "gated_attention": true,
+          "value_residual": true,
+          "late_qat_threshold": 0.15,
+          "max_wallclock_seconds": 600
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Adds a tiny causal wavelet-lite mixer inside each residual block",
+    "Uses a PR #549-derived Parallel Muon stack with architectural changes rather than a pure retune",
+    "Disables TTT in the final budgeted run to fit the 16MB cap",
+    "Trims the bigram table to BIGRAM_VOCAB_SIZE=1024 to reduce artifact size",
+    "Recovers the final int6 artifact and exact roundtrip evaluation from a persisted full-precision checkpoint"
+  ],
+  "artifact_size": "15,859,711 bytes"
+}

@@ -1,0 +1,150 @@
+{
+  "pr_number": 327,
+  "title": "Submission TrigramHash + PartialRoPE + HeadTemp + stride32 (val_bpb: 1.1450)and",
+  "author": "Ananddna",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.145,
+  "architecture": "Transformer",
+  "quantization": "int5 MLP / int6 attention",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Adds learned hashed embeddings for consecutive token triplets to capture 3-token patterns as atomic units.",
+        "parameters": {
+          "buckets": 8192,
+          "dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of each attention head dimension, leaving the rest position-free.",
+        "parameters": {
+          "fraction": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Per-head temperature scaling",
+        "description": "Learns a separate temperature parameter for each attention head to vary attention sharpness.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses hashed embeddings for token pairs as a complementary n-gram feature.",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating component used in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x expanded MLP hidden size.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Shares embedding weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections in a U-Net-like pattern across layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frac": 0.4,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "TrigramHashEmbedding for hashing token triplets into learned embeddings",
+    "Partial RoPE applied to only 50% of head dimensions",
+    "Per-head temperature scaling in attention",
+    "Reduced evaluation stride from 64 to 32",
+    "LoRA-based test-time training infrastructure"
+  ],
+  "artifact_size": "~15.9 MB"
+}

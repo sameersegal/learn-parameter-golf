@@ -1,0 +1,12 @@
+{
+  "number": 330,
+  "title": "Non-record: 11L Int6 + Online Logit Bias (val_bpb=1.1609)",
+  "author": "bopmite",
+  "body": "",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T09:09:45Z",
+  "updated_at": "2026-03-21T09:09:45Z",
+  "submission_readme": "Non-record submission: 11L int6 with Online Logit Bias eval technique.\n\n## result\n\n**val_bpb: 1.1609** (sliding window, stride=64) | 13.9 MB artifact | 8xH100 SXM, 600s\n\nNote: ran without FlashAttention 3 (SDPA fallback). FA3 would improve step time and final score.\n\n| metric | value |\n|--------|-------|\n| pre-quant val_bpb | 1.1709 |\n| int6 roundtrip val_bpb | 1.1829 |\n| int6 sliding val_bpb (s64) | **1.1609** |\n| steps | 7,620 / 20,000 (wallclock cap) |\n| step time | 78.7ms |\n| artifact | 13,977,633 bytes |\n\n## novel technique: online logit bias (OLB)\n\nLearned per-token bias vector added to logits during sliding window eval. Updated after each scored batch using the exact CE gradient: `b -= lr * (softmax(z+b) - onehot(y))`. Only uses already-scored tokens to update - compliant with the TTT rules. Zero model parameters, near-zero compute overhead. Strictly generalizes frequency counting since the gradient naturally captures frequency information plus systematic prediction biases.\n\n`OLB_LR=0.1` enables it. `OLB_LR=0` disables. OLB was not enabled in this run - pending further compute to validate.\n\n## training stack\n\n11 layers, 512 dim, 3x MLP (1536 hidden), relu^2, GQA 8/4 heads, sp1024 tied embeddings, int6 per-row quant + zstd, SmearGate, BigramHash(2048x128), OrthoInit + muP, seq 2048 + NTK RoPE, Muon WD 0.04, EMA (0.997), XSA on last 4 layers, Partial RoPE (16/64 dims), LN Scale, Late QAT.\n\n## command\n\n```bash\nOLB_LR=0 SEED=1337 EVAL_STRIDE=64 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## files\n\n- `train_gpt.py`\n- `submission.json`\n- `requirements.txt`\n"
+}

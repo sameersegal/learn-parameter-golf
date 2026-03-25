@@ -1,0 +1,122 @@
+{
+  "pr_number": 686,
+  "title": "Record:  Depth Recurrence (layers 4 and 5 repeated): val_bpb 1.1182",
+  "author": "msisovic",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1182,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Re-executes mid-network layers with independent learnable block scalars to create more virtual layers without increasing model size much.",
+        "parameters": {
+          "recur_layers": [
+            4,
+            5
+          ],
+          "physical_layers": 11,
+          "virtual_layers": 13
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_from": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2,
+          "untie": false
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "matrix_weight_decay": 0.04,
+          "adam_weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses independent learnable block scalars for recurrent layer passes.",
+        "parameters": {
+          "added_params": "~2K"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Dual depth recurrence on layers 4 and 5 to create 13 virtual layers from 11 physical layers",
+    "Independent learnable block scalars for repeated layer passes",
+    "Achieves near-independent-depth performance gains while staying under the artifact budget",
+    "Confirms tied TTT performs equivalently to untied for recurrent layers"
+  ],
+  "artifact_size": "~15.9MB"
+}

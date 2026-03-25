@@ -1,0 +1,128 @@
+{
+  "pr_number": 364,
+  "title": "Record: Batch-Optimized 524K + Warmdown 4000 (val_bpb 1.1497)",
+  "author": "shikhar1729",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1497,
+  "architecture": "10L MLP3x",
+  "quantization": "int5/int6 + zstd-22",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "10-layer model with 3x MLP blocks as part of the base architecture.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism used in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component with 10240 buckets.",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for model weights."
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 15,
+          "freeze_blocks": 0,
+          "batch_seqs": 16
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Increased training batch tokens to 524288 to obtain more optimizer steps per wall-clock minute.",
+    "Retuned warmdown to 4000 iterations to match the higher step count from the smaller batch.",
+    "Applied full-weight test-time training on the validation distribution after quantization roundtrip.",
+    "Used sliding window evaluation with stride 64.",
+    "Built on the prior #1 entry architecture with no code changes, only hyperparameter changes."
+  ],
+  "artifact_size": "15.93MB"
+}

@@ -1,0 +1,139 @@
+{
+  "pr_number": 347,
+  "title": "LongContext 4096 + Full SOTA Stack & QAT Int4 \u2192 16 Layers",
+  "author": "FlashyFlash3011",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int4 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "context_length": 3840
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.98,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 4,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "FP16 tied embedding export to avoid int8 errors on input/output paths",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware RoPE with adjusted base for long-context training",
+        "parameters": {
+          "base": 40000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 query heads and 4 key/value heads",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections in a U-Net-like layout",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Overtone spectral embedding initialization with power-law singular values"
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition residual mixing initialization with sigmoid schedule"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 1600,
+          "warmup_steps": 400
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Long-context training with 4096-token sequences and increased effective evaluation context per token",
+        "parameters": {
+          "context_tokens": 3840
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Training at 4096-token sequence length with sliding-window evaluation",
+    "Combining long-context training with the full SOTA stack",
+    "NTK-aware RoPE scaling to 40000 for 4096 context",
+    "Re-tuned learning rate and Muon momentum for long-context training",
+    "QAT int4 nibble-packing to fit 16 transformer layers in the 16MB budget",
+    "STE-based quantization-aware training with gradual clustering near int4 grid points",
+    "Int4 roundtrip assertion before export to verify packing correctness"
+  ],
+  "artifact_size": "~14.7 MB"
+}

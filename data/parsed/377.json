@@ -1,0 +1,141 @@
+{
+  "pr_number": 377,
+  "title": "Hybrid INL + Sort-Split MoE (1.41/1.46 bpb TTT, 15.5MB, 1xH100)",
+  "author": "Complexity-ML",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4072,
+  "architecture": "Hybrid Transformer",
+  "quantization": "int8+zlib",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA + RoPE",
+        "description": "Classical grouped-query attention with rotary positional embeddings in early layers.",
+        "parameters": {
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "INL BetaMu attention",
+        "description": "Error-driven O(n) attention using causal cumsum over (x - mu) instead of QKV attention matrices.",
+        "parameters": {
+          "layers": [
+            5,
+            6,
+            7,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Sort-Split MoE",
+        "description": "Deterministic argsort + fixed split routing with 4 experts, keeping all experts busy and compatible with fullgraph compilation.",
+        "parameters": {
+          "experts": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ALiBi",
+        "description": "Learned slopes per head used as positional encoding in INL layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Token-routed MoE",
+        "description": "Deterministic token_id % 4 routing across 4 experts with mask-multiply pattern.",
+        "parameters": {
+          "experts": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "PID Dynamics / INL Ultra-Lite",
+        "description": "Learnable equilibrium mu traverses all layers with fixed alpha/beta/gate and clamped velocity for stabilizing hidden state trajectories.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaces relu^2 activation with SwiGLU in expert MLPs.",
+        "parameters": {
+          "experts": 4
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warm restarts (SGDR)",
+        "parameters": {
+          "cycle_lengths": [
+            5000,
+            10000,
+            20000
+          ],
+          "peak_lr_decay": 0.7
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 23
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Hybrid architecture combining classical GQA attention with INL error-driven O(n) attention",
+    "Sort-and-split MoE routing with deterministic argsort + fixed split",
+    "Token-routed MoE with perfectly balanced 4-expert routing",
+    "PID-style dynamics with a learnable equilibrium mu traversing all layers",
+    "ALiBi positional encoding in INL layers",
+    "Cosine warm restarts learning-rate schedule",
+    "SWA checkpoint averaging"
+  ],
+  "artifact_size": "15.5MB"
+}

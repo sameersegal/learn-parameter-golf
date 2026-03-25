@@ -1,0 +1,12 @@
+{
+  "number": 356,
+  "title": "Non-record: PR315 repro on 1xH100 PCIe, int6+zstd (val_bpb=1.8338)",
+  "author": "sjp611",
+  "body": "## Summary\r\n- Based on PR #315 recipe (XSA+EMA+PartialRoPE+LateQAT), adapted for 1xH100 PCIe\r\n- Flash Attention 2 instead of FA3\r\n- Training schedule adjusted for 1GPU (WARMDOWN_ITERS=400, MOMENTUM_WARMUP=200)\r\n- Sliding-window val_bpb=1.8338, artifact 10.0MB (int6+zstd)\r\n\r\n## Notes\r\n- 1GPU limits to ~492 steps (vs ~6200 on 8xH100)\r\n- QAT had only ~40 steps of adaptation due to limited training budget\r\n\r\n## Test plan\r\n- [x] Training completes within 10min wallclock\r\n- [x] Artifact under 16MB (10.0MB)\r\n- [x] int6+zstd roundtrip eval passes\r\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T18:19:12Z",
+  "updated_at": "2026-03-22T13:36:23Z",
+  "submission_readme": "## PR315 Recipe Reproduction on 1xH100 PCIe\n\nReproduction of PR #315 recipe on a single H100 PCIe GPU (RunPod, $2.39/hr).\nUses Flash Attention 2 instead of FA3.\n\n### Results\n\n| Metric | Value |\n|--------|-------|\n| Sliding-window BPB | **1.8338** |\n| Pre-quant BPB | 1.4192 |\n| Post-quant roundtrip BPB | 1.8398 |\n| Steps | 492 |\n| Wallclock | 600s (10min) |\n| Artifact size | 10.0MB (int6+zstd) |\n| Peak memory | 20785 MiB |\n\n### Notes\n\n- 1xH100 PCIe limits training to ~492 steps (vs ~6200 on 8xH100 SXM)\n- QAT enabled at step 452 with only ~40 steps of adaptation, causing higher quantization loss (+0.42 BPB)\n- On 8xH100 SXM this recipe achieves ~1.13 BPB with ~6200 steps and proper QAT convergence\n\n### Configuration\n\n- 11 layers, 512 dim, 8 heads, 4 KV heads, 3x MLP\n- XSA (last 4 layers), EMA 0.997, Partial RoPE (16/64 dims)\n- LN Scale, Late QAT (threshold 0.1)\n- BigramHash 2048, SmearGate\n- Muon optimizer + weight decay 0.04\n\n### Run Command\n\n```bash\npip install zstandard flash-attn\n\nNUM_LAYERS=11 BIGRAM_VOCAB_SIZE=2048 XSA_LAST_N=4 \\\nEMA_ENABLED=1 EMA_DECAY=0.997 SWA_ENABLED=0 \\\nROPE_DIMS=16 LN_SCALE=1 LATE_QAT=1 QAT_THRESHOLD=0.1 \\\nMUON_WD=0.04 ADAM_WD=0.04 \\\nMATRIX_LR=0.025 SCALAR_LR=0.025 TIED_EMBED_LR=0.035 \\\nMUON_MOMENTUM=0.99 MUON_MOMENTUM_WARMUP_START=0.92 \\\nMUON_MOMENTUM_WARMUP_STEPS=200 WARMDOWN_ITERS=400 \\\nITERATIONS=9000 MAX_WALLCLOCK_SECONDS=600 EVAL_STRIDE=64 \\\ntorchrun --standalone --nproc_per_node=1 train_gpt.py\n```\n\n### Hardware\n\n- RunPod 1xH100 PCIe 80GB ($2.39/hr)\n"
+}

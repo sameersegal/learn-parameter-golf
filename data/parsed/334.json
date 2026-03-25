@@ -1,0 +1,177 @@
+{
+  "pr_number": 334,
+  "title": "Non-record: 11L PartialRoPE + LNScale + EMA + SWA + TTT (1xH100 107min, val_bpb=1.2207, 15.4MB)",
+  "author": "nathon-lee",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2207,
+  "architecture": "GPT",
+  "quantization": "uniform int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position encoding to only a subset of head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_head_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gate blending current and previous token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram context embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections with learnable weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x ReluSquared MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "RMSNorm damped by 1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.95,
+          "used_for": "scalars/embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": "last 40% of training"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 3,
+          "frozen_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP output-projection scaling."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer 512-dim GPT architecture with 8 attention heads and 4 KV heads",
+    "Partial RoPE applied to only 16 of 64 head dimensions",
+    "LN Scale using RMSNorm damped by 1/sqrt(layer+1)",
+    "SmearGate token blending mechanism",
+    "BigramHash context embeddings with 2048 buckets and 64 dimensions",
+    "U-Net style skip connections with learnable weights",
+    "Muon optimizer combined with Adam for embeddings/scalars",
+    "EMA plus SWA weight averaging",
+    "Uniform int5 quantization with zstd-22 compression",
+    "Sliding-window evaluation and full-model test-time training"
+  ],
+  "artifact_size": "15.4 MB"
+}
