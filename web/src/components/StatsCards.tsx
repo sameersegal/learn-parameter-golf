@@ -1,15 +1,16 @@
-import { submissions, getRecords, getBestBpb, getUniqueAuthors } from "@/lib/data";
+import { submissions, getBestBpb, getTechniqueCount } from "@/lib/data";
+import { DEEP_DIVES } from "@/content/deep-dives/registry";
 
 export default function StatsCards() {
-  const records = getRecords();
   const bestBpb = getBestBpb();
-  const uniqueAuthors = getUniqueAuthors();
+  const techniqueCount = getTechniqueCount();
+  const deepDiveCount = DEEP_DIVES.filter((dd) => dd.sections.length > 0).length;
 
   const stats = [
-    { label: "Total PRs", value: submissions.length },
-    { label: "Records", value: records.length },
-    { label: "Best BPB", value: bestBpb?.toFixed(4) ?? "N/A" },
-    { label: "Authors", value: uniqueAuthors },
+    { label: "PRs Processed", value: submissions.length },
+    { label: "Best BPB Score", value: bestBpb?.toFixed(4) ?? "N/A" },
+    { label: "Techniques", value: techniqueCount },
+    { label: "Deep Dives", value: deepDiveCount },
   ];
 
   return (

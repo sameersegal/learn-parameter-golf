@@ -25,4 +25,5 @@ export const NAV_LINKS = [
   { href: "/techniques", label: "Techniques" },
   { href: "/learn", label: "Learn" },
   { href: "/emerging", label: "Emerging" },
+  { href: "/prs", label: "PRs" },
 ];

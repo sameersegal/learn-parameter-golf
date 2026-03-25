@@ -23,3 +23,11 @@ export function getBestBpb(): number | null {
 export function getUniqueAuthors(): number {
   return new Set(submissions.map((s) => s.author)).size;
 }
+
+export function getTechniqueCount(): number {
+  let count = 0;
+  for (const cards of Object.values(techniqueIndex.categories)) {
+    count += cards.length;
+  }
+  return count;
+}
