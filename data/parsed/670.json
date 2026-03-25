@@ -1,0 +1,152 @@
+{
+  "pr_number": 670,
+  "title": "Non-record: Negative results \u2014 hardware alignment & quantization on 8xH100",
+  "author": "abaybektursun",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1171,
+  "architecture": "11L d=512 Transformer",
+  "quantization": "Full GPTQ with additional experiments in SpinQuant/Hadamard, mixed int5/int8, Soft-Round QAT, and selective pruning",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "SpinQuant/Hadamard",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int8",
+        "bits": 5,
+        "scope": "per-layer"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Soft-Round QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "selective pruning",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA to all 11 layers instead of only the last 4 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning to inject identity information into deep attention layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gating in attention",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QKV fusion",
+        "description": "Fused 8Q/4KV grouped-query attention projection",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.08
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "experiments": 22
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "torch.compile-based kernel fusion and hardware-aligned optimization attempts including CUTLASS SM90, fused Triton GEMM, FP8 training, custom CUDA, fused norm+residual, and stale-process mitigation",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Systematic negative-results study of 30+ optimization experiments on an 8xH100 setup",
+    "Demonstration that torch.compile (PyTorch 2.9.1) already fuses most relevant patterns",
+    "Evidence that cuBLAS is near the hardware limit for K=512 in this setting",
+    "Finding that quantization quality matters more than kernel engineering for this competition",
+    "Comparison of SpinQuant/Hadamard, mixed int5/int8, Soft-Round QAT, and selective pruning",
+    "Evaluation of architecture changes such as XSA-all, VRL, Gated Attention, larger models, batch size changes, and shard ordering",
+    "Observation that stale nohup+torchrun processes can silently degrade performance"
+  ],
+  "artifact_size": "16MB"
+}

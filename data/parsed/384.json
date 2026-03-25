@@ -1,0 +1,138 @@
+{
+  "pr_number": 384,
+  "title": "Non-record: Meta-TTT + Cache/OGD Eval Stacking + Tokenizer Ablation",
+  "author": "anantdgoel",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2882,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Architectural gating modification used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature/module used in the model.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon": 0.04,
+          "adam": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Eval-time unigram cache mixture combined with online gradient descent on a vocab bias vector.",
+        "parameters": {
+          "cache_lambda": 0.02,
+          "cache_decay": 0.995,
+          "ogd_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MAML-style meta-test-time training during training to optimize initialization for later TTT adaptation.",
+        "parameters": {
+          "meta_loss_weight": 0.5,
+          "inner_lr": 0.03,
+          "start_frac": 0.5,
+          "every": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tokenizer optimization using SentencePiece BPE with modified splitting settings and longer max token length.",
+        "parameters": {
+          "split_digits": false,
+          "split_by_unicode_script": false,
+          "split_by_number": false,
+          "max_sentencepiece_length": 64,
+          "vocab_size": 8192
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "MAML-style Meta-TTT during training to optimize initialization for test-time adaptation",
+    "Eval-time stacking of unigram cache mixture with online gradient descent on a vocab bias vector on top of SGD TTT",
+    "Tokenizer optimization ablation using modified SentencePiece BPE settings",
+    "Controlled ablations comparing meta-TTT, cache+OGD stacking, and tokenizer changes"
+  ],
+  "artifact_size": "13.2 MB"
+}

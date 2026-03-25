@@ -1,0 +1,183 @@
+{
+  "pr_number": 669,
+  "title": "Add TRN hybrid non-record submission (1.4942 bpb, 1x RTX 5090)",
+  "author": "amabito",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4942,
+  "architecture": "TRN hybrid",
+  "quantization": "int5 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5 QAT",
+        "bits": 5,
+        "scope": "all matrix weights; embeddings remain fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TRN hybrid",
+        "description": "10-layer interleaved hybrid model combining 7 TRN layers with 3 causal attention layers for pattern compression plus exact retrieval.",
+        "parameters": {
+          "layers": 10,
+          "trn_layers": 7,
+          "attention_layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Token-pair hash table added to the embedding stack to improve representation capacity.",
+        "parameters": {
+          "vocab_size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention used in the attention layers.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "lr": 0.04,
+          "scope": "matrices only"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.05,
+          "beta1": 0.9,
+          "beta2": 0.95,
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "start": "50% of training"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04,
+          "scope": "Muon matrices only"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Kogge-Stone parallel prefix scan over complex-valued oscillators implemented in pure PyTorch for TRN recurrence.",
+        "parameters": {
+          "scan_type": "Kogge-Stone",
+          "implementation": "pure PyTorch"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Token shift enabled in RWKV-6 style pre-resonance mixing.",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU squared activation with PCG lambda regularization-like setting.",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2",
+          "pcg_lambda": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "chunk": 256
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Hybrid architecture combining TRN recurrence with periodic causal attention layers",
+    "Complex-valued oscillator recurrence with learned frequency, phase, amplitude, and decay",
+    "Kogge-Stone parallel prefix scan implementation in pure PyTorch without Triton or custom CUDA",
+    "Int5 QAT under a 16 MB artifact constraint",
+    "BigramHash token-pair embedding augmentation",
+    "Detailed analysis of int5 quantization collapse in oscillatory recurrence parameters",
+    "Interleaved TRN/attention layer layout for balancing compression and exact retrieval"
+  ],
+  "artifact_size": "15.28 MB"
+}

@@ -1,0 +1,162 @@
+{
+  "pr_number": 672,
+  "title": "Record: 30ep Cosine TTT on LeakyReLU\u00b2 stack (3-seed mean val_bpb=1.0781)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0781,
+  "architecture": "Transformer",
+  "quantization": "Int6 + zstd-22",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2 stack",
+        "description": "11-layer Transformer stack using LeakyReLU(0.5) squared MLPs with several custom architectural components.",
+        "parameters": {
+          "layers": 11,
+          "d_model": 512,
+          "gqa_heads": "8/4",
+          "mlp_multiplier": 3,
+          "bigram_hash": 2048,
+          "partial_rope_dims": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component used in the model.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA4",
+        "description": "Custom attention-like architectural component.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied only to part of the representation.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV GQA",
+        "description": "Grouped-query attention with reduced KV heads.",
+        "parameters": {
+          "heads": "8/4"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 30,
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "lr_schedule": "cosine decay",
+          "per_layer_lr_groups": {
+            "mlp.proj": 3.0,
+            "mlp.fc": 0.5
+          }
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "phase": "TTT",
+          "epochs": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Increased TTT epochs to 30 while keeping the architecture identical to PR #518",
+    "Achieved a 3-seed mean validation BPB of 1.0781",
+    "Used cosine-decayed test-time training with per-layer learning-rate groups",
+    "Maintained artifact size under 16 MB"
+  ],
+  "artifact_size": "15.62 MB"
+}

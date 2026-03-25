@@ -1,0 +1,227 @@
+{
+  "pr_number": 383,
+  "title": "Record: 11L Full Stack + XSA4 + Tight SWA + Late QAT (val_bpb=1.1320)",
+  "author": "joelnishanth",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.132,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA to the last 4 layers in a GQA-aware, zero-allocation form.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Used partial rotary positional embeddings with NTK-aware scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width by 3x with relu-squared activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query attention with 4 KV heads out of 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Included SmearGate as part of the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added BigramHash with 2048 buckets and 128-dimensional embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embedding",
+        "description": "Shared value embeddings were used in layers 9 and 10.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with projection scaling."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval_steps": 50,
+          "threshold_scale": 0.2,
+          "checkpoints": 12
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "MLP + attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "iters": 3000,
+          "wallclock_based": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT applied when learning-rate scale dropped below 0.1.",
+        "parameters": {
+          "threshold_lr_scale": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Used FlashAttention 3 with FA2 fallback.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer transformer with 512 hidden size and GQA",
+    "XSA on the last 4 layers",
+    "Partial RoPE with NTK-aware scaling",
+    "U-Net skip connections",
+    "SmearGate and BigramHash features",
+    "Shared Value Embedding in later layers",
+    "Tight SWA during late training",
+    "Late QAT with STE int6",
+    "FlashAttention 3 with FA2 fallback",
+    "Orthogonal initialization with projection scaling"
+  ],
+  "artifact_size": "15,753,020 bytes"
+}

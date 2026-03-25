@@ -1,0 +1,94 @@
+{
+  "pr_number": 412,
+  "title": "WIP: Shared depth training",
+  "author": "tranphat180603",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int5 with fp16 keep patterns",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares only the MLP weights across logical layers while keeping attention and control parameters unique per logical layer.",
+        "parameters": {
+          "layers": 10,
+          "encoder_layers": 5,
+          "decoder_layers": 5,
+          "shared_mlp_pools": 6
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5 with fp16 keep patterns",
+        "bits": null,
+        "scope": "shared MLP pools int6, ordinary MLP weights int5, selected tensors fp16"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonWD04"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 50
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses shared-depth training with repeated MLP id patterns across encoder and decoder blocks to reduce parameter count without changing the 10 logical-layer topology.",
+        "parameters": {
+          "shared_encoder_mlp_ids": [
+            0,
+            1,
+            2,
+            0,
+            1
+          ],
+          "shared_decoder_mlp_ids": [
+            0,
+            1,
+            2,
+            0,
+            1
+          ]
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Shared only the MLP weights across logical layers while keeping attention/control parameters unique.",
+    "Kept the original 10 logical-layer topology with 5 encoder and 5 decoder layers.",
+    "Used 6 unique MLP pools total via repeated encoder/decoder MLP id patterns.",
+    "Exported shared MLP pools as int6 while keeping ordinary MLP weights on the int5 path.",
+    "Spent saved bytes on gentler serialization rather than increasing model capacity."
+  ],
+  "artifact_size": "16MB"
+}

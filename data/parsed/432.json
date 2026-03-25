@@ -1,0 +1,101 @@
+{
+  "pr_number": 432,
+  "title": "Add non-record 1x5090 autoresearch submission with two-campaign analysis",
+  "author": "jadechip",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.529478563,
+  "architecture": "GPT",
+  "quantization": "int6 export with targeted fp16/fp16-like precision spends and attention QAT-off during training",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP-only export / model weights with targeted fp16 exceptions"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reduced repeated/shared compute and shifted capacity into unique late tail blocks; explored compact carrier plus deeper unique tail.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "q_proj",
+        "description": "Used low-rank q_proj on most blocks, with full-rank q_proj restored only on the final tail block.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept tied embeddings in fp16 export on the final line.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 960,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "short-to-full context warmup",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Shrank the global update shape from 4 x 30720 to 3 x 30720 and then 2 x 30720.",
+        "parameters": {
+          "from": "4 x 30720",
+          "to": "2 x 30720"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Disabled attention fake quant during training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Delayed MLP fake quant until the full-context boundary.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Git-native autoresearch loop that commits wins and reverts losers as search memory",
+    "Two-campaign analysis showing a trajectory from 1.733958794 to 1.535119154 with a best numeric run of 1.528664372",
+    "Use of low-rank q_proj on most blocks to buy compute for better-performing components",
+    "Targeted precision spending, including full-rank q_proj only on the final tail block and fp16 tied embeddings",
+    "Int6 MLP-only export to reclaim artifact budget for stronger tail capacity",
+    "Short-to-full context warmup and staged fake-quant changes to improve training efficiency"
+  ],
+  "artifact_size": "9,190,936 bytes"
+}

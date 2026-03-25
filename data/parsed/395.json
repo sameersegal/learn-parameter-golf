@@ -1,0 +1,135 @@
+{
+  "pr_number": 395,
+  "title": "Add MaxParams6L_120 submission (1.2374 BPB) to track_non_record_16mb",
+  "author": "NishantDahal",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2374,
+  "architecture": "Transformer",
+  "quantization": "INT8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth reduction / encoder-decoder split",
+        "description": "6-layer encoder-decoder architecture with 3 encoder and 3 decoder layers plus learned skip connections, instead of the usual 9-11 layers.",
+        "parameters": {
+          "layers": 6,
+          "encoder_layers": 3,
+          "decoder_layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Replaced universal ReLU-squared MLP with a SwiGLU feedforward block.",
+        "parameters": {
+          "hidden_size": 1280
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Used untied input and output embeddings instead of tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used full multi-head attention with one KV head per query head instead of grouped-query attention.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-dimension control parameters",
+        "description": "Added learned residual mixing, attention scaling, MLP scaling, and query gain controls.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.045,
+          "embed_lr": 0.6
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Learned per-dimension residual mixing, attention/MLP scaling, and query gain control tensors stored in fp32 through quantization.",
+        "parameters": {
+          "fp32_control_tensors": true
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "6-layer encoder-decoder architecture with learned skip connections",
+    "SwiGLU MLP instead of ReLU-squared",
+    "Untied embeddings with very high embedding learning rate",
+    "Full multi-head attention with 8 KV heads instead of GQA",
+    "Per-dimension learned control parameters for residual, attention, MLP, and query scaling",
+    "INT8 quantization combined with zlib compression",
+    "Training at sequence length 2048",
+    "Weight decay tuned to improve both quality and artifact size"
+  ],
+  "artifact_size": "13.5MB"
+}

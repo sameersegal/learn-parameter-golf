@@ -1,0 +1,163 @@
+{
+  "pr_number": 389,
+  "title": "Record: 11L Int5-All + XSA5 + EMA + 10% Pruning (val_bpb=1.1466)",
+  "author": "trasnake87",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1466,
+  "architecture": "Transformer",
+  "quantization": "uniform int5 quantization for all weights (MLP + attention), with late QAT / int5 STE fake-quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all weights (MLP and attention)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 5 layers",
+        "parameters": {
+          "layers": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the head dimensions",
+        "parameters": {
+          "dimensions": 16,
+          "total_head_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing module used as part of the architecture",
+        "parameters": {
+          "hash_size": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3x",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP output scaling"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "10% magnitude pruning after EMA averaging and before quantization",
+        "parameters": {
+          "pruning_fraction": 0.1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "final ~5% of training"
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Uniform int5 quantization for both MLP and attention weights",
+    "10% magnitude pruning after EMA averaging and before quantization",
+    "Reduced artifact size from about 15.6MB to 14.8MB with minimal quality impact",
+    "Late int5 STE fake-quantization during the final portion of training"
+  ],
+  "artifact_size": "14.8 MB"
+}

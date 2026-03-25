@@ -1,0 +1,145 @@
+{
+  "pr_number": 436,
+  "title": "Non-Record: 8L + BigramHash(12288) + Systematic HyperOpt (val_bpb=1.2392, 1xH100, 129 experiments)",
+  "author": "CrimsonSithria",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2392,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash with a 12288-bucket embedding and a 128-dimensional linear projection to reduce artifact size while preserving quality.",
+        "parameters": {
+          "buckets": 12288,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings with an optimized base for 2048 context.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x/4x MLP",
+        "description": "Uses 4x MLP expansion with relu^2 activation for throughput-limited training.",
+        "parameters": {
+          "mlp_mult": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.048,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.03,
+          "scalar_lr": 0.03,
+          "tied_embed_lr": 0.08,
+          "grad_clip_norm": 0.3,
+          "muon_backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 512
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone embedding init",
+        "description": "Uses overtone embedding initialization with phase-transition residual mixing."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Systematic hyperparameter optimization across 129 experiments to map scaling laws for learning rate, weight decay, batch size, and depth under single-GPU throughput constraints.",
+        "parameters": {
+          "experiments": 129,
+          "total_compute_usd": 19.47
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Systematic hyperparameter optimization across 129 experiments on a single H100",
+    "Mapped scaling laws for learning rate, weight decay, batch size, and model depth under throughput constraints",
+    "BigramHash with 128-dimensional projection to reduce artifact size with minimal BPB loss",
+    "Weight decay as a compression knob controlling int8+zlib artifact size",
+    "Batch size scaling on H100 showing 131K tokens outperforming 65K batch"
+  ],
+  "artifact_size": "15.9MB"
+}

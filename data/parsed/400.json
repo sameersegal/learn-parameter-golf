@@ -1,0 +1,187 @@
+{
+  "pr_number": 400,
+  "title": "Record: 11L CANON-AC(last5)+DeltaGate Report (Humble Record Attempt, val_bpb: 1.1296)",
+  "author": "chanwoo-park-official",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1296177,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "mlp, attn"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash as part of the leaderboard-aligned stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate as part of the leaderboard-aligned stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Enables XSA only on the last 4 transformer blocks.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE to only part of the dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "CANON",
+        "description": "Adds CANON convolutional path with scoped placement on the last 5 layers and delta gating.",
+        "parameters": {
+          "kernel": 3,
+          "last_n": 5,
+          "delta_gate": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "enabled": true,
+          "tight_swa": true,
+          "every": 50,
+          "start_lrmul": 0.2,
+          "max_checkpoints": 12
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "CANON delta gate near-identity init",
+        "description": "Initializes CANON delta gate with g=-4.0 so the path starts near identity."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "matrix": 0.04,
+          "adam": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "mlp, attn"
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Scoped CANON placement on the last 5 layers (AC(last5))",
+    "CANON delta gate to modulate the residual CANON path",
+    "Tight SWA schedule under a 600-second wallclock cap",
+    "Combination of AC(last5)+delta with leaderboard-aligned components to improve val_bpb",
+    "Int6 quantization with QAT on MLP and attention weights"
+  ],
+  "artifact_size": "15,581,348 bytes"
+}

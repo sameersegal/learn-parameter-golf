@@ -1,0 +1,178 @@
+{
+  "pr_number": 676,
+  "title": "SwiGLU MLP: parameter-neutral gated activation over LeakyReLU^2",
+  "author": "they-call-me-god",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP activation",
+        "description": "Replaces LeakyReLU(0.5)^2 with SwiGLU gated activation using split up-bank projections.",
+        "parameters": {
+          "gate_half_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash as part of the model architecture.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary positional embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Adds VE modules in selected layers.",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 0,
+          "momentum": 0.9,
+          "batch_seqs": 32,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "warmdown_iters": 3500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "warmup_steps": 1500
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Replaces LeakyReLU(0.5)^2 with SwiGLU gating in the MLP.",
+    "Maintains parameter neutrality by resizing the up and down banks without increasing total parameters.",
+    "Applies SwiGLU to the PR #549 SOTA stack while keeping the rest of the training setup unchanged.",
+    "Uses a gated linear unit style MLP inspired by LLaMA, Mistral, Gemma, and PaLM."
+  ],
+  "artifact_size": "~15.9 MB"
+}

@@ -1,0 +1,202 @@
+{
+  "pr_number": 418,
+  "title": "Non-record: PrismLM v3 \u2014 DiffTransformer V2 + NorMuon + TrigramHash (val_bpb=1.1715)",
+  "author": "yashverms",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1715,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DiffTransformer V2",
+        "description": "Differential attention in the last 2 layers using two softmax maps and subtraction to cancel noise.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": 0.02,
+        "momentum": 0.95,
+        "other_params": {
+          "beta2": 0.95,
+          "lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Adds a trigram hash table to capture three-token patterns alongside BigramHash.",
+        "parameters": {
+          "buckets": 2048,
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram n-gram memory component used with context-aware gating.",
+        "parameters": {
+          "buckets": 2048,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention in the last 6 layers.",
+        "parameters": {
+          "layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP with 3x hidden size and ReLU\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Uses U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "matrices": 0.02,
+          "embeddings_scalars": 0.01
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 200
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weight matrices"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT enabled when learning-rate scale drops below 0.1.",
+        "parameters": {
+          "threshold": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "DiffTransformer V2 attention in the last 2 layers",
+    "NorMuon optimizer with per-neuron row normalization after Newton-Schulz orthogonalization",
+    "TrigramHash with context-aware n-gram gating",
+    "First submission using differential attention in the competition",
+    "First submission using NorMuon optimizer",
+    "First submission with context-aware n-gram gating"
+  ],
+  "artifact_size": "15.59MB"
+}

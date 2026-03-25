@@ -1,0 +1,129 @@
+{
+  "pr_number": 673,
+  "title": "Add submission snapshots for grant-backed runs",
+  "author": "Aristide021",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "weights / large matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "large matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Explicit MLP hidden width sizing to target the parameter budget more tightly.",
+        "parameters": {
+          "hidden_width": 992
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-RoPE extrapolation is used to extend context at evaluation time.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "context_length": 1408
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone init",
+        "description": "Overtone embedding initialization with depth-dependent resid_mix initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1408
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 20000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.01
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Int6 quantization-aware training with fake per-row quantization in the forward pass",
+    "Int6 packed export using 4 values packed into 3 bytes",
+    "Explicit MLP hidden-width sizing for tighter parameter-budget targeting",
+    "Sliding-window validation with longer left context via NTK-RoPE extrapolation",
+    "Overtone embedding initialization and depth-dependent resid_mix initialization",
+    "Full-budget warmdown to reduce quantization damage near the end of training",
+    "Submission-style record folder snapshots prepared for later H100-backed runs"
+  ],
+  "artifact_size": null
+}

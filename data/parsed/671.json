@@ -1,0 +1,174 @@
+{
+  "pr_number": 671,
+  "title": "Submission: Atris Labs v8 (audited seed42, clean branch)",
+  "author": "keshav55",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.18069496,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x-expanded MLP with 1536 hidden units and relu-squared activation.",
+        "parameters": {
+          "hidden_units": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a 10240-bucket embedding table with learnable scale.",
+        "parameters": {
+          "buckets": 10240,
+          "dimension": 128,
+          "scale": 0.05
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension learned gate blending each token with the previous token embedding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used and kept in FP16 passthrough during compression.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "tied_embed_lr": 0.03,
+          "scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 24,
+          "during": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "magnitude_pruning": "3%"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "10-layer transformer with U-Net skip connections",
+    "MLP 3x expansion with relu-squared activation",
+    "BigramHash token-pair embedding augmentation",
+    "SmearGate token blending mechanism",
+    "Mixed int5/int6 quantization with per-row scaling",
+    "3% magnitude pruning before quantization",
+    "SWA over 24 checkpoints during warmdown",
+    "Audited seed=42 run with real train log and aligned submission artifacts"
+  ],
+  "artifact_size": "14,461,499 bytes"
+}

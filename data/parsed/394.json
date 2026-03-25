@@ -1,0 +1,149 @@
+{
+  "pr_number": 394,
+  "title": "Non-record: 11L PR315 Backout + Native FA3 RunPod (val_bpb=1.1247)",
+  "author": "greqone",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.12467423,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model artifact"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses an 11-layer PR315-style transformer line with XSA-related settings.",
+        "parameters": {
+          "layers": 11,
+          "xsa_last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applies RoPE with reduced dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embeddings / tied embedding learning rate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes a bigram vocabulary component.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "adam_wd": 0.04,
+          "muon_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Native Hopper FlashAttention and torch.compile were used for training efficiency.",
+        "parameters": {
+          "flash_attn_backend": "native",
+          "torch_compile": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Backout residual subtraction from the mid-network hidden state.",
+        "parameters": {
+          "backout_enabled": true,
+          "backout_lambda_init": 0.2,
+          "backout_layer": -1
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Non-record 10-minute-track submission packaged under track_non_record_16mb",
+    "Faithful RunPod 8xH100 SXM PR315-style run with native Hopper FlashAttention",
+    "Backout residual subtraction added as a cheap orthogonal improvement",
+    "Self-contained train_gpt.py with inlined flash_attn_interface helper",
+    "Exact training log and submission artifacts packaged within the 16MB cap"
+  ],
+  "artifact_size": "15,545,662 bytes"
+}

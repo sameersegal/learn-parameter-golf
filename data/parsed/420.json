@@ -1,0 +1,139 @@
+{
+  "pr_number": 420,
+  "title": "WIP: Shared-transformer + warmdown-aligned training (not final submis\u2026",
+  "author": "leofeasby",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1454,
+  "architecture": "Shared-weight Transformer",
+  "quantization": "int8 roundtrip",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight sharing / depth recurrence",
+        "description": "A single transformer block is reused across 9 effective passes instead of using independent layers.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Token embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding table with 4096 entries.",
+        "parameters": {
+          "entries": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 2:1 query-to-KV head ratio.",
+        "parameters": {
+          "num_heads": 16,
+          "num_kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP\u00d75",
+        "description": "Expanded MLP width with relu\u00b2 activation.",
+        "parameters": {
+          "mlp_mult": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style shared-core transformer with learned skip weights across depth.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "weight_decay_applied_to": "matrix params only"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 32500,
+          "snapshots": 351,
+          "freq": 50
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_start_step": 4000,
+          "warmdown_iters": 41000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Warmdown-aligned training schedule designed to align the low-LR phase with the wallclock budget.",
+        "parameters": {
+          "iterations": 50000,
+          "max_wallclock_seconds": 86400
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Shared-weight transformer architecture with a single block reused across depth",
+    "U-Net-style encoder-decoder structure with learned skip connections",
+    "Step-based warmdown trigger (`WARMDOWN_START_STEP`) decoupled from wallclock time",
+    "Observation that most gains occur during the low-LR warmdown phase",
+    "Use of a 4096-entry hash-based bigram embedding table",
+    "Long-context training at sequence length 2048",
+    "Application of SWA during the late training phase"
+  ],
+  "artifact_size": "13.9MB"
+}

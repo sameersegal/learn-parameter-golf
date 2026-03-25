@@ -1,0 +1,163 @@
+{
+  "pr_number": 430,
+  "title": "Value Residual + Gated Attention + XSA + EMA + AdamW TTT \u2014 val_bpb pending H100",
+  "author": "sahiee-dev",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1428,
+  "architecture": "Transformer",
+  "quantization": "int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaced ReLU\u00b2 MLP activation with SwiGLU using iso-parameter 2/3 hidden scaling.",
+        "parameters": {
+          "hidden": 938
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Adds a learned scalar multiple of the raw token embedding to each block output.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Adds a learned per-layer scalar gate on attention output.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention removes self-value bias from attention output via orthogonal projection in the last layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses hashed bigram token features as part of the input representation.",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "decay": 0.4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9999
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "ttt": true,
+          "learning_rate": 0.001,
+          "betas": [
+            0.9,
+            0.999
+          ]
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "AdamW TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.001,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "frozen_layers": 6
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "SwiGLU MLP replacing ReLU\u00b2 with iso-parameter hidden scaling",
+    "Value Residual connections from raw token embeddings into each transformer block",
+    "Per-layer gated attention output scaling",
+    "Exclusive Self Attention (XSA) in the last 4 layers",
+    "Exponential Moving Average (EMA) of weights during training",
+    "AdamW-based test-time training over validation tokens",
+    "Restoring full-size BigramHash(10240) and dropping TrigramHash"
+  ],
+  "artifact_size": "11.9MB"
+}

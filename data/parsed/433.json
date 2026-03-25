@@ -1,0 +1,135 @@
+{
+  "pr_number": 433,
+  "title": "EBLS Learned Sharing (10min/16MB)",
+  "author": "Robby955",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.3441,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Empirical Bayes Layer Sharing with 3 shared transformer blocks applied 3 times to create 9 effective virtual layers, with per-virtual-layer LoRA deviations gated by learned shrinkage factors.",
+        "parameters": {
+          "shared_blocks": 3,
+          "virtual_layers": 9,
+          "lora_rank": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism included as part of the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature with a 10240-sized hash space.",
+        "parameters": {
+          "size": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x expansion MLP with ReLU\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 16 query heads and 4 key/value heads.",
+        "parameters": {
+          "q_heads": 16,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds U-Net style skip connections to the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "adam_used_for": "LoRA, embeddings, scalars"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "LoRA, embeddings, scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Empirical Bayes Layer Sharing with learned shrinkage factors gamma_i to automatically determine how much each virtual layer deviates from shared weights.",
+        "parameters": {
+          "shrinkage_gated_lora_rank": 8
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Empirical Bayes Layer Sharing (EBLS) with learned shrinkage factors for automatic layer sharing",
+    "3 shared transformer blocks reused as 9 effective virtual layers",
+    "Per-virtual-layer rank-8 LoRA deviations gated by learned gamma shrinkage",
+    "Evidence that MLP layers can be fully shared while attention specializes only minimally in early layers",
+    "Combination of SmearGate, BigramHash, and U-Net skip connections in a compact transformer",
+    "Int6 STE QAT with zstd-22 compression to fit the 16MB budget"
+  ],
+  "artifact_size": "16,224,826 bytes"
+}

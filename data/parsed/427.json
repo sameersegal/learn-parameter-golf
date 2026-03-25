@@ -1,0 +1,150 @@
+{
+  "pr_number": 427,
+  "title": "AnAI: BigramHash(12288) + TrigramHash + int5/int6 QAT",
+  "author": "VeerGosai",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int4/int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash consecutive token pairs into a larger embedding table to reduce collisions and capture pairwise context.",
+        "parameters": {
+          "vocab_size": 12288,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hash consecutive token triplets into an embedding table to capture 3-gram context complementary to bigram hashing.",
+        "parameters": {
+          "vocab_size": 4096,
+          "dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate as part of the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with hidden size 1536.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections in a U-Net-like pattern.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4/int5/int6 QAT",
+        "bits": null,
+        "scope": "MLP fc int4, MLP proj int5, attention int6, embeddings fp16"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "momentum_final": 0.99
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.35,
+          "every_steps": 40
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_frac": 0.05
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Introduces TrigramHash embedding to capture 3-gram context alongside bigram hashing.",
+    "Increases BigramHash vocabulary to 12288 buckets to reduce hash collisions.",
+    "Uses aggressive SWA with earlier start and more frequent averaging for quantization-friendly weights.",
+    "Applies 5% magnitude pruning to improve zstd compression.",
+    "Uses mixed int4/int5/int6 quantization with int4 for MLP fc, int5 for MLP proj, and int6 for attention."
+  ],
+  "artifact_size": "~15.5MB"
+}

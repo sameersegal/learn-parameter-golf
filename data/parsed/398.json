@@ -1,0 +1,182 @@
+{
+  "pr_number": 398,
+  "title": "Non-record: 11L EMA + TTT(20ep,freeze=0) + 15-run ablation study \u2014 val_bpb=1.1213 (3-seed)",
+  "author": "felipe-parodi",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1213,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a BigramHash embedding/component with vocabulary size 2048 and dimension 128.",
+        "parameters": {
+          "vocab_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x-width MLP block.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 20,
+          "learning_rate": 0.008,
+          "momentum": 0.9,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "EMA(0.997) combined with aggressive 20-epoch test-time training",
+    "All blocks unfrozen during TTT (freeze_blocks=0) was critical for best performance",
+    "15-run ablation study identifying negative results such as late QAT, memory tokens, warmdown=20000, and PPM-C blending",
+    "Removal of XSA to save step time and gain additional training steps within the wall-clock budget",
+    "Mixed int6 quantization with zstd-22 compression under the 16MB artifact constraint"
+  ],
+  "artifact_size": "15.53 MB"
+}

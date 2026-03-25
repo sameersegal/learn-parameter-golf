@@ -1,0 +1,134 @@
+{
+  "pr_number": 413,
+  "title": "Non-record: Value Residual (-0.015 BPB) + Gated Attention (-0.003 BPB) with ablations",
+  "author": "anantdgoel",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4525,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Caches raw V vectors from layer 0 and mixes them into all subsequent layers via learnable scalars to preserve token identity through depth.",
+        "parameters": {
+          "layers": 9,
+          "learnable_scalars": 18
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Applies a per-head sigmoid gate after SDPA output to allow heads to suppress output and reduce attention sinks.",
+        "parameters": {
+          "bias_init": 4.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Architecture component used in the ablation setup and training stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component used in the ablation setup and training stack.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Included in the training script as a model component; likely an attention-related architectural modification.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embedding variant used in the training script.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scaling modification included in the training script.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for the model."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay_muon": 0.04,
+          "weight_decay_adam": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "PPM-C context mixer: blends classical Prediction by Partial Matching with neural softmax at evaluation time; reported as a negative result.",
+        "parameters": {
+          "alpha": 0.95,
+          "order": 2
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Value Residual (ResFormer) that mixes layer-0 value vectors into deeper layers with learnable scalars",
+    "Gated Attention with per-head sigmoid gating after SDPA to reduce attention sinks",
+    "Controlled ablation study showing the two techniques stack additively",
+    "Negative result for PPM-C context mixing on SmearGate + BigramHash models"
+  ],
+  "artifact_size": "13.2 MB"
+}

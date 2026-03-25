@@ -1,0 +1,134 @@
+{
+  "pr_number": 421,
+  "title": "Non-record: 11L mixed int5/int6 + working QAT + TTT (val_bpb=1.1466)",
+  "author": "vytautas-bunevicius",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1466,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 QAT",
+        "bits": null,
+        "scope": "MLP int5, attention int6, embeddings int8"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Increased bigram hash size for token/context representation.",
+        "parameters": {
+          "size": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "memory tokens",
+        "description": "Added learnable global context tokens prepended during evaluation and masked during training.",
+        "parameters": {
+          "tokens": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "backout connection",
+        "description": "Learned scalar connection subtracting encoder/decoder boundary state from final output.",
+        "parameters": {
+          "parameters": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-head temperature",
+        "description": "Learned temperature parameter per attention head.",
+        "parameters": {
+          "parameters": 88
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 3,
+          "optimizer": "SGD",
+          "time": "83s"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "ortho+muP init",
+        "description": "Orthogonal plus muP initialization."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Working QAT fix by swapping per-instance forward methods to avoid torch.compile constant folding",
+    "Mixed int5 MLP / int6 attention quantization with 3% magnitude pruning",
+    "Test-time training with post-quantization SGD on validation tokens",
+    "Expanded BigramHash from 2048 to 10240",
+    "Added 64 learnable memory tokens",
+    "Added a learned backout connection",
+    "Added per-head temperature parameters",
+    "Reduced evaluation stride to 32"
+  ],
+  "artifact_size": "14.7MB"
+}
