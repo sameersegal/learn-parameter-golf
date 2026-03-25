@@ -1,0 +1,169 @@
+{
+  "pr_number": 254,
+  "title": "Record: FarnsworthEngine v1 \u2014 TTT + 11L Int6 MLP3x, val_bpb=1.1303",
+  "author": "timowhite88",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1303,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP+attention; embeddings int8; tied embeddings fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x expansion MLP with ReLU\u00b2 activation in an 11-layer transformer",
+        "parameters": {
+          "layers": 11,
+          "hidden_dim": 1536,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned sigmoid token blending gate",
+        "parameters": {
+          "params": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048-bucket hash embedding for token-pair features",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-RoPE for long-context extrapolation",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_steps": 1500,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 7,
+          "phase": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "freezing_first_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization combined with muP"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 3 used for attention computation",
+        "parameters": {
+          "hardware": "Hopper"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Test-time training (TTT) with full-weight SGD adaptation on validation data before scoring",
+    "11-layer MLP3x transformer architecture with ReLU\u00b2 activation",
+    "Mixed int6/int8 quantization with fp16 tied embeddings",
+    "SmearGate learned token blending gate",
+    "BigramHash token-pair feature embeddings",
+    "SWA checkpoint averaging during warmdown",
+    "NTK-RoPE for long-context extrapolation"
+  ],
+  "artifact_size": "15.88 MB"
+}

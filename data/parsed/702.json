@@ -1,0 +1,145 @@
+{
+  "pr_number": 702,
+  "title": "Record: 1.0240 BPB \u2014 Multi-Order N-gram Backoff + Entropy-Adaptive Alpha (100% autonomous research via goldfish)",
+  "author": "lukacf",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0244,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd QAT",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA-all attention variant used in the 11-layer transformer.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component included in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature used in the base architecture and referenced in prior baseline.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial RoPE applied to the model.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 100,
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "scheduler": "CosineAnnealingLR",
+          "t_max": 100,
+          "eta_min": 1e-05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive n-gram mixing during evaluation, increasing reliance on n-gram predictions when model entropy is high.",
+        "parameters": {
+          "alpha_formula": "0.05 + 0.35 * sigmoid(2 * (H - 4.0))"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-order n-gram backoff cache used at evaluation time, backing off from 5-gram to 4-gram, 3-gram, and 2-gram contexts.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Multi-order n-gram backoff across 2-gram to 5-gram contexts",
+    "Entropy-adaptive mixing weight based on model entropy",
+    "Score-first eval-time n-gram cache updated only after scoring each token",
+    "Proper distribution-preserving mixture of model and n-gram probabilities",
+    "Autonomous research workflow using Goldfish ML and Meerkat",
+    "3-seed validation of the submission"
+  ],
+  "artifact_size": "15.79 MB"
+}

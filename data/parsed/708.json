@@ -1,0 +1,124 @@
+{
+  "pr_number": 708,
+  "title": "[non-record] byte jepa-lw naive experimental baseline 2.125 bpb @ 2000 cc @0hq",
+  "author": "juvi21",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 2.12515832,
+  "architecture": "Byte-level JEPA / Transformer encoder",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "byte-level input/output",
+        "description": "Uses byte-level modeling with no tokenizer and byte 260.",
+        "parameters": {
+          "byte_vocab_size": 260
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "JEPA + exact next-byte objective",
+        "description": "Adds an exact next-byte compression objective on top of the JEPA loss so latent prediction affects likelihood.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "byte transformer encoder",
+        "description": "Replaces the paper's pixel encoder with a byte transformer encoder.",
+        "parameters": {
+          "model_dim": 896,
+          "layers": 14,
+          "heads": 14,
+          "kv_heads": 14
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "strictly causal chunk-context conditioning",
+        "description": "Replaces action-conditioned prediction with causal chunk-context conditioning for byte compression.",
+        "parameters": {
+          "chunk_size": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "predicted chunk latents injected into byte scorer",
+        "description": "Injects predicted chunk latents into the byte scorer so JEPA influences exact likelihood.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "leworldmodel ingredients",
+        "description": "Keeps latent prediction, batchnorm projector MLPs, AdaLN predictor, and sigreg in the main path; EMA path kept only as a control.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "sigreg_cf",
+        "parameters": {
+          "reg_weight": 1.0,
+          "reg_slices": 1024,
+          "sigreg_knots": 17,
+          "sigreg_max_t": 3.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "role": "control"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 256,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses a JEPA-based byte compression setup with chunked context and latent prediction for next-byte modeling.",
+        "parameters": {
+          "latent_dim": 256,
+          "pred_hidden": 384,
+          "pred_depth": 2,
+          "pred_heads": 4,
+          "projector_hidden": 2048,
+          "context_hidden": 2048,
+          "pred_dim_head": 64,
+          "latent_weight": 0.2
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Byte-level JEPA baseline with no tokenizer",
+    "Exact next-byte compression objective added on top of JEPA loss",
+    "Byte transformer encoder adapted from the paper's pixel encoder",
+    "Strictly causal chunk-context conditioning instead of action-conditioned prediction",
+    "Predicted chunk latents injected into the byte scorer so JEPA affects exact likelihood",
+    "Retention of core leworldmodel components such as latent prediction, batchnorm projector MLPs, AdaLN predictor, and sigreg"
+  ],
+  "artifact_size": null
+}

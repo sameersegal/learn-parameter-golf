@@ -1,0 +1,255 @@
+{
+  "pr_number": 710,
+  "title": "Submission: 11L EMA + GPTQ-lite + Int6 (val_bpb: 1.1240)",
+  "author": "Dhruba531",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.124,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6 with late QAT and int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion with relu-squared activation",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections across layers",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Efficient partial XSA applied to the last layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions with NTK-aware scaling",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature with bucketed representation",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "Shared value embeddings used in later layers with learned per-layer scales",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "warmup_momentum_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.035,
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.025,
+          "scope": "scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used with muP-scaled output projections"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_rule": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with STE int6 fake-quantization when LR scale drops below 0.15",
+        "parameters": {
+          "threshold": 0.15
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer transformer with 3x MLP expansion and U-Net skip connections",
+    "Efficient partial XSA on the last 4 layers",
+    "Partial RoPE with NTK-aware scaling",
+    "SmearGate, BigramHash, and shared value embeddings",
+    "EMA plus tight SWA during training",
+    "GPTQ-lite per-row optimal clip percentile search for int6 quantization",
+    "Late QAT with STE int6 fake-quantization",
+    "Int6 roundtrip evaluation with zstd-compressed artifact"
+  ],
+  "artifact_size": "15.58 MB"
+}

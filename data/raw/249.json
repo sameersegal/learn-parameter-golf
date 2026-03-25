@@ -1,0 +1,12 @@
+{
+  "number": 249,
+  "title": "non-record: int6 3xMLP + cosine warmdown (1.1704 bpb)",
+  "author": "kvmukilan",
+  "body": "wider MLP (3x) enabled by int6 quantization, cosine warmdown schedule, ortho init.\nbuilt on top of the merged SOTA. single seed, 8xH100 SXM.\n\n- val_bpb: 1.1704\n- artifact: 13.5MB\n- steps: 7630\n- training: 10min wallclock cap",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T18:34:10Z",
+  "updated_at": "2026-03-20T18:34:10Z",
+  "submission_readme": "# Int6 3xMLP + Cosine Warmdown\n\nval_bpb: **1.1704** (single seed 1337, 8xH100 SXM)\n\n## what i changed\n\nstarted from the merged SOTA submission (SlidingWindow_FP16Emb_10L_MuonWD_OvertoneInit) and added:\n\n- **int6 quantization** - switched from int8 to int6 (range [-31,31]) for both export and training (STE). frees up ~3MB in the artifact budget\n- **3x MLP** - used the freed space to widen MLP from 2x to 3x (hidden=1536). model goes from ~18M to ~24M params\n- **cosine warmdown** - replaced the linear LR decay with cosine: `0.5 * (1 + cos(pi * progress))`. keeps LR higher early in warmdown, smoother convergence\n- **ortho init** - orthogonal weight initialization for all linear layers (except zero-init ones)\n- **zstd compression** - zstd level 22 instead of zlib level 9 for the artifact\n- **rope base 50k** - passed via env var\n- **GQA compat fix** - manual KV head repeat instead of enable_gqa flag (older pytorch compat)\n\neverything else is inherited from the base: 10 layers, muon WD, overtone embed init, sliding window eval stride=64, fp16 embed passthrough, phase-transition resid_mix\n\n## results\n\n| seed | val_loss | val_bpb | steps | ms/step |\n|------|----------|---------|-------|---------|\n| 1337 | 1.9762 | 1.1704 | 7630 | 79.04 |\n\nartifact size: 13.5MB (13,520,480 bytes)\ntraining time: ~10min (603s wallclock cap)\neval time: 61s (sliding window)\n\nonly ran one seed so no statistical significance claim. would need 2 more seeds to verify.\n\n## run command\n\n```\nEVAL_STRIDE=64 ROPE_BASE=50000 RUN_ID=final_v2 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\nneeds `pip install zstandard` if not already installed.\n\n## notes\n\n- the int6 STE adds overhead per step (~5% slower) but the wider MLP more than makes up for it\n- cosine warmdown is pretty standard in LLM pretraining but nobody had tried it here yet\n- single seed result so take with a grain of salt\n- didn't try seq2048 with this config due to time constraints, might be worth exploring\n"
+}

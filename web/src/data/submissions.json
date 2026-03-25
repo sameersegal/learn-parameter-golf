@@ -1,5 +1,3047 @@
 [
   {
+    "pr_number": 225,
+    "title": "Non-record: Int6 QAT + 11L 512d + Sliding Window, val_bpb=1.2089",
+    "author": "dibdabo",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.2089,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "large matrices / model weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "11-layer Transformer with 512d hidden size and 1024 MLP hidden size; originally targeted 1536 MLP hidden size but reduced to fit budget.",
+          "parameters": {
+            "layers": 11,
+            "dimensions": 512,
+            "mlp_hidden": 1024
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.025,
+            "warmdown": 3000,
+            "muon_momentum_warmup_start": 0.92,
+            "muon_momentum_warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "context_length": 4096,
+            "chunk_size": 512,
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Flat tensor storage for packed int6 bytes (int6_mixed_per_row_v2) to improve compression by avoiding pickle metadata interleaving.",
+          "parameters": {
+            "format": "int6_mixed_per_row_v2"
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Flat tensor storage for packed int6 weights to improve zlib compression",
+      "STE fake-int6 QAT activated at step 200 with fp32 weight restore after backward",
+      "Sliding window evaluation with ctx=4096, chunk=512, stride=64",
+      "Tuned Muon optimizer settings for the 8×H100, 10-minute budget",
+      "Observation that more training steps can worsen compression due to near-orthogonal, high-entropy weights"
+    ],
+    "artifact_size": "15,190,812 bytes"
+  },
+  {
+    "pr_number": 226,
+    "title": "Submission: Low-Rank All-Attention (1.3446 bpb)",
+    "author": "CRouvroy",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.3446,
+    "architecture": "Transformer",
+    "quantization": "mixed int8/fp16",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "persistent memory",
+          "description": "Replaces the feed-forward network in Transformer blocks with persistent memory based on Augmenting Self-attention with Persistent Memory.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "tensors with size > 16384; smaller tensors kept in fp16"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "low-rank factorization",
+          "description": "Factorizes matrices as W = W_d W_u to reduce parameter count for large square matrices.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Replaces Transformer feed-forward layers with persistent memory",
+      "Applies mixed precision quantization with INT8 for large tensors and FP16 for smaller tensors",
+      "Uses low-rank factorization for routing/matrix parameter reduction"
+    ],
+    "artifact_size": null
+  },
+  {
+    "pr_number": 228,
+    "title": "Record: 10-Layer 4xMLP (val_bpb: 1.4444)",
+    "author": "hmhm0",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.4444,
+    "architecture": "Transformer",
+    "quantization": "INT8 per-row post-training quantization",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "10-layer 4xMLP",
+          "description": "Expanded the standard 9-layer architecture to 10 layers and increased the MLP multiplier from 2x to 4x.",
+          "parameters": {
+            "layers": 10,
+            "mlp_multiplier": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "overlapping": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "batched": true
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Expanded the baseline architecture from 9 layers to 10 layers",
+      "Increased the MLP multiplier from 2x to 4x",
+      "Used standard INT8 per-row post-training quantization",
+      "Applied zlib compression to fit within the 16MB limit",
+      "Evaluated with an overlapping sliding window",
+      "Used batched LoRA test-time training"
+    ],
+    "artifact_size": "14.68 MB"
+  },
+  {
+    "pr_number": 230,
+    "title": "Record: Int6 + MLP 3x + NorMuon + SmearGate + BigramHash + OrthoInit + Sliding Window, val_bpb=1.1541",
+    "author": "MatthewHRockwell",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.1541,
+    "architecture": "Transformer",
+    "quantization": "int6 per-row quantization",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "per-row weights; tied embeddings kept in fp16"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP hidden size to 3x model dimension to increase capacity.",
+          "parameters": {
+            "hidden_dim": 1536,
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.02,
+          "momentum": 0.99,
+          "other_params": {
+            "decoupled_weight_decay": true,
+            "normalized_newton_schulz": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Learned gate blending each token embedding with the previous token embedding.",
+          "parameters": {
+            "params": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Hash-based embedding for token pairs to inject explicit bigram context.",
+          "parameters": {
+            "buckets": 4096,
+            "dimension": 64,
+            "projected_dim": 512
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization with muP-style output projection scaling by 1/sqrt(2L)."
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 256,
+            "context_length": 2048
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.02,
+            "decoupled": true
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Int6 per-row quantization with fp16 scales and fp16 tied embeddings",
+      "MLP hidden expansion to 3x model dimension enabled by quantization savings",
+      "NorMuon / normalized Newton-Schulz optimization with decoupled weight decay",
+      "SmearGate token blending with previous-token context",
+      "BigramHash embedding for token pairs",
+      "Orthogonal initialization with muP-scaled output projections",
+      "Sliding window evaluation with stride 256 over 2048-token windows"
+    ],
+    "artifact_size": "15,992,610 bytes"
+  },
+  {
+    "pr_number": 231,
+    "title": "Record: SEQ_LEN=4096 training",
+    "author": "lenguyen1807",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.2036,
+    "architecture": "Transformer",
+    "quantization": "FP16 tied embedding export; optional mixed-bit lowbit export",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied for the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "NTK-aware RoPE scaling for longer-context evaluation/training.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses grouped-query style attention with fewer KV heads than query heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.02,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "tied_embed_lr": 0.04
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "overtone init",
+          "description": "Uses overtone embedding initialization."
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "phase-transition resid_mix",
+          "description": "Applies phase-transition residual mixing in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "extended warmup",
+          "parameters": {
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed-bit lowbit export",
+          "bits": null,
+          "scope": "selected block weights"
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Long-context training with sequence length 4096",
+      "Sliding-window evaluation with stride 64",
+      "FP16 tied embedding export",
+      "Overtone embedding initialization",
+      "Phase-transition residual mixing",
+      "NTK-aware RoPE scaling",
+      "Lower learning rates with higher Muon momentum and extended warmup",
+      "Optional mixed-bit lowbit export for deeper models"
+    ],
+    "artifact_size": null
+  },
+  {
+    "pr_number": 232,
+    "title": "Record: 11L MLP3x + SmearGate + Error Correction Table",
+    "author": "kellyvv",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.437,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP hidden dimension to 3x the model dimension.",
+          "parameters": {
+            "layers": 11,
+            "hidden_dim": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Sigmoid-gated mechanism initialized near 0.95 to improve model behavior.",
+          "parameters": {
+            "init": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Added a bigram hash feature with 4096 buckets and 128-dimensional embeddings.",
+          "parameters": {
+            "buckets": 4096,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every": 50
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "embed_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "error correction table",
+          "parameters": {
+            "use_correction": 1,
+            "boost_logit": 20,
+            "fixed_val_set": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Built a compact position-to-token lookup table from worst predictions on the fixed validation set and applied it during evaluation to zero out loss on matched positions.",
+          "parameters": {
+            "entries": 907927,
+            "table_size_bytes": 2867053
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Used delta-encoded positions with varint encoding for compact correction-table storage.",
+          "parameters": {
+            "avg_bytes_per_entry": 3.16
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Error Correction Table: a pre-computed position-to-token lookup table for the fixed validation set",
+      "Delta-encoded positions plus varint encoding to compress correction entries efficiently",
+      "On-the-fly correction table construction during evaluation without a separate build step",
+      "Logit boosting for matched positions to achieve effectively zero loss on corrected tokens"
+    ],
+    "artifact_size": "15.15 MB"
+  },
+  {
+    "pr_number": 236,
+    "title": "Record: 11L Int6 + SmearGate + Batch Optimization (val_bpb=1.1400)",
+    "author": "saml212",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.14,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon + AdamW",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": 6,
+          "scope": "attention + MLP weights; int8 tok_emb"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Per-dimension gating module that blends adjacent token embeddings",
+          "parameters": {
+            "params": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds consecutive token pair features via hashed bigram buckets",
+          "parameters": {
+            "buckets": 2048,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Widened MLP to 3x hidden size",
+          "parameters": {
+            "hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses fewer KV heads than attention heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embedding / output projection implied by tied embedding learning rate",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "checkpoints": 7,
+            "every_steps": 200
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "batch_seqs": 32
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization with muP output scaling"
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_wd": 0.04,
+            "adamw_wd": 0.04
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Reduced batch size to improve step count under a fixed 600s training budget",
+          "parameters": {
+            "from_tokens": 786000,
+            "to_tokens": 524288
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Reduced batch size from 786K to 524K tokens to maximize optimization steps within a fixed training time budget",
+      "Used int6 quantization for all main weights instead of int5 MLP quantization",
+      "Switched tok_emb from fp16 to int8 to free artifact space for a wider MLP",
+      "Added SmearGate as a per-dimension embedding blending mechanism",
+      "Added BigramHash features with 2048 buckets and 128-dimensional embeddings",
+      "Applied batched sliding-window evaluation with stride 64 to make long-context eval feasible within time limits",
+      "Used SWA with periodic checkpoint averaging",
+      "Combined Muon and AdamW with dual weight decay to improve compression and quantization behavior",
+      "Used OrthoInit with muP output scaling"
+    ],
+    "artifact_size": "15.7 MB"
+  },
+  {
+    "pr_number": 237,
+    "title": "Add 10L 4K long-context negative-result submission",
+    "author": "takoyakisoft",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.8389,
+    "architecture": "Transformer",
+    "quantization": "QAT-style fake quantization",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses tied embeddings as part of the model configuration.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses fewer KV heads than attention heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "context_length": 4096
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "rank": 8
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 20000
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Selective FP16 passthrough for a few sensitive tensors during training.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Negative-result submission for the 10-minute, 16MB track",
+      "10-layer, 4K-context training run",
+      "Overlapping sliding-window evaluation",
+      "Rank-8 LoRA test-time training",
+      "QAT-style fake quantization during training",
+      "Selective FP16 passthrough for sensitive tensors",
+      "Documentation of coverage collapse under the 10-minute budget"
+    ],
+    "artifact_size": "13361078 bytes"
+  },
+  {
+    "pr_number": 238,
+    "title": "[Non-record] Quantization Findings: SWA Reversal + Int5 Failure",
+    "author": "kellyvv",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.5164,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int5 quantization",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "3x-expanded MLP layers in the baseline architecture",
+          "parameters": {
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses SmearGate in the model architecture",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses BigramHash in the model architecture",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": 5,
+          "scope": "MLP"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "num_checkpoints": 84,
+            "every_steps": 50,
+            "start_step": 6481
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Training under compute constraints with 10,670 steps on 1xH100",
+          "parameters": {
+            "steps": 10670,
+            "hardware": "1xH100"
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Demonstrates that SWA can reverse the quantization gap, producing a lower int6+zstd BPB than the pre-quantization checkpoint",
+      "Shows that int5 quantization of MLP layers can be catastrophic for undertrained models, greatly increasing the quantization gap",
+      "Provides evidence that SWA and quantization can be synergistic rather than antagonistic",
+      "Argues against mixed int5/int6 viability for compute-constrained training in this setting"
+    ],
+    "artifact_size": "10.5 MB"
+  },
+  {
+    "pr_number": 240,
+    "title": "Non-record: local RTX 4070 SP1024 7x512 KV2 500-step run",
+    "author": "riatzukiza",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.66595795,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses a KV-thin attention configuration with fewer key/value heads than query heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Transformer depth/width",
+          "description": "Shallower compact Transformer configuration for local GPU training.",
+          "parameters": {
+            "layers": 7,
+            "model_dim": 512
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup",
+          "parameters": {
+            "warmup_steps": 4
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Local non-record submission under the 16MB artifact cap using a single RTX 4070 Laptop GPU.",
+          "parameters": {
+            "artifact_cap_bytes": 16000000,
+            "iterations": 500
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record local workstation run on a single RTX 4070 Laptop GPU",
+      "Shallower 7-layer, 512-dim Transformer with KV-thin attention (8 query heads, 2 KV heads)",
+      "Tied input/output embeddings",
+      "Full published validation split evaluation with first published training shard only",
+      "Compact int8+zlib artifact under the 16MB cap"
+    ],
+    "artifact_size": "10.94MB"
+  },
+  {
+    "pr_number": 244,
+    "title": "Non-record: leader-core valid-eval parity run + 1xH100 proxy screens",
+    "author": "simon-marcus",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.20639536,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses tied embeddings / tied token embedding settings in the leader-core merge candidate.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model weights / export"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "validity-safe eval path",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "non-overlapping final eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OvertoneInit",
+          "description": "Training core rooted in the official SlidingWindow_FP16Emb_10L_MuonWD_OvertoneInit recipe."
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 800
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "token embeddings"
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Temperature-only post-quant search used after export.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Validity-safe merge rooted in the official SlidingWindow_FP16Emb_10L_MuonWD_OvertoneInit training core",
+      "Non-overlapping final evaluation",
+      "Stronger int8 export search",
+      "Temperature-only post-quant search",
+      "Saved RunPod local-disk parity run logs",
+      "Saved 1xH100 proxy-screen logs",
+      "Proxy ablations over learning-rate, warmdown, gradient clipping, Muon momentum, and token-embedding int8 settings",
+      "Identified warmdown800 + matrixlr006 as the strongest tested proxy combination"
+    ],
+    "artifact_size": "15294320 bytes"
+  },
+  {
+    "pr_number": 247,
+    "title": "Non-record: local RTX 4070 SP1024 8x512 KV4 seq768 500-step run",
+    "author": "riatzukiza",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.6114074,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses fewer key/value heads than attention heads.",
+          "parameters": {
+            "layers": 8,
+            "model_dim": 512,
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 768,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Post-training int8 zlib roundtrip evaluation of the serialized model artifact.",
+          "parameters": {
+            "serialized_model_bytes": 9988629,
+            "total_submission_bytes": 10036271
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record local consumer-GPU submission under the 16MB artifact cap",
+      "Throughput-oriented search path for an 8-layer 512-dim configuration",
+      "Full published validation split evaluation using fineweb_val_*",
+      "Compact local RTX 4070 Laptop GPU run with tied embeddings and reduced KV heads",
+      "Public non-record anchor for a candidate family selected through repeated local search and validation"
+    ],
+    "artifact_size": "10036271 bytes"
+  },
+  {
+    "pr_number": 248,
+    "title": "Non-record: local RTX 4070 SP1024 8x512 KV4 500-step run",
+    "author": "riatzukiza",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.62312436,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses reduced key/value head count relative to attention heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Transformer size",
+          "description": "Compact 8-layer, 512-dimensional Transformer configuration.",
+          "parameters": {
+            "layers": 8,
+            "model_dim": 512
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup",
+          "parameters": {
+            "warmup_steps": 4
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Local non-record submission run on a consumer GPU under the 16MB artifact cap, using a locally validated search path and full published validation split.",
+          "parameters": {
+            "hardware": "1x RTX 4070 Laptop GPU",
+            "iterations": 500
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record local consumer-GPU submission under the 16MB artifact cap",
+      "8-layer, 512-dim Transformer with 8 attention heads and 4 KV heads",
+      "Tied input/output embeddings",
+      "Full published validation split evaluation",
+      "Local search-loop-derived configuration re-evaluated on the full validation set",
+      "Int8 + zlib roundtrip artifact packaging"
+    ],
+    "artifact_size": "10246842 bytes"
+  },
+  {
+    "pr_number": 249,
+    "title": "non-record: int6 3xMLP + cosine warmdown (1.1704 bpb)",
+    "author": "kvmukilan",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.1704,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Widened the MLP from 2x to 3x using freed artifact budget from int6 quantization.",
+          "parameters": {
+            "hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Set RoPE base to 50k via environment variable.",
+          "parameters": {
+            "base": 50000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Manual KV head repeat for GQA compatibility instead of using enable_gqa.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal weight initialization for all linear layers except zero-init layers."
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine warmdown",
+          "parameters": {
+            "formula": "0.5 * (1 + cos(pi * progress))"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "optimizer": "Muon WD"
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Switched from int8 to int6 quantization to free artifact budget",
+      "Used the freed budget to widen the MLP from 2x to 3x",
+      "Replaced linear LR decay with cosine warmdown",
+      "Applied orthogonal initialization to linear layers",
+      "Used zstd level 22 for artifact compression",
+      "Implemented manual KV head repeat for GQA compatibility"
+    ],
+    "artifact_size": "13.5MB"
+  },
+  {
+    "pr_number": 251,
+    "title": "Add SP4096 11L432 MLP3x Int6+Zstd Momentum99 record (val_bpb=1.1596)",
+    "author": "kshitizz36",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.1596,
+    "architecture": "Transformer",
+    "quantization": "int6 PTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Increased MLP expansion from 2x to 3x to add model capacity.",
+          "parameters": {
+            "mlp_mult": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses tied embeddings with fp16 embedding passthrough during quantization.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.02,
+          "momentum": 0.99,
+          "other_params": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_wd": 0.02,
+            "adam_wd": 0.02
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all except fp16 embeddings"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "fp16",
+          "bits": 16,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "spectral init",
+          "description": "Tied embeddings use overtone spectral initialization."
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "New SOTA validation score of 1.1596 bpb",
+      "11-layer SP-4096 Transformer with dim 432",
+      "3x MLP expansion with relu^2 activation",
+      "Muon optimizer momentum increased to 0.99",
+      "Int6 post-training quantization with zstd-22 compression",
+      "fp16 embedding passthrough to preserve embedding quality",
+      "Sliding-window evaluation with stride 64",
+      "Tied embeddings with overtone spectral initialization"
+    ],
+    "artifact_size": "15.3MB"
+  },
+  {
+    "pr_number": 252,
+    "title": "Add PR114 RunPod H100 SXM non-record submission",
+    "author": "greqone",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.15536852,
+    "architecture": "Transformer",
+    "quantization": "mixed selective precision with fp16 tied embedding and late-K passthrough",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses tied embeddings in a 9-layer, width-512 GPT-style model with GQA and SP-1024.",
+          "parameters": {
+            "layers": 9,
+            "width": 512,
+            "sp": 1024
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped-query attention used in the model architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed selective precision",
+          "bits": null,
+          "scope": "model export with fp16 tied embedding and late-K passthrough"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "muon_momentum_warmup_start": 0.92,
+            "muon_momentum_warmup_steps": 1500,
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "tied_embed_lr": 0.03,
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 256,
+            "context_length": 2048
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record submission packaged under track_non_record_16mb after the leaderboard moved past the result.",
+      "Same-provider RunPod verification on 8x H100 SXM with three reruns for robustness evidence.",
+      "Long-context selective-precision PR114 recipe with fp16 tied embedding and late-K passthrough.",
+      "Under-cap artifact with detailed size accounting and significance testing against the older threshold."
+    ],
+    "artifact_size": "15,963,195 bytes"
+  },
+  {
+    "pr_number": 254,
+    "title": "Record: FarnsworthEngine v1 — TTT + 11L Int6 MLP3x, val_bpb=1.1303",
+    "author": "timowhite88",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.1303,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": 6,
+          "scope": "MLP+attention; embeddings int8; tied embeddings fp16"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "3x expansion MLP with ReLU² activation in an 11-layer transformer",
+          "parameters": {
+            "layers": 11,
+            "hidden_dim": 1536,
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Learned sigmoid token blending gate",
+          "parameters": {
+            "params": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "2048-bucket hash embedding for token-pair features",
+          "parameters": {
+            "buckets": 2048,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "NTK-RoPE for long-context extrapolation",
+          "parameters": {
+            "base": 50000
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_steps": 1500,
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "checkpoints_averaged": 7,
+            "phase": "warmdown"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "context_length": 2048
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "epochs": 3,
+            "freezing_first_blocks": 2
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization combined with muP"
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup + warmdown",
+          "parameters": {
+            "warmup_steps": 1500,
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "weight_decay": 0.04
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "FlashAttention 3 used for attention computation",
+          "parameters": {
+            "hardware": "Hopper"
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Test-time training (TTT) with full-weight SGD adaptation on validation data before scoring",
+      "11-layer MLP3x transformer architecture with ReLU² activation",
+      "Mixed int6/int8 quantization with fp16 tied embeddings",
+      "SmearGate learned token blending gate",
+      "BigramHash token-pair feature embeddings",
+      "SWA checkpoint averaging during warmdown",
+      "NTK-RoPE for long-context extrapolation"
+    ],
+    "artifact_size": "15.88 MB"
+  },
+  {
+    "pr_number": 256,
+    "title": "DenseContextQuantTrim 8xH100: 1.1779 val_bpb",
+    "author": "IvGolovach",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.1778717,
+    "architecture": "Transformer",
+    "quantization": "int8 PTQ with hybrid fp16/int8 embedding export",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses grouped-query style attention with fewer KV heads than query heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "final model with hybrid fp16/int8 token embeddings"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "context_length": 2048,
+            "stride_tokens": 512
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02,
+            "tied_embed_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup + warmdown",
+          "parameters": {
+            "warmup_steps": 20,
+            "warmdown_iters": 3000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "grad_clip_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Clip-search post-training quantization with candidate clipping thresholds.",
+          "parameters": {
+            "candidates": [
+              1,
+              0.95,
+              0.9,
+              0.85
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Clean under-cap 8xH100 snapshot for the 10 minute / 16,000,000 byte track",
+      "Clip-search PTQ",
+      "Hybrid fp16/int8 export for token embeddings with top rows kept in fp16",
+      "Sliding-window validation at 2048 context with 512-token stride",
+      "Tied-embedding dense transformer baseline with grouped KV heads"
+    ],
+    "artifact_size": "15,981,108 bytes"
+  },
+  {
+    "pr_number": 258,
+    "title": "Non-record: local RTX 4070 SP1024 7x512 KV4 500-step run",
+    "author": "riatzukiza",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.65718316,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses a KV4 attention configuration with fewer key/value heads than query heads.",
+          "parameters": {
+            "layers": 7,
+            "model_dim": 512,
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup",
+          "parameters": {
+            "warmup_steps": 4
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record local consumer-GPU submission under the 16MB artifact cap",
+      "Shallower 7-layer, 512-dim KV4 configuration discovered through a local search loop",
+      "Evaluation on the full published validation split",
+      "Uses tied embeddings with separate tied-embedding and matrix learning rates"
+    ],
+    "artifact_size": "10296829 bytes"
+  },
+  {
+    "pr_number": 259,
+    "title": "submission: QK Gain Init 1.2 + Sliding Window Eval (stride=64)",
+    "author": "outsourc-e",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.5879,
+    "architecture": null,
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "initialization",
+        "data": {
+          "method": "QK Gain Init",
+          "description": "Uses QK_GAIN_INIT=1.2 instead of the default 1.5 to improve attention stability during short training runs."
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "batch_seqs": 32
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "QK gain initialization with QK_GAIN_INIT=1.2 for improved training stability",
+      "Sliding window evaluation with stride=64 and batch size of 32 sequences",
+      "Added forward_logits() and eval_val_sliding() for eval-only long-context scoring",
+      "Reported improved validation performance from both initialization and evaluation changes"
+    ],
+    "artifact_size": null
+  },
+  {
+    "pr_number": 260,
+    "title": "[codex] Validate sliding-window post-quant evaluation on 1xH100 proxy",
+    "author": "Kevxn97",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.32756718,
+    "architecture": null,
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": null,
+            "context_length": null
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Validate post-quantized evaluation on a 1xH100 proxy run and use it as a reproducible baseline for future search.",
+          "parameters": {
+            "hardware": "1xH100",
+            "branch": "codex/sliding-window-eval-v1"
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Adds sliding-window validation so scored tokens see near-max left context during evaluation",
+      "Keeps the training path unchanged while modifying evaluation behavior",
+      "Introduces configuration knobs for evaluation stride and batching",
+      "Documents a local and RunPod workflow for reproducibility",
+      "Records validated experiment details in the repo tracker",
+      "Uses a real proxy run to validate final post-quantized performance"
+    ],
+    "artifact_size": null
+  },
+  {
+    "pr_number": 263,
+    "title": "Non-record: TTT + QAT on Consumer GPU (val_bpb=1.5382)",
+    "author": "Dannybc123",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.5382,
+    "architecture": "Transformer",
+    "quantization": "int8 QAT",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": 8,
+          "scope": "weights during training"
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "learning_rate": 0.0001,
+            "steps": 1,
+            "scope": [
+              "attn.proj.weight",
+              "mlp.proj.weight"
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses tied input/output embeddings in the baseline Transformer architecture.",
+          "parameters": {
+            "layers": 9,
+            "dim": 512,
+            "heads": 8,
+            "kv_heads": 4,
+            "mlp_multiplier": 2
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Autoresearch loop with AI-assisted autonomous experimentation, iterating on train_gpt.py via one-variable-at-a-time experiments.",
+          "parameters": {
+            "experiments": 15
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Fake quantization-aware training (QAT) using a straight-through estimator in CastedLinear.forward()",
+      "Test-time training on both attention and MLP output projections during evaluation",
+      "Finding that QAT made training faster while improving post-quantization quality",
+      "Consumer-GPU-only autonomous experimentation workflow"
+    ],
+    "artifact_size": "11.5 MB"
+  },
+  {
+    "pr_number": 264,
+    "title": "11L Int5-MLP + TTT-SGD + SmearGate + SWA (1.1455 BPB)",
+    "author": "stukenov",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.1455,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": 5,
+          "scope": "MLP weights (int5), attention weights (int6)"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Learned per-dimension gate blending each token embedding with the previous token's embedding to inject bigram context.",
+          "parameters": {
+            "params": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "2048-bucket hashed bigram embedding table projected into model dimension.",
+          "parameters": {
+            "buckets": 2048,
+            "dimension": 64,
+            "projection_dim": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP hidden size to 3x model dimension with relu^2 activation.",
+          "parameters": {
+            "multiplier": 3,
+            "hidden_size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Grouped-query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "warmup_momentum_start": 0.92,
+            "warmup_momentum_end": 0.99,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "epochs": 2
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "checkpoints": 30,
+            "interval_steps": 50
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization for large matrices with muP scaling."
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.04
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "context_length": 2048
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iterations": 3000
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "11-layer transformer funded by mixed-precision quantization savings",
+      "Mixed int5 MLP and int6 attention quantization to fit within the artifact budget",
+      "SmearGate for injecting previous-token context",
+      "BigramHash embedding for learned bigram context",
+      "Full-model SGD test-time training to improve validation BPB",
+      "Stochastic Weight Averaging over 30 checkpoints",
+      "OrthoInit with muP scaling for stable training",
+      "Sliding-window evaluation with stride 64"
+    ],
+    "artifact_size": "15.94 MB"
+  },
+  {
+    "pr_number": 266,
+    "title": "Non-record: Mixture of Softmax K=2 R=64 (1xH100, 10min, 1.3932 bpb)",
+    "author": "User123331",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.3932,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses tied input/output embeddings in the baseline model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Mixture of Softmax",
+          "description": "Replaces the standard tied-embedding softmax with a K=2 mixture of softmaxes to break the softmax bottleneck.",
+          "parameters": {
+            "k": 2,
+            "rank": 64
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Applies Mixture of Softmax (MoS) to the baseline 9x512 architecture.",
+      "Uses low-rank factorization with rank 64 to keep parameter overhead minimal.",
+      "Demonstrates that MoS adds negligible artifact overhead while remaining within the 16MB budget.",
+      "Reports minimal quantization degradation after int8+zlib roundtrip.",
+      "Explores the theoretical benefit of lifting the softmax rank limit from d+1 to K*d+? for the full vocabulary dimensionality."
+    ],
+    "artifact_size": "12.8 MB"
+  },
+  {
+    "pr_number": 267,
+    "title": "Record: val_bpb: 1.14020 [tested 3x on 8xh100]",
+    "author": "andrewgcodes",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.13742,
+    "architecture": "Transformer",
+    "quantization": "int5 all weights with fp16 exceptions",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int5",
+          "bits": 5,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "fp16",
+          "bits": 16,
+          "scope": "tied embeddings and last-layer key projections"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive self-attention applied to the last 3 layers by subtracting self-value projection from attention output",
+          "parameters": {
+            "layers": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses SmearGate in the architecture",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Grouped-query attention with 4 KV heads",
+          "parameters": {
+            "kv_heads": 4,
+            "heads": 8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "MLP uses 3x expansion",
+          "parameters": {
+            "hidden_size": 1536
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.08,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings/scalars"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs_per_chunk": 12,
+            "chunks": 64,
+            "learning_rate": 0.004,
+            "momentum": 0.9
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization with scaled output projections"
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000,
+            "warmup_steps": 20
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.08
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "sparsity": "3%"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Causal test-time training that evaluates each chunk first and trains only on already-scored tokens",
+      "Int5 quantization applied to all weight categories to fit the model under the artifact size limit",
+      "EMA-based training for improved model averaging",
+      "Exclusive self-attention applied to the last 3 layers",
+      "Orthogonal initialization with scaled output projections",
+      "Sliding-window evaluation with stride 64",
+      "Post quantization roundtrip using int5 + zstd"
+    ],
+    "artifact_size": "15,516,237 bytes"
+  },
+  {
+    "pr_number": 271,
+    "title": "Non-record: HyperparamTuned KV2 + FP16 Embed",
+    "author": "xexyz",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.3003,
+    "architecture": "Transformer",
+    "quantization": "fp16 embeddings (tok_emb export); baseline int8 embeddings",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Reduced key-value heads from 4 to 2 (GQA 8:2) to save parameters and improve throughput.",
+          "parameters": {
+            "num_kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.97,
+          "other_params": {
+            "matrix_lr": 0.048,
+            "scalar_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 600
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "QK_GAIN_INIT",
+          "description": "Lower initial attention sharpness via QK gain initialization set to 1.35."
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "fp16",
+          "bits": 16,
+          "scope": "embeddings"
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Systematic hyperparameter tuning of the baseline 9x512 architecture",
+      "Reduced NUM_KV_HEADS from 4 to 2",
+      "Adjusted Muon and scalar learning rates",
+      "Shortened warmdown schedule",
+      "Increased Muon momentum",
+      "Lowered QK gain initialization",
+      "Exported token embeddings in fp16 instead of int8",
+      "Focused on throughput-neutral changes to improve BPB under wallclock constraints"
+    ],
+    "artifact_size": null
+  },
+  {
+    "pr_number": 272,
+    "title": "Non-record: 10L mixed int5/int6 export reaches ~10.4MB with strong throughput",
+    "author": "simon-marcus",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.24271554,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6/int8",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6/int8",
+          "bits": null,
+          "scope": "MLP matrices int5, attention matrices int6, elsewhere int8"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied output and input embeddings",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "matrix_lr": 0.08,
+            "scalar_lr": 0.04,
+            "embed_lr": 0.05
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "tiny eval-time SGD",
+          "parameters": {
+            "targets": [
+              "q_gain",
+              "attn_scale",
+              "mlp_scale",
+              "resid_mix",
+              "skip_weights"
+            ]
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 500,
+            "warmup_steps": 20
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Mixed-precision export with int5 for MLP matrices and int6 for attention matrices",
+      "Tiny eval-time adaptation on a small control-parameter subset",
+      "Demonstration of a valid 10L submission with strong throughput and much smaller artifact size",
+      "Exploration of the size/quality frontier using aggressive mixed quantization"
+    ],
+    "artifact_size": "10.4MB"
+  },
+  {
+    "pr_number": 273,
+    "title": "Non-record: 10L Int6 QAT + SmearGate + SWA (val_bpb=1.1575)",
+    "author": "dentity007",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.1575,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Per-dimension gate blending token with predecessor",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded feed-forward network width to 3x",
+          "parameters": {
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses 4 KV heads with 8 attention heads (GQA)",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied; embedding kept in FP16",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every_steps": 50,
+            "start_frac": 0.5,
+            "num_checkpoints": 27
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.038,
+          "momentum": 0.99,
+          "other_params": {
+            "momentum_warmup": "0.92->0.99 over 1500 steps"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "weight_decay": 0.038
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Per-dimension SmearGate and step-throughput-focused 10-layer depth tradeoff to maximize training steps under a 10-minute wall-clock budget",
+          "parameters": {
+            "layers": 10,
+            "step_time_ms": 65.49,
+            "steps": 9156
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "10-layer configuration chosen to improve step throughput under the 10-minute wall-clock constraint",
+      "Systematic analysis across 17 experiments comparing architecture, LR schedules, quantization, and data scaling",
+      "Int6 QAT with STE combined with per-dimension SmearGate and SWA",
+      "Demonstration that 10L outperforms 11L because faster step time yields more training steps",
+      "Use of sliding window evaluation with stride 64 and zstd-22 compression"
+    ],
+    "artifact_size": "14.73MB"
+  },
+  {
+    "pr_number": 274,
+    "title": "[Record] Stride-32 + Warmdown/Muon Tuning on SOTA #1: mean val_bpb=1.1403",
+    "author": "haikosys",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.1403,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8 with int5 MLP and FP16 tied embeddings",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": 6,
+          "scope": "MLP, attention, tied embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses SmearGate in the base architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds BigramHash embedding component.",
+          "parameters": {
+            "size": 10240,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses a 3x expanded MLP hidden size.",
+          "parameters": {
+            "hidden_size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Uses FP16 tied embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.95,
+          "other_params": {
+            "muon_momentum": 0.95
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every": 50,
+            "start": "40%"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 32
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "rank": 8
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization."
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 5000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "weight_decay": 0.04
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Stride-32 sliding window evaluation with 2x context overlap",
+      "Warmdown tuning extended to 5000 iterations",
+      "Muon momentum tuning from 0.99 to 0.95",
+      "Reduced training batch tokens to 524288",
+      "LoRA test-time training with rank-8 adapters during evaluation",
+      "Per-document adapter reset and score-then-train ordering to preserve causality"
+    ],
+    "artifact_size": "under 16MB"
+  },
+  {
     "pr_number": 276,
     "title": "Non-record: local RTX 4070 shared-depth RMS interface v0",
     "author": "riatzukiza",
@@ -32403,5 +35445,1231 @@
       "Clean rerun package with strict runtime gates for uninterrupted 8x H100 execution"
     ],
     "artifact_size": "15,635,201 bytes"
+  },
+  {
+    "pr_number": 700,
+    "title": "Record Submission: 1.0541 BPB - 5-expert Hedge Mixer + CROWN-Q + stride=64",
+    "author": "RoyiRa",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.0541,
+    "architecture": "Transformer",
+    "quantization": "Full GPTQ int5",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Applied XSA across all 11 layers with window size 8.",
+          "parameters": {
+            "layers": 11,
+            "ws": 8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Added BigramHash feature with dimension 128.",
+          "parameters": {
+            "size": 6144,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Used a widened MLP with LeakyReLU activations.",
+          "parameters": {
+            "multiplier": 3.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Used 8 attention heads and 8 KV heads in an 11-layer, 512d model.",
+          "parameters": {
+            "layers": 11,
+            "hidden_size": 512,
+            "heads": 8,
+            "kv_heads": 8
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Polyak averaging",
+          "parameters": {
+            "decay": 0.998
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "stride-based sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs": 4,
+            "learning_rate": 0.0001,
+            "freeze_blocks": 2,
+            "chunk_tokens": 131072
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "targets_seconds": 582
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "sparsity": 0.03
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "CROWN-Q training-time quantization-aware penalty during warmdown to reduce quantization sensitivity.",
+          "parameters": {
+            "lambda": 0.01
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "5-expert Hedge mixer combining neural, unigram, bigram, trigram, and entropy experts.",
+          "parameters": {
+            "experts": 5
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Added a CROWN-Q quantization-aware training penalty during warmdown to improve quantization robustness.",
+      "Increased evaluation stride from 32 to 64 to halve eval cost while preserving BPB quality.",
+      "Used the saved evaluation time to increase test-time training from 3 to 4 epochs per chunk.",
+      "Combined a 5-expert Hedge mixer with GPTQ int5 compression and CROWN-Q for a new record score."
+    ],
+    "artifact_size": "~15.7 MB"
+  },
+  {
+    "pr_number": 702,
+    "title": "Record: 1.0240 BPB — Multi-Order N-gram Backoff + Entropy-Adaptive Alpha (100% autonomous research via goldfish)",
+    "author": "lukacf",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.0244,
+    "architecture": "Transformer",
+    "quantization": "int6 + zstd QAT",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA-all attention variant used in the 11-layer transformer.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate component included in the base architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash feature used in the base architecture and referenced in prior baseline.",
+          "parameters": {
+            "size": 2048
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial RoPE applied to the model.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6 QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 100,
+            "learning_rate": 0.001
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "scheduler": "CosineAnnealingLR",
+            "t_max": 100,
+            "eta_min": 0.00001
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Entropy-adaptive n-gram mixing during evaluation, increasing reliance on n-gram predictions when model entropy is high.",
+          "parameters": {
+            "alpha_formula": "0.05 + 0.35 * sigmoid(2 * (H - 4.0))"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Multi-order n-gram backoff cache used at evaluation time, backing off from 5-gram to 4-gram, 3-gram, and 2-gram contexts.",
+          "parameters": {
+            "orders": [
+              2,
+              3,
+              4,
+              5
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Multi-order n-gram backoff across 2-gram to 5-gram contexts",
+      "Entropy-adaptive mixing weight based on model entropy",
+      "Score-first eval-time n-gram cache updated only after scoring each token",
+      "Proper distribution-preserving mixture of model and n-gram probabilities",
+      "Autonomous research workflow using Goldfish ML and Meerkat",
+      "3-seed validation of the submission"
+    ],
+    "artifact_size": "15.79 MB"
+  },
+  {
+    "pr_number": 703,
+    "title": "Record: PR549 + MiLe decay + 8-bit Muon + 1.04x LR + Cache+Backout — val_bpb 1.1176",
+    "author": "Gusanidas",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.1176,
+    "architecture": "Transformer",
+    "quantization": "Full Hessian GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "Muon momentum buffers"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "muon_momentum_warmup_start": 0.92,
+            "muon_momentum_warmup_steps": 1500,
+            "warmdown_iters": 3500
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every": 50
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU²",
+          "description": "MLP activation uses LeakyReLU(0.5) squared",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash embedding/component used in the model",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied to the last 4 layers",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary positional embeddings applied partially",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LN Scale",
+          "description": "LayerNorm scale set to 1/sqrt(layer+1)",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "VE enabled in layers 9-10 with dimension 128",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Cache+Backout",
+          "description": "Caches hidden states after layer 7; later attention reads from cached clean context and applies a learned backout term",
+          "parameters": {
+            "cache_after_layer": 7,
+            "backout_init": 0.1
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "MiLe loss with entropy-weighted token loss and decay to standard cross-entropy during warmdown",
+          "parameters": {
+            "gamma": 1.1
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3500,
+            "lr_multiplier": 1.04
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "layerwise LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "MiLe loss with entropy-weighted token loss and decay during warmdown",
+      "8-bit blockwise symmetric int8 quantization of Muon momentum buffers",
+      "1.04x learning-rate boost",
+      "Cache+Backout mechanism using cached hidden states after layer 7 and learned backout scalar",
+      "Full Hessian GPTQ with Hessian-based column ordering and Cholesky error compensation",
+      "GPTQ quantization adapted for banked weights via temporary unbanked model Hessian collection"
+    ],
+    "artifact_size": "~15.95 MB"
+  },
+  {
+    "pr_number": 705,
+    "title": "Byte-Level Tokenizer-Free Transformer: 1.2151 BPB (beats baseline 1.2244)",
+    "author": "seanward",
+    "status": "open",
+    "is_record": true,
+    "val_bpb": 1.2151,
+    "architecture": "Transformer",
+    "quantization": "int6 + zstd",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Shares the byte embedding table with the output projection.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Adds SmearGate feature processing in the byte-level model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses hashed byte-bigram embeddings to capture local byte-pair statistics.",
+          "parameters": {
+            "buckets": 4096,
+            "dim": 32
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses a 3x hidden-size MLP with LeakyReLU² activation.",
+          "parameters": {
+            "hidden_multiplier": 3,
+            "hidden_dim": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net style skip connections",
+          "description": "Adds learned encoder-decoder skip connections across transformer layers.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 512,
+            "context_length": 4096
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "momentum_warmup_start": 0.92,
+            "momentum_warmup_steps": 2500
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "max_norm": 0.3
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Tokenizer-free raw UTF-8 byte-level modeling with no tokenizer, BPE, or SentencePiece.",
+          "parameters": {
+            "vocab_size": 256
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "First tokenizer-free byte-level model to beat the sp1024 baseline in Parameter Golf",
+      "Raw UTF-8 byte modeling with vocab size 256 and no tokenizer/BPE/SentencePiece",
+      "Hashed byte-bigram embeddings to capture local byte-pair statistics",
+      "SmearGate and U-Net style skip connections in a pure self-attention transformer",
+      "LeakyReLU² activation in the MLP",
+      "Sliding-window evaluation at stride 512 over 4096-byte contexts",
+      "Int6 quantization combined with zstd-22 compression",
+      "4-seed significance test showing consistent improvement over baseline"
+    ],
+    "artifact_size": "15.795055 MB"
+  },
+  {
+    "pr_number": 706,
+    "title": "Podracing: 1.0461 BPB (3-seed mean) — 5-gram eval + LeakyReLU²",
+    "author": "newjordan",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.0461,
+    "architecture": "11L/512d U-Net",
+    "quantization": "GPTQ int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA attention with the last 4 layers modified.",
+          "parameters": {
+            "last_n": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds a BigramHash component for hashed n-gram features.",
+          "parameters": {
+            "vocab_size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": 24
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "LeakyReLU squared activation with slope 0.5.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "5-gram eval interpolation",
+          "parameters": {
+            "alpha": 0.2,
+            "order": 5,
+            "min_count": 2,
+            "buckets": 4194304,
+            "score_first": true,
+            "legal": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "disabled": true
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "5-gram eval interpolation using a fixed-weight hashed n-gram cache built from already-scored tokens only",
+      "Score-first legal evaluation with no safety gate or target-aware selection",
+      "LeakyReLU squared activation",
+      "XSA last-4 configuration with BigramHash and partial RoPE",
+      "GPTQ int6 quantization with late QAT"
+    ],
+    "artifact_size": "15.64 MB"
+  },
+  {
+    "pr_number": 707,
+    "title": "Submit 1x A100 QAT Fix - 1.4078 BPB (Non-Record) [v2]",
+    "author": "Shuvam-Banerji-Seal",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.4078,
+    "architecture": "modded-nanogpt-derived Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "LR scheduling tuned for single-device run",
+          "parameters": {
+            "gradient_accum_tokens": 131000,
+            "iterations": 2600
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Replaced torch.quantile with w.abs().amax(dim=1) / w.amax().clamp_min-based clip factor estimation to avoid Triton compiler performance penalty",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Adjusted hyperparameters from multi-device scales to single-A100 scales so the LR schedule completes properly",
+      "Replaced torch.quantile with amax-based clip factor estimation to avoid a severe Triton compiler performance penalty",
+      "Reduced gradient accumulation sizing to 131K tokens so training reaches 2600 iterations within the time budget",
+      "Addressed prior review feedback on unused dependencies and imports"
+    ],
+    "artifact_size": "15.77 MB"
+  },
+  {
+    "pr_number": 709,
+    "title": "Results of 2026-03-23_MixedQAT_Int5MLP_Int6Attn",
+    "author": "StolbaJ",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.14777536,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6 STE QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 5,
+          "scope": "MLP"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "attention and bigram-proj"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Learned previous-token blending at the embedding layer",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Hash-based bigram embedding table",
+          "parameters": {
+            "dimensions": 128,
+            "table_size": 10240
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "MLP with 3x expansion",
+          "parameters": {
+            "hidden_size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Grouped-query attention with 4 KV heads and 8 attention heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4,
+            "layers": 10,
+            "dim": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied",
+          "parameters": {
+            "vocab_size": 1024
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.02,
+            "warmup_momentum_start": 0.92,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "scalar_lr": 0.02,
+            "tied_embed_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "start_frac": 0.4,
+            "every_steps": 50,
+            "checkpoints_averaged": 24
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3000
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal weight initialization with muP output-projection scaling"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_wd": 0.04,
+            "adamw_wd": 0.04
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Mixed-precision QAT with int5 STE for MLP and int6 STE for attention/bigram projection",
+      "STE quantization aligned exactly with the export-time per-row quantization scheme",
+      "QAT enabled from step 0 on the full SOTA stack",
+      "Combination of QAT with the existing SOTA architecture features such as SmearGate and BigramHash"
+    ],
+    "artifact_size": "15,957,281 bytes"
+  },
+  {
+    "pr_number": 710,
+    "title": "Submission: 11L EMA + GPTQ-lite + Int6 (val_bpb: 1.1240)",
+    "author": "Dhruba531",
+    "status": "open",
+    "is_record": false,
+    "val_bpb": 1.124,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6 with late QAT and int8 embeddings",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "MLP and attention weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "3x MLP expansion with relu-squared activation",
+          "parameters": {
+            "expansion": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder style skip connections across layers",
+          "parameters": {
+            "encoder_layers": 5,
+            "decoder_layers": 6
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Efficient partial XSA applied to the last layers",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary positional embeddings applied to a subset of dimensions with NTK-aware scaling",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "tied embeddings",
+          "description": "Input and output embeddings are tied",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Grouped-query attention with fewer KV heads than attention heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Custom gating mechanism used in the model",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hashing feature with bucketed representation",
+          "parameters": {
+            "buckets": 2048,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Embeddings",
+          "description": "Shared value embeddings used in later layers with learned per-layer scales",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "lr": 0.025,
+            "warmup_momentum_start": 0.92
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "lr": 0.035,
+            "scope": "embeddings"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "lr": 0.025,
+            "scope": "scalars"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every_steps": 50,
+            "scale_threshold": 0.2
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization used with muP-scaled output projections"
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "layerwise LN scale",
+          "parameters": {
+            "scale_rule": "1/sqrt(layer_idx+1)"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Late QAT with STE int6 fake-quantization when LR scale drops below 0.15",
+          "parameters": {
+            "threshold": 0.15
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "11-layer transformer with 3x MLP expansion and U-Net skip connections",
+      "Efficient partial XSA on the last 4 layers",
+      "Partial RoPE with NTK-aware scaling",
+      "SmearGate, BigramHash, and shared value embeddings",
+      "EMA plus tight SWA during training",
+      "GPTQ-lite per-row optimal clip percentile search for int6 quantization",
+      "Late QAT with STE int6 fake-quantization",
+      "Int6 roundtrip evaluation with zstd-compressed artifact"
+    ],
+    "artifact_size": "15.58 MB"
   }
 ]

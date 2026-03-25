@@ -1,0 +1,147 @@
+{
+  "pr_number": 704,
+  "title": "Add int8 shared-block bigram+cache prototype",
+  "author": "sauravtom",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8 QAT",
+        "bits": 8,
+        "scope": "all linears"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "shared-block Transformer",
+        "description": "12 logical layers are built from a 2-block shared Transformer block bank.",
+        "parameters": {
+          "layers": 12,
+          "shared_blocks": 2,
+          "d_model": 640,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "mlp_mult": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE/ALiBi",
+        "description": "Uses rotary or ALiBi positional encoding support.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "bigram prior + cache fusion",
+        "description": "Inference combines a KN-smoothed bigram prior with a short-context cache mixture added to model logits.",
+        "parameters": {
+          "cache_size": 256,
+          "bigram_lambda": 0.3,
+          "cache_lambda": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "value": 0.05
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "steps": 300
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.05,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.95,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + cosine decay",
+        "parameters": {
+          "warmup_steps": 2000,
+          "peak_lr": 0.003
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LSQ-lite QAT hooks with per-row scales for int8 export alignment.",
+        "parameters": {
+          "per_row_scales": true
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Shared-block Transformer with 12 logical layers from a 2-block bank",
+    "LSQ-lite QAT hooks for int8 export alignment",
+    "Bigram prior plus short-context cache logit fusion",
+    "Label smoothing, EMA, and optional SWA for stability",
+    "Embedded export extras for priors and configuration",
+    "Runnable submission package with README, submission.json, and placeholder train log"
+  ],
+  "artifact_size": "16MB"
+}

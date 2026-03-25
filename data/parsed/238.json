@@ -1,0 +1,137 @@
+{
+  "pr_number": 238,
+  "title": "[Non-record] Quantization Findings: SWA Reversal + Int5 Failure",
+  "author": "kellyvv",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.5164,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int5 quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x-expanded MLP layers in the baseline architecture",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the model architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash in the model architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": 5,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "num_checkpoints": 84,
+          "every_steps": 50,
+          "start_step": 6481
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training under compute constraints with 10,670 steps on 1xH100",
+        "parameters": {
+          "steps": 10670,
+          "hardware": "1xH100"
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Demonstrates that SWA can reverse the quantization gap, producing a lower int6+zstd BPB than the pre-quantization checkpoint",
+    "Shows that int5 quantization of MLP layers can be catastrophic for undertrained models, greatly increasing the quantization gap",
+    "Provides evidence that SWA and quantization can be synergistic rather than antagonistic",
+    "Argues against mixed int5/int6 viability for compute-constrained training in this setting"
+  ],
+  "artifact_size": "10.5 MB"
+}

@@ -1,0 +1,178 @@
+{
+  "pr_number": 264,
+  "title": "11L Int5-MLP + TTT-SGD + SmearGate + SWA (1.1455 BPB)",
+  "author": "stukenov",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1455,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": 5,
+        "scope": "MLP weights (int5), attention weights (int6)"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending each token embedding with the previous token's embedding to inject bigram context.",
+        "parameters": {
+          "params": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048-bucket hashed bigram embedding table projected into model dimension.",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 64,
+          "projection_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x model dimension with relu^2 activation.",
+        "parameters": {
+          "multiplier": 3,
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "warmup_momentum_end": 0.99,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 2
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 30,
+          "interval_steps": 50
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for large matrices with muP scaling."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iterations": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer transformer funded by mixed-precision quantization savings",
+    "Mixed int5 MLP and int6 attention quantization to fit within the artifact budget",
+    "SmearGate for injecting previous-token context",
+    "BigramHash embedding for learned bigram context",
+    "Full-model SGD test-time training to improve validation BPB",
+    "Stochastic Weight Averaging over 30 checkpoints",
+    "OrthoInit with muP scaling for stable training",
+    "Sliding-window evaluation with stride 64"
+  ],
+  "artifact_size": "15.94 MB"
+}

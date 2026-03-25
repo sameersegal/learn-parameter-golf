@@ -1,0 +1,128 @@
+{
+  "pr_number": 232,
+  "title": "Record: 11L MLP3x + SmearGate + Error Correction Table",
+  "author": "kellyvv",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.437,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden dimension to 3x the model dimension.",
+        "parameters": {
+          "layers": 11,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Sigmoid-gated mechanism initialized near 0.95 to improve model behavior.",
+        "parameters": {
+          "init": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a bigram hash feature with 4096 buckets and 128-dimensional embeddings.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "error correction table",
+        "parameters": {
+          "use_correction": 1,
+          "boost_logit": 20,
+          "fixed_val_set": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Built a compact position-to-token lookup table from worst predictions on the fixed validation set and applied it during evaluation to zero out loss on matched positions.",
+        "parameters": {
+          "entries": 907927,
+          "table_size_bytes": 2867053
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Used delta-encoded positions with varint encoding for compact correction-table storage.",
+        "parameters": {
+          "avg_bytes_per_entry": 3.16
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Error Correction Table: a pre-computed position-to-token lookup table for the fixed validation set",
+    "Delta-encoded positions plus varint encoding to compress correction entries efficiently",
+    "On-the-fly correction table construction during evaluation without a separate build step",
+    "Logit boosting for matched positions to achieve effectively zero loss on corrected tokens"
+  ],
+  "artifact_size": "15.15 MB"
+}

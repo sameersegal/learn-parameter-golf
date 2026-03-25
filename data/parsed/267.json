@@ -1,0 +1,188 @@
+{
+  "pr_number": 267,
+  "title": "Record: val_bpb: 1.14020 [tested 3x on 8xh100]",
+  "author": "andrewgcodes",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.13742,
+  "architecture": "Transformer",
+  "quantization": "int5 all weights with fp16 exceptions",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings and last-layer key projections"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to the last 3 layers by subtracting self-value projection from attention output",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 4 KV heads",
+        "parameters": {
+          "kv_heads": 4,
+          "heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP uses 3x expansion",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.08,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs_per_chunk": 12,
+          "chunks": 64,
+          "learning_rate": 0.004,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with scaled output projections"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.08
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": "3%"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Causal test-time training that evaluates each chunk first and trains only on already-scored tokens",
+    "Int5 quantization applied to all weight categories to fit the model under the artifact size limit",
+    "EMA-based training for improved model averaging",
+    "Exclusive self-attention applied to the last 3 layers",
+    "Orthogonal initialization with scaled output projections",
+    "Sliding-window evaluation with stride 64",
+    "Post quantization roundtrip using int5 + zstd"
+  ],
+  "artifact_size": "15,516,237 bytes"
+}

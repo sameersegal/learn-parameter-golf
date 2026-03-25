@@ -1,0 +1,99 @@
+{
+  "pr_number": 235,
+  "title": "Draft: 6-bit QAT + SP4096 + Layer Recurrence 5\u00d72, requesting compute",
+  "author": "zeyuchenphd",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "6-bit QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "2D weight matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shares weights across layer pairs to create 10 effective layers from 5 unique layers, preserving skip connections.",
+        "parameters": {
+          "unique_layers": 5,
+          "passes": 2,
+          "effective_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "2D matrices",
+          "adam_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 1200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SentencePiece tokenizer with 4096 vocabulary trained on FineWeb docs.",
+        "parameters": {
+          "vocab_size": 4096
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "6-bit quantization-aware training with straight-through estimator",
+    "N-bit export packed into int8 with limited range for zlib-friendly compression",
+    "SentencePiece tokenizer with 4096 vocabulary trained on FineWeb docs",
+    "Layer recurrence using 5 unique layers repeated twice for 10 effective layers",
+    "Muon optimizer for 2D matrices combined with Adam for embeddings and scalars",
+    "Tied embeddings and reduced KV head count architecture"
+  ],
+  "artifact_size": null
+}

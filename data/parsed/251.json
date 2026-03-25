@@ -1,0 +1,128 @@
+{
+  "pr_number": 251,
+  "title": "Add SP4096 11L432 MLP3x Int6+Zstd Momentum99 record (val_bpb=1.1596)",
+  "author": "kshitizz36",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1596,
+  "architecture": "Transformer",
+  "quantization": "int6 PTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP expansion from 2x to 3x to add model capacity.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embeddings with fp16 embedding passthrough during quantization.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.02,
+          "adam_wd": 0.02
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all except fp16 embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Tied embeddings use overtone spectral initialization."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "New SOTA validation score of 1.1596 bpb",
+    "11-layer SP-4096 Transformer with dim 432",
+    "3x MLP expansion with relu^2 activation",
+    "Muon optimizer momentum increased to 0.99",
+    "Int6 post-training quantization with zstd-22 compression",
+    "fp16 embedding passthrough to preserve embedding quality",
+    "Sliding-window evaluation with stride 64",
+    "Tied embeddings with overtone spectral initialization"
+  ],
+  "artifact_size": "15.3MB"
+}

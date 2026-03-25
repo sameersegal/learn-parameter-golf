@@ -1,0 +1,71 @@
+{
+  "pr_number": 271,
+  "title": "Non-record: HyperparamTuned KV2 + FP16 Embed",
+  "author": "xexyz",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.3003,
+  "architecture": "Transformer",
+  "quantization": "fp16 embeddings (tok_emb export); baseline int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Reduced key-value heads from 4 to 2 (GQA 8:2) to save parameters and improve throughput.",
+        "parameters": {
+          "num_kv_heads": 2
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "matrix_lr": 0.048,
+          "scalar_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 600
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "QK_GAIN_INIT",
+        "description": "Lower initial attention sharpness via QK gain initialization set to 1.35."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "embeddings"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Systematic hyperparameter tuning of the baseline 9x512 architecture",
+    "Reduced NUM_KV_HEADS from 4 to 2",
+    "Adjusted Muon and scalar learning rates",
+    "Shortened warmdown schedule",
+    "Increased Muon momentum",
+    "Lowered QK gain initialization",
+    "Exported token embeddings in fp16 instead of int8",
+    "Focused on throughput-neutral changes to improve BPB under wallclock constraints"
+  ],
+  "artifact_size": null
+}

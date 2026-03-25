@@ -1,0 +1,147 @@
+{
+  "pr_number": 700,
+  "title": "Record Submission: 1.0541 BPB - 5-expert Hedge Mixer + CROWN-Q + stride=64",
+  "author": "RoyiRa",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0541,
+  "architecture": "Transformer",
+  "quantization": "Full GPTQ int5",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA across all 11 layers with window size 8.",
+        "parameters": {
+          "layers": 11,
+          "ws": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added BigramHash feature with dimension 128.",
+        "parameters": {
+          "size": 6144,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Used a widened MLP with LeakyReLU activations.",
+        "parameters": {
+          "multiplier": 3.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used 8 attention heads and 8 KV heads in an 11-layer, 512d model.",
+        "parameters": {
+          "layers": 11,
+          "hidden_size": 512,
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 4,
+          "learning_rate": 0.0001,
+          "freeze_blocks": 2,
+          "chunk_tokens": 131072
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "targets_seconds": 582
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.03
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CROWN-Q training-time quantization-aware penalty during warmdown to reduce quantization sensitivity.",
+        "parameters": {
+          "lambda": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "5-expert Hedge mixer combining neural, unigram, bigram, trigram, and entropy experts.",
+        "parameters": {
+          "experts": 5
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Added a CROWN-Q quantization-aware training penalty during warmdown to improve quantization robustness.",
+    "Increased evaluation stride from 32 to 64 to halve eval cost while preserving BPB quality.",
+    "Used the saved evaluation time to increase test-time training from 3 to 4 epochs per chunk.",
+    "Combined a 5-expert Hedge mixer with GPTQ int5 compression and CROWN-Q for a new record score."
+  ],
+  "artifact_size": "~15.7 MB"
+}

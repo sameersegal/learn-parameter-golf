@@ -1,0 +1,151 @@
+{
+  "pr_number": 705,
+  "title": "Byte-Level Tokenizer-Free Transformer: 1.2151 BPB (beats baseline 1.2244)",
+  "author": "seanward",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.2151,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Shares the byte embedding table with the output projection.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate feature processing in the byte-level model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses hashed byte-bigram embeddings to capture local byte-pair statistics.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x hidden-size MLP with LeakyReLU\u00b2 activation.",
+        "parameters": {
+          "hidden_multiplier": 3,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net style skip connections",
+        "description": "Adds learned encoder-decoder skip connections across transformer layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 2500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "max_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tokenizer-free raw UTF-8 byte-level modeling with no tokenizer, BPE, or SentencePiece.",
+        "parameters": {
+          "vocab_size": 256
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "First tokenizer-free byte-level model to beat the sp1024 baseline in Parameter Golf",
+    "Raw UTF-8 byte modeling with vocab size 256 and no tokenizer/BPE/SentencePiece",
+    "Hashed byte-bigram embeddings to capture local byte-pair statistics",
+    "SmearGate and U-Net style skip connections in a pure self-attention transformer",
+    "LeakyReLU\u00b2 activation in the MLP",
+    "Sliding-window evaluation at stride 512 over 4096-byte contexts",
+    "Int6 quantization combined with zstd-22 compression",
+    "4-seed significance test showing consistent improvement over baseline"
+  ],
+  "artifact_size": "15.795055 MB"
+}

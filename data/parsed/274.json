@@ -1,0 +1,146 @@
+{
+  "pr_number": 274,
+  "title": "[Record] Stride-32 + Warmdown/Muon Tuning on SOTA #1: mean val_bpb=1.1403",
+  "author": "haikosys",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1403,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 with int5 MLP and FP16 tied embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP, attention, tied embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds BigramHash embedding component.",
+        "parameters": {
+          "size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x expanded MLP hidden size.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "muon_momentum": 0.95
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50,
+          "start": "40%"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 5000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Stride-32 sliding window evaluation with 2x context overlap",
+    "Warmdown tuning extended to 5000 iterations",
+    "Muon momentum tuning from 0.99 to 0.95",
+    "Reduced training batch tokens to 524288",
+    "LoRA test-time training with rank-8 adapters during evaluation",
+    "Per-document adapter reset and score-then-train ordering to preserve causality"
+  ],
+  "artifact_size": "under 16MB"
+}

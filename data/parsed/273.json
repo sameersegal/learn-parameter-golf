@@ -1,0 +1,141 @@
+{
+  "pr_number": 273,
+  "title": "Non-record: 10L Int6 QAT + SmearGate + SWA (val_bpb=1.1575)",
+  "author": "dentity007",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1575,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gate blending token with predecessor",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded feed-forward network width to 3x",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads with 8 attention heads (GQA)",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied; embedding kept in FP16",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "start_frac": 0.5,
+          "num_checkpoints": 27
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.038,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup": "0.92->0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.038
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-dimension SmearGate and step-throughput-focused 10-layer depth tradeoff to maximize training steps under a 10-minute wall-clock budget",
+        "parameters": {
+          "layers": 10,
+          "step_time_ms": 65.49,
+          "steps": 9156
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "10-layer configuration chosen to improve step throughput under the 10-minute wall-clock constraint",
+    "Systematic analysis across 17 experiments comparing architecture, LR schedules, quantization, and data scaling",
+    "Int6 QAT with STE combined with per-dimension SmearGate and SWA",
+    "Demonstration that 10L outperforms 11L because faster step time yields more training steps",
+    "Use of sliding window evaluation with stride 64 and zstd-22 compression"
+  ],
+  "artifact_size": "14.73MB"
+}

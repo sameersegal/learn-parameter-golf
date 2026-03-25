@@ -1,0 +1,180 @@
+{
+  "pr_number": 703,
+  "title": "Record: PR549 + MiLe decay + 8-bit Muon + 1.04x LR + Cache+Backout \u2014 val_bpb 1.1176",
+  "author": "Gusanidas",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1176,
+  "architecture": "Transformer",
+  "quantization": "Full Hessian GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "Muon momentum buffers"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2",
+        "description": "MLP activation uses LeakyReLU(0.5) squared",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embedding/component used in the model",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale set to 1/sqrt(layer+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE enabled in layers 9-10 with dimension 128",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Cache+Backout",
+        "description": "Caches hidden states after layer 7; later attention reads from cached clean context and applies a learned backout term",
+        "parameters": {
+          "cache_after_layer": 7,
+          "backout_init": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MiLe loss with entropy-weighted token loss and decay to standard cross-entropy during warmdown",
+        "parameters": {
+          "gamma": 1.1
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "lr_multiplier": 1.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "MiLe loss with entropy-weighted token loss and decay during warmdown",
+    "8-bit blockwise symmetric int8 quantization of Muon momentum buffers",
+    "1.04x learning-rate boost",
+    "Cache+Backout mechanism using cached hidden states after layer 7 and learned backout scalar",
+    "Full Hessian GPTQ with Hessian-based column ordering and Cholesky error compensation",
+    "GPTQ quantization adapted for banked weights via temporary unbanked model Hessian collection"
+  ],
+  "artifact_size": "~15.95 MB"
+}

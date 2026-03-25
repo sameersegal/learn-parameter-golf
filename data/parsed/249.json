@@ -1,0 +1,100 @@
+{
+  "pr_number": 249,
+  "title": "non-record: int6 3xMLP + cosine warmdown (1.1704 bpb)",
+  "author": "kvmukilan",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1704,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Widened the MLP from 2x to 3x using freed artifact budget from int6 quantization.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Set RoPE base to 50k via environment variable.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Manual KV head repeat for GQA compatibility instead of using enable_gqa.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal weight initialization for all linear layers except zero-init layers."
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warmdown",
+        "parameters": {
+          "formula": "0.5 * (1 + cos(pi * progress))"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "optimizer": "Muon WD"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Switched from int8 to int6 quantization to free artifact budget",
+    "Used the freed budget to widen the MLP from 2x to 3x",
+    "Replaced linear LR decay with cosine warmdown",
+    "Applied orthogonal initialization to linear layers",
+    "Used zstd level 22 for artifact compression",
+    "Implemented manual KV head repeat for GQA compatibility"
+  ],
+  "artifact_size": "13.5MB"
+}

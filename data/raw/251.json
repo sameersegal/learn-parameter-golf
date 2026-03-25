@@ -1,0 +1,12 @@
+{
+  "number": 251,
+  "title": "Add SP4096 11L432 MLP3x Int6+Zstd Momentum99 record (val_bpb=1.1596)",
+  "author": "kshitizz36",
+  "body": "## Summary\r\n- **New SOTA: val_bpb=1.1596** (prev: 1.1753, \u0394=\u22120.0157)\r\n- SP-4096 tokenizer, 11 layers \u00d7 dim 432, 3x MLP expansion (relu\u00b2)\r\n- Muon momentum 0.99, decoupled WD 0.02, warmdown 3000 iters\r\n- Int6 PTQ (levels=31) + zstd-22, fp16 embedding passthrough\r\n- Sliding-window eval stride=64, 20.3M params \u2192 15.3MB artifact\r\n- 9237 steps in 600s on 8\u00d7H100\r\n\r\n## Key changes from previous record\r\n| | Previous (1.1753) | This (1.1596) |\r\n|---|---|---|\r\n| Layers | 10 | 11 |\r\n| Dim | 496 | 432 |\r\n| MLP mult | 2x | 3x |\r\n| Muon momentum | 0.95 | 0.99 |\r\n| Warmdown iters | 2500 | 3000 |\r\n| Params | ~19.5M | 20.3M |\r\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T18:56:07Z",
+  "updated_at": "2026-03-20T21:56:51Z",
+  "submission_readme": "# 11L MLP3x + Int6 PTQ + Muon Momentum 0.99\n\n**val_bpb: 1.1596** | artifact: 15.3MB | 8xH100 600s\n\n## Key Changes from Previous SOTA (1.1753 BPB)\n\n- **11 transformer layers** (up from 8) with dim=432\n- **MLP 3x expansion** (up from 2x) \u2014 significantly more capacity\n- **Muon momentum 0.99** (up from 0.95) \u2014 smoother optimization\n- **Decoupled weight decay 0.02** on both Muon and Adam\n- **Int6 PTQ** (levels=31) with fixed floor bug + zstd-22 compression\n- **fp16 embedding passthrough** \u2014 embeddings kept at fp16 instead of quantized\n\n## Reproduction\n\n```bash\nmodal run run_modal.py \\\n  --command train-8gpu \\\n  --vocab-size 4096 \\\n  --variant sp4096 \\\n  --num-layers 11 \\\n  --model-dim 432 \\\n  --mlp-mult 3 \\\n  --compression-codec zstd \\\n  --compression-level 22 \\\n  --fp16-embed 1 \\\n  --qat-start-frac 1.1 \\\n  --quant-levels 31 \\\n  --matrix-lr 0.04 \\\n  --scalar-lr 0.04 \\\n  --muon-momentum 0.99 \\\n  --muon-wd 0.02 \\\n  --adam-wd 0.02 \\\n  --warmdown-iters 3000 \\\n  --train-seq-len 1024 \\\n  --eval-seq-len 1024 \\\n  --eval-batch-seqs 256 \\\n  --max-seconds 600\n```\n\n## Architecture\n\n- SP-4096 tokenizer (0.30 tokens/byte)\n- 11 layers, dim=432, 8 heads / 4 KV heads (GQA)\n- MLP 3x expansion with relu^2 activation\n- RoPE positional encoding, encoder-decoder skip connections\n- Tied embeddings with overtone spectral init\n- 20.3M parameters \u2192 15.3MB artifact (int6+zstd-22)\n"
+}

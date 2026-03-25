@@ -1,0 +1,74 @@
+{
+  "pr_number": 224,
+  "title": "Complexity MoE + PID Dynamics (Token-Routed I64)",
+  "author": "Complexity-ML",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Token-Routed MoE",
+        "description": "4-expert mixture-of-experts MLP with deterministic token routing via token_id % 4 and mask-multiply implementation for compile compatibility.",
+        "parameters": {
+          "experts": 4,
+          "routing": "token_id % 4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "PID Dynamics",
+        "description": "Learnable equilibrium mu traverses all 9 layers with tight clamping for stability, acting like a PID-style controller over hidden state dynamics.",
+        "parameters": {
+          "layers": 9,
+          "mu_range": "[0.5, 1.5]",
+          "velocity_range": "[-3, 3]"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaces relu\u00b2 activation with SwiGLU in the expert MLPs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warm restarts",
+        "parameters": {
+          "cycle_lengths": [
+            5000,
+            10000,
+            20000
+          ],
+          "peak_lr_decay": 0.7
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "int8 + zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "int8 + zlib",
+  "novel_contributions": [
+    "Token-routed MoE with deterministic routing using token_id % 4",
+    "PID dynamics with mu traversing all 9 layers",
+    "SwiGLU activation replacing relu\u00b2",
+    "Cosine warm restarts learning-rate schedule",
+    "Mask-multiply routing designed to be fullgraph-safe for torch.compile"
+  ],
+  "artifact_size": "under 16MB"
+}

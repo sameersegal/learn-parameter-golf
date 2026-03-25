@@ -1,0 +1,181 @@
+{
+  "pr_number": 236,
+  "title": "Record: 11L Int6 + SmearGate + Batch Optimization (val_bpb=1.1400)",
+  "author": "saml212",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.14,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "attention + MLP weights; int8 tok_emb"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gating module that blends adjacent token embeddings",
+        "parameters": {
+          "params": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds consecutive token pair features via hashed bigram buckets",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Widened MLP to 3x hidden size",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding / output projection implied by tied embedding learning rate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 7,
+          "every_steps": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 32
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP output scaling"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adamw_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reduced batch size to improve step count under a fixed 600s training budget",
+        "parameters": {
+          "from_tokens": 786000,
+          "to_tokens": 524288
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Reduced batch size from 786K to 524K tokens to maximize optimization steps within a fixed training time budget",
+    "Used int6 quantization for all main weights instead of int5 MLP quantization",
+    "Switched tok_emb from fp16 to int8 to free artifact space for a wider MLP",
+    "Added SmearGate as a per-dimension embedding blending mechanism",
+    "Added BigramHash features with 2048 buckets and 128-dimensional embeddings",
+    "Applied batched sliding-window evaluation with stride 64 to make long-context eval feasible within time limits",
+    "Used SWA with periodic checkpoint averaging",
+    "Combined Muon and AdamW with dual weight decay to improve compression and quantization behavior",
+    "Used OrthoInit with muP output scaling"
+  ],
+  "artifact_size": "15.7 MB"
+}

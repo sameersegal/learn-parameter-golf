@@ -1,0 +1,120 @@
+{
+  "pr_number": 230,
+  "title": "Record: Int6 + MLP 3x + NorMuon + SmearGate + BigramHash + OrthoInit + Sliding Window, val_bpb=1.1541",
+  "author": "MatthewHRockwell",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1541,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights; tied embeddings kept in fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x model dimension to increase capacity.",
+        "parameters": {
+          "hidden_dim": 1536,
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": {
+          "decoupled_weight_decay": true,
+          "normalized_newton_schulz": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending each token embedding with the previous token embedding.",
+        "parameters": {
+          "params": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based embedding for token pairs to inject explicit bigram context.",
+        "parameters": {
+          "buckets": 4096,
+          "dimension": 64,
+          "projected_dim": 512
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-style output projection scaling by 1/sqrt(2L)."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02,
+          "decoupled": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Int6 per-row quantization with fp16 scales and fp16 tied embeddings",
+    "MLP hidden expansion to 3x model dimension enabled by quantization savings",
+    "NorMuon / normalized Newton-Schulz optimization with decoupled weight decay",
+    "SmearGate token blending with previous-token context",
+    "BigramHash embedding for token pairs",
+    "Orthogonal initialization with muP-scaled output projections",
+    "Sliding window evaluation with stride 256 over 2048-token windows"
+  ],
+  "artifact_size": "15,992,610 bytes"
+}
