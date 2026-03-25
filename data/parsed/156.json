@@ -1,0 +1,151 @@
+{
+  "pr_number": 156,
+  "title": "feat(record): Int6 STE + NorMuon + SWA + Sliding Window (val_bpb=1.16019)",
+  "author": "dexhunter",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.16019,
+  "architecture": "Transformer",
+  "quantization": "int6 STE",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights; embeddings kept fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x wider MLP hidden layer to increase capacity within the artifact budget",
+        "parameters": {
+          "dimensions": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Embedding tensor is tied and stored in fp16, never quantized",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "layers": 9,
+          "model_dim": 512,
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses RoPE positional encoding with learnable Q gain",
+        "parameters": {
+          "q_gain_init": 1.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "beta2": 0.95,
+          "matrix_lr": 0.02,
+          "warmdown_iters": 3000,
+          "momentum_warmup_steps": 1500,
+          "momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 7,
+          "interval_steps": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 960
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-through estimator with fake int6 per-row quantization applied on every forward pass during training",
+        "parameters": {
+          "range": [
+            -31,
+            31
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "U-Net style skip connections with learnable per-layer per-dimension skip weights",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 STE fake quantization during training with straight-through gradient bypass",
+    "NorMuon optimizer with row-normalized Newton-Schulz updates",
+    "3x wider MLP enabled by int6 compression savings",
+    "FP16 tied embedding passthrough to protect quantization-sensitive weights",
+    "Sliding window evaluation with stride 64 for longer effective context",
+    "SWA over 7 checkpoints during warmdown",
+    "Zstd-22 artifact compression",
+    "U-Net skip connections with learnable skip weights"
+  ],
+  "artifact_size": "15,045,740 bytes"
+}

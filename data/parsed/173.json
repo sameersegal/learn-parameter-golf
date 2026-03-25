@@ -1,0 +1,119 @@
+{
+  "pr_number": 173,
+  "title": "Record submission : Int6 + MLP 3x + Flash Attention 3 + NorMuon, val_bpb = 1.1532",
+  "author": "tamoghnokandar",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1532,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "weight matrices with per-row scaling; tied embedding and last 2 layers' c_k.weight kept in fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP hidden size from 1024 to 1536 (3x expansion).",
+        "parameters": {
+          "hidden_size": 1536,
+          "base_hidden_size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept tied token embedding in fp16 for sensitivity reasons.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Model uses 4 KV heads with 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4,
+          "layers": 9,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "eval_seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 3 used for the attention kernel to improve training/runtime on H100s.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Replaced Muon with NorMuon for optimizer updates.",
+    "Switched the attention path to FlashAttention 3.",
+    "Used int6 post-training quantization with per-row scaling to fit a larger MLP.",
+    "Expanded the MLP hidden size from 1024 to 1536 while staying within the artifact budget.",
+    "Validated the submission across three seeds (7, 42, 1337) with sliding-window evaluation."
+  ],
+  "artifact_size": "15.96MB"
+}

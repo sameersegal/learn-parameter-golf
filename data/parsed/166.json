@@ -1,0 +1,123 @@
+{
+  "pr_number": 166,
+  "title": "Record: Long Context + All Optimizations submission",
+  "author": "chinesepowered",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.155,
+  "architecture": "Transformer",
+  "quantization": "FP16 tied embedding export with int8 quantization elsewhere",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "eval_seq_len": 1024
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embedding export in FP16 to avoid quantization error compounding through input/output paths.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer depth",
+        "description": "Increases model depth to 10 transformer layers.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": {
+          "extended_momentum_warmup": {
+            "start": 0.92,
+            "steps": 1500
+          }
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Overtone spectral embedding initialization with power-law spectrum shaping."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition residual mixing with sigmoid-scheduled initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3600,
+          "momentum_warmup_steps": 1500,
+          "momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses a smaller training batch of 393K tokens to increase optimizer steps per wallclock second.",
+        "parameters": {
+          "train_batch_tokens": 393000
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Combines long-context training with the strongest prior SOTA evaluation and quantization tricks.",
+    "Uses 2048-token training sequences instead of 1024 to improve pre-quantization quality.",
+    "Applies conservative learning rates and higher Muon momentum to reduce quantization gap.",
+    "Uses FP16 tied embedding export to avoid int8 quantization error compounding.",
+    "Keeps sliding-window evaluation while adding training optimizations from the Seq4096 submission.",
+    "Increases model depth to 10 layers while staying within budget."
+  ],
+  "artifact_size": null
+}

@@ -1,0 +1,167 @@
+{
+  "pr_number": 752,
+  "title": "Record: Depth Recurrence + SGD TTT : 1.1182 BPB",
+  "author": "Naazimsnh02",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1182,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeats layers 4 and 5 to create 13 virtual layers from 11 physical layers at zero parameter cost.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "physical_layers": 11,
+          "virtual_layers": 13
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash module with vocabulary size 2048.",
+        "parameters": {
+          "vocab_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA on the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary positional embeddings to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP block with LeakyReLU(0.5)^2.",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50,
+          "description": "tight SWA weight averaging"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Legal score-first test-time training with backward-looking chunk adaptation; each chunk is scored before being trained on, and the last chunk is scored but never trained on.",
+        "parameters": {
+          "chunks": 1893
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Depth recurrence on layers 4 and 5 to create 13 virtual layers from 11 physical layers with zero parameter cost",
+    "First successful use of depth recurrence on the leaderboard",
+    "Legal score-first SGD test-time training applied on top of the base model",
+    "Combination of depth recurrence with SGD TTT to improve BPB from 1.1208 to 1.1182"
+  ],
+  "artifact_size": "15.93 MB"
+}

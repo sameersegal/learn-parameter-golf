@@ -1,0 +1,162 @@
+{
+  "pr_number": 741,
+  "title": "Record: Cosine TTT + Multi-Order N-gram Cache (3-seed mean val_bpb=0.9850)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.985,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer variant with expanded MLP projection layers as part of the custom architecture stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed n-gram/count-sketch style component used for multi-order n-gram caching.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism included in the architecture stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Custom attention/sequence module included in the architecture stack.",
+        "parameters": {
+          "version": "XSA4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embedding variant.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with reduced KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "multi-order n-gram cache interpolation",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "entropy_adaptive_alpha": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 20,
+          "learning_rate_schedule": "cosine",
+          "per_layer_lr_groups": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used in the custom architecture stack."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Combining cosine test-time training with multi-order n-gram cache interpolation",
+    "Entropy-adaptive alpha mixing between model and n-gram predictions",
+    "Score-first n-gram cache evaluation with single blended prediction per token",
+    "Single-pass cosine TTT adaptation with per-layer learning-rate groups",
+    "Breaking the sub-1.0 BPB barrier with a 3-seed mean val_bpb of 0.9850"
+  ],
+  "artifact_size": "15.62 MB"
+}

@@ -1,0 +1,158 @@
+{
+  "pr_number": 745,
+  "title": "Record: XSA-all + Depth Recurrence + Hedge Mixer TTT (val_bpb=1.0222, 3-seed mean)",
+  "author": "stukenov",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0222,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied on all virtual layers.",
+        "parameters": {
+          "layers": 13
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual Learning",
+        "description": "Layer 0 value output is blended into subsequent attention via learned sigmoid gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gates on attention output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "CROWN-Q",
+        "description": "Curvature-weighted quantization penalty during warmdown to improve int6 quantization robustness.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are repeated, creating 13 virtual layers from 11 physical layers.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 13,
+          "repeated_layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "5-expert Hedge Mixer for online context mixing during TTT evaluation using neural, unigram, bigram, trigram, and entropy experts.",
+        "parameters": {
+          "experts": 5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 1,
+          "learning_rate": 0.002,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "XSA on all layers",
+    "Value Residual Learning",
+    "Gated Attention",
+    "CROWN-Q curvature-weighted quantization penalty",
+    "Depth recurrence with repeated layers 4 and 5",
+    "5-expert Hedge Mixer for online context mixing during TTT",
+    "Score-first test-time training with n-gram tables built only from already-scored tokens"
+  ],
+  "artifact_size": "15,857,972 bytes"
+}

@@ -1,0 +1,102 @@
+{
+  "pr_number": 182,
+  "title": "Non-record: Linearized Neural Memory + TTT (val_bpb=1.1844)",
+  "author": "mihir-s-05",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1844,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "linearized neural memory",
+        "description": "Titans-inspired neural memory added to each transformer block; cumulative gradient update is linearized into causal linear attention via cumsum/einsum and used as a gated residual between attention and MLP.",
+        "parameters": {
+          "layers": 10,
+          "params_per_layer_overhead": "~8k"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "targets": [
+            "Q",
+            "V",
+            "lm_head"
+          ]
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone spectral embedding init",
+        "description": "Uses overtone spectral embedding initialization with phase-transition residual mixing."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "middle layers"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "decoupled": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FP16 embedding bypass",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Adds a Titans-inspired neural memory module to each transformer block",
+    "Linearizes the memory update into causal linear attention using cumsum and einsum for fullgraph compilation",
+    "Places memory between attention and MLP as a gated residual",
+    "Combines the memory module with LoRA-based test-time training",
+    "Uses overtone spectral embedding initialization and phase-transition residual mixing",
+    "Applies FP16 embedding bypass and int6 quantization on middle layers",
+    "Uses Muon weight decay with AdamW for embeddings/scalars"
+  ],
+  "artifact_size": "14.5 MB"
+}

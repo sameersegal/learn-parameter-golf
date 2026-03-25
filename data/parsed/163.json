@@ -1,0 +1,122 @@
+{
+  "pr_number": 163,
+  "title": "SwiGLU dim=576 + Sliding Window + Muon WD (1.2091 BPB)",
+  "author": "Focus2321",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2091,
+  "architecture": "Transformer",
+  "quantization": "FP16 embeddings passthrough with int8/tied-embedding export implied",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Keeps tok_emb.weight in fp16 instead of int8 to avoid quantization degradation in tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses a larger RoPE base to improve performance.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Uses a wider SwiGLU feed-forward block with multiplier 2.",
+        "parameters": {
+          "layers": 7,
+          "dim": 576,
+          "mlp_mult": 2
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.6
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses wallclock-based warmdown at 60% of training and a larger batch/LR configuration.",
+        "parameters": {
+          "train_batch_tokens": 262144,
+          "matrix_lr": 0.03,
+          "scalar_lr": 0.03,
+          "tied_embed_lr": 0.04
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Wider Transformer model with dim=576 and 7 layers using SwiGLU MLPs",
+    "Muon optimizer with decoupled weight decay 0.02",
+    "FP16 embedding passthrough to reduce tied-embedding quantization degradation",
+    "Sliding window evaluation with stride 64 for improved validation BPB",
+    "Wallclock-based warmdown at 60%",
+    "RoPE base 50K, beta2=0.99, and tuned batch/LR settings"
+  ],
+  "artifact_size": "13.2MB"
+}

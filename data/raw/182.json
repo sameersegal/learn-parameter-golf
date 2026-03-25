@@ -1,0 +1,12 @@
+{
+  "number": 182,
+  "title": "Non-record: Linearized Neural Memory + TTT (val_bpb=1.1844)",
+  "author": "mihir-s-05",
+  "body": "Non-record submission. Adds a linearized Titans-style neural memory to each block - the cumulative gradient update reduces to causal linear attention via cumsum, so it compiles with fullgraph=True at ~8K\r\n  params/layer overhead. Combined with LoRA TTT, overtone init, 10 layers, FP16 embedding bypass, int6, Muon WD.\r\n  val_bpb: 1.1844 (TTT) / 1.2163 (standard) | 14.5 MB artifact | 8,641 steps @ 69ms",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T07:06:15Z",
+  "updated_at": "2026-03-20T22:35:55Z",
+  "submission_readme": "# Linearized Neural Memory + TTT\n\n**val_bpb: 1.1844** | Non-record submission (novel architecture)\n\n## Approach\n\nThis submission adds a neural memory module inspired by the Titans paper to each transformer block. The Titans memory module from the paper uses sequential gradient descent loops for memory update, which ended up being too slow given the 10 minute training budget. I made it a closed form linearization that eliminates all loops for increased throughput.\n\nThe cumulative gradient update `W_t = W_0 - \u03b8 \u03a3 grad_i` turned out to be equivalent to causal linear attention, computable with ` cumsum` + ` einsum`. It compiled with ` fullgraph=True` and added around 8k parameters per layer with negligible throughput overhead.\n\nThe memory is placed in between attention and the MLP as a gated residual. Each token's retrieval incorporates all the prior tokens' prediction errors, which functions as a form of test-time adaptation built into the forward pass instead of being applied at eval time.\n\n## Combined Techniques\n\nOn top of the neural memory, this submission incorporates techniques from other submissions that achieved SOTA:\n\n- 10 layers with overtone spectral embedding init and phase-transition residual mixing\n- LoRA TTT at eval (per-document rank-8 adaptation on Q/V/lm_head)\n- FP16 embedding bypass and int6 quantization on middle layers\n- Muon weight decay (0.02, decoupled), AdamW for embeddings/scalars, warmdown=2500\n\n## Results\n\n| Metric | Value |\n|--------|-------|\n| val_bpb (with TTT) | **1.1844** |\n| val_bpb (standard) | 1.2163 |\n| Artifact size | 14.5 MB |\n| Training steps | 8,641 @ 69ms/step |\n\n## References\n\n- [Titans: Learning to Memorize at Test Time](https://arxiv.org/abs/2501.00663)\n\n## Reproduction\n\n```bash\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

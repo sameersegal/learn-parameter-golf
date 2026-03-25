@@ -1,0 +1,136 @@
+{
+  "pr_number": 139,
+  "title": "Non-record: BitNet b1.58 \u2014 65M ternary params beat 4-hour baseline in 10 minutes (val_bpb=1.2029)",
+  "author": "ksang123",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2029,
+  "architecture": "Transformer",
+  "quantization": "ternary base-3 packed weights (BitNet b1.58 / STE QAT)",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 2,
+        "scope": "all linear layers (attention and MLP); ternary {-1, 0, 1} weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BitLinear",
+        "description": "All linear layers use ternary weight quantization with per-group scaling and STE gradients.",
+        "parameters": {
+          "group_size": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP with 3x hidden dimension.",
+        "parameters": {
+          "mlp_multiplier": 3,
+          "hidden_dim": 2304
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with a larger base.",
+        "parameters": {
+          "base": 200000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.04,
+          "tied_embedding_lr": 0.03,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup + wallclock-aware linear warmdown",
+        "parameters": {
+          "warmup_steps": 50,
+          "warmdown_steps": 1200
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "fp16 scale simulation during training using .half().float() to match stored scale precision and reduce quantization gap.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Base-3 packing of ternary weights with 5 trits per byte for lossless artifact storage.",
+        "parameters": {
+          "trits_per_byte": 5
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Uses BitNet b1.58 ternary weights to fit 64.5M parameters into a 15.1MB artifact.",
+    "Achieves near-zero quantization gap by training with ternary quantization active in every forward pass.",
+    "Uses fp16 scale simulation (.half().float()) so training matches stored scale precision.",
+    "Applies base-3 packing (5 trits per byte) for lossless, compact artifact storage.",
+    "Demonstrates that a 10-minute ternary model can beat a 4-hour full-precision baseline under the same size budget.",
+    "Argues that Chinchilla scaling under a fixed artifact-size constraint favors more low-precision parameters over fewer high-precision parameters."
+  ],
+  "artifact_size": "15.11 MB"
+}

@@ -1,0 +1,108 @@
+{
+  "pr_number": 176,
+  "title": "Add submission: 10L Slide64 Mid6, val_bpb=1.1732",
+  "author": "GLDRoger",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.17319477,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 with fp16 tied embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings with fp16 passthrough for the tied embedding/output-head tensor.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 8,
+        "scope": "all weights by default, with middle blocks 3,4,5,6 forced to int6; embeddings and LM head kept fp16"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Uses spectral embedding initialization."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Uses phase residual mixing initialization."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "context_length": 1024,
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Improved the prior valid mid6 run by lowering TIED_EMBED_LR from 0.10 to 0.08.",
+    "Kept the 10-layer sliding-window family recipe with 1024/64 sliding evaluation.",
+    "Used a mixed export policy with only middle blocks 3,4,5,6 forced to int6 while keeping embeddings and LM head in fp16.",
+    "Retained the stronger Muon crossover schedule with warmup and warmdown settings.",
+    "Achieved a new best valid score for this submission family under the 16MB cap."
+  ],
+  "artifact_size": "15846677 bytes"
+}

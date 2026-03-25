@@ -1,0 +1,12 @@
+{
+  "number": 142,
+  "title": "Record: Quant Quality: val_bpb=1.1925",
+  "author": "ankitmaloo",
+  "body": " (int8 clip 99.99995 + float32 per-row scales)\r\n\r\n\r\nSee readme.md. \r\n\r\nFinal loss at 1.19",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T00:20:12Z",
+  "updated_at": "2026-03-25T18:43:35Z",
+  "submission_readme": "# Quant Quality\n\n## Summary\n\nImproved quantization fidelity on the seq4096 training trunk via two changes:\n\n1. **Tighter int8 clipping** \u2014 `INT8_CLIP_PERCENTILE=99.99995` (vs default 99.99984), retaining more of the weight distribution tail\n2. **Higher-precision per-row scales** \u2014 `INT8_PER_ROW_SCALE_DTYPE=float32` (vs default float16), reducing scale quantization error\n\nCombined with the strong TrainingOptSeq4096 optimizer tuning (Muon momentum 0.99, extended warmup, warmdown 3000).\n\n## Configuration\n\n- Layout: `VOCAB_SIZE=1024 NUM_LAYERS=9 MODEL_DIM=512 NUM_HEADS=8 NUM_KV_HEADS=4`\n- Tied embeddings: `TIE_EMBEDDINGS=1`\n- Training geometry: `TRAIN_SEQ_LEN=4096 TRAIN_BATCH_TOKENS=393216`\n- Learning rates: `TIED_EMBED_LR=0.03 MATRIX_LR=0.02 SCALAR_LR=0.02`\n- Muon: `MUON_MOMENTUM=0.99 MUON_MOMENTUM_WARMUP_START=0.92 MUON_MOMENTUM_WARMUP_STEPS=1500`\n- Schedule: `WARMDOWN_ITERS=3000`\n- Quantization: `INT8_CLIP_PERCENTILE=99.99995 INT8_PER_ROW_SCALE_DTYPE=float32`\n\n## Command\n\n```bash\nTRAIN_SEQ_LEN=4096 \\\nTRAIN_BATCH_TOKENS=393216 \\\nTIED_EMBED_LR=0.03 \\\nMATRIX_LR=0.02 \\\nSCALAR_LR=0.02 \\\nMUON_MOMENTUM=0.99 \\\nMUON_MOMENTUM_WARMUP_START=0.92 \\\nMUON_MOMENTUM_WARMUP_STEPS=1500 \\\nWARMDOWN_ITERS=3000 \\\nINT8_CLIP_PERCENTILE=99.99995 \\\nINT8_PER_ROW_SCALE_DTYPE=float32 \\\nMAX_WALLCLOCK_SECONDS=600 \\\nDATA_PATH=./data/datasets/fineweb10B_sp1024 \\\nTOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## Key Metrics\n\n- Pre-quant eval: `val_bpb:1.1895` (step 11300)\n- Post-quant (int8 + zlib): `val_loss:2.01343926 val_bpb:1.19247214`\n- Quantization gap: ~0.003 bpb\n- Train time: 600069ms (step_avg: 52.67ms)\n- Steps: 11,389/20,000 (wallclock limited)\n- Artifact: 15,934,552 bytes (code: 58,672 + model: 15,875,880)\n\n## Hardware\n\nRun on 8xH100 (Hyperbolic).\n\n## Included Files\n\n- `train_gpt.py` (code snapshot)\n- `train.log` (training log)\n- `submission.json` (metadata)\n"
+}

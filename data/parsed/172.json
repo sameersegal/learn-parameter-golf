@@ -1,0 +1,97 @@
+{
+  "pr_number": 172,
+  "title": "Add 3xMLP + Mixed Quant + Blockade/Sigma submission (val_bpb: 1.1812)",
+  "author": "GMaN1911",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1812,
+  "architecture": "Transformer",
+  "quantization": "mixed int8/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width from 2x baseline to 3x to improve token representation capacity.",
+        "parameters": {
+          "mlp_mult": 3,
+          "model_dim": 512,
+          "layers": 9,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int8/int6",
+        "bits": 8,
+        "scope": "attention int8, MLP int6"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2500
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Used tied embeddings with a higher embedding learning rate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Blockade attention diversity to encourage inter-head suppression and diverse attention patterns.",
+        "parameters": {
+          "strength": 0.15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Sigma residuals: uncertainty-gated residual connections that dampen noisy head contributions.",
+        "parameters": {
+          "strength": 0.3
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "3x MLP expansion to increase model capacity within the training budget",
+    "Mixed quantization using INT8 for attention and INT6 for MLP to fit under the 16MB cap",
+    "Blockade attention diversity mechanism to suppress overlapping heads",
+    "Uncertainty-gated sigma residuals to stabilize training",
+    "10-minute 8xH100 training run with reported mixed-roundtrip val_bpb of 1.1812"
+  ],
+  "artifact_size": "15.37 MB"
+}

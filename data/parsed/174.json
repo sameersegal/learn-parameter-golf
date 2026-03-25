@@ -1,0 +1,123 @@
+{
+  "pr_number": 174,
+  "title": "Add ContextFuse-2048-BigramSmear submission",
+  "author": "Julz19",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.15369565,
+  "architecture": "Transformer",
+  "quantization": "mixed int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds bigram token-pair features on the input path.",
+        "parameters": {
+          "bigram_vocab_size": 4096,
+          "bigram_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Blends each token representation with the previous token to smooth inputs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "large MLP and attention matrices"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.5,
+          "every": 200
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "adam_weight_decay": 0.01,
+          "muon_weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for the model."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fixed the sliding-window evaluator to avoid rescoring overlapping tail tokens in truncated windows.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Adds BigramHash token-pair features to the input path",
+    "Introduces SmearGate input smoothing",
+    "Uses mixed int6 export for large attention and MLP matrices",
+    "Applies SWA over the late low-learning-rate phase",
+    "Uses Muon with tuned momentum and weight decay",
+    "Fixes the sliding-window evaluation bug that previously double-counted tail tokens",
+    "Updates the canonical metric using an exact reevaluation of the saved seed=1337 checkpoint"
+  ],
+  "artifact_size": "15331125 bytes"
+}

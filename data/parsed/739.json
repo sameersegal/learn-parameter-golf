@@ -1,0 +1,101 @@
+{
+  "pr_number": 739,
+  "title": "T5: Phase-Based Depth Recurrence + MLA + Graduated Precision (Non-Record)",
+  "author": "Jonas-T5",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.5,
+  "architecture": "Transformer",
+  "quantization": "mixed FP4/Int6 QAT with FP8 training",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "8 unique transformer blocks are repeated across 4 specialized phases for 40 effective layers, with phase-specific specialization instead of uniform cycling.",
+        "parameters": {
+          "unique_blocks": 8,
+          "phases": 4,
+          "repetitions": 5,
+          "effective_depth": 40,
+          "width": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLA",
+        "description": "Multi-Head Latent Attention uses low-rank KV compression to replace GQA and reduce attention parameters.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed FP4/Int6 QAT",
+        "bits": null,
+        "scope": "early-phase layers FP4, late-phase layers Int6"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "FP8",
+        "bits": 8,
+        "scope": "all persistent state (master weights, optimizer momentum)"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "with": "AdamW",
+          "orthogonalization": "Newton-Schulz for 2D weights"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "DeepNorm init",
+        "description": "Output projections scaled by (8\u00b7N)^(-1/4) for deep stability."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "Z-Loss",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "QK-Clip",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Phase-based depth recurrence with 8 unique blocks repeated across 4 specialized phases",
+    "40 effective layers at full d=512 width with only 24M unique parameters",
+    "Multi-Head Latent Attention (MLA) for low-rank KV compression",
+    "Graduated precision scheme using FP4 for early layers and Int6 for late layers",
+    "FP8 training with stochastic rounding for persistent state on H100",
+    "Phase-specialized recurrence intended to outperform uniform ALBERT-style cycling"
+  ],
+  "artifact_size": "~13 MB"
+}

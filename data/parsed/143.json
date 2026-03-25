@@ -1,0 +1,105 @@
+{
+  "pr_number": 143,
+  "title": "Add ContextFuse-2048 submission",
+  "author": "Julz19",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.17792945,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib roundtrip with fp16 tied-embedding passthrough",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings and preserves them in fp16 for better post-quantization fidelity.",
+        "parameters": {
+          "tie_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 256
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights with fp16 tied embeddings passthrough"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "muon_backend_steps": 5,
+          "tied_embed_lr": 0.03,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "max_wallclock_seconds": 599
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Byte-safe export revision by disabling fp16 passthrough for late-K layers while keeping fp16 embedding passthrough.",
+        "parameters": {
+          "fp16_embed_passthrough": 1,
+          "fp16_late_k_layers": 0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Long-context training at 2048 tokens instead of the 1024-token baseline",
+    "Sliding-window final evaluation with stride 64 to improve context coverage during scoring",
+    "FP16 tied-embedding export to preserve the highest-value tensor under quantization",
+    "Byte-safe architecture adjustment using MLP hidden size 992 to offset fp16 embedding cost",
+    "Muon-smoothed optimization with lower learning rates and warmdown tuned for the 2048-context regime",
+    "Standalone record-folder submission artifact with Modal orchestration removed"
+  ],
+  "artifact_size": "15,929,105 bytes"
+}

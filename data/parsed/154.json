@@ -1,0 +1,109 @@
+{
+  "pr_number": 154,
+  "title": "Non-record: Cross-layer parameter sharing + 4-bit QAT (RecurrentGPT)",
+  "author": "evnkm",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 2.1586,
+  "architecture": "Transformer",
+  "quantization": "4-bit QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Preludes, a shared recurrent block iterated multiple times, and coda blocks replace a stack of unique transformer layers to share parameters across depth.",
+        "parameters": {
+          "num_prelude": 2,
+          "num_recurrent_iters": 10,
+          "num_coda": 2,
+          "effective_depth": 14
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses aggressive grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 10,
+          "num_kv_heads": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 4,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone init",
+        "description": "Non-standard initialization mentioned as part of the preserved SOTA techniques."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "FP16 tied embedding is preserved from the baseline.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "type": "Muon WD"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-iteration learned gates allow the shared recurrent block to behave differently at each effective depth.",
+        "parameters": {
+          "num_iterations": 10
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Phase-transition residual mixing applied across effective depth, including recurrent iterations.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Cross-layer parameter sharing via a prelude \u2192 recurrent \u2192 coda architecture",
+    "Per-iteration learned gating for depth-dependent behavior in a shared recurrent block",
+    "4-bit quantization-aware training with straight-through estimator fake quantization",
+    "Unified quantization pipeline supporting int8 and 4-bit modes",
+    "Phase-transition residual mixing across effective depth",
+    "Preservation of baseline techniques such as FP16 tied embedding, Muon WD, overtone init, and sliding window evaluation"
+  ],
+  "artifact_size": "7.25MB"
+}

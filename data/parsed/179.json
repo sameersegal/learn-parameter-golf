@@ -1,0 +1,109 @@
+{
+  "pr_number": 179,
+  "title": "Record: 11L, int6+zstd, decoupled WD (val_bpb = 1.1472)",
+  "author": "devin-cog",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1472,
+  "architecture": "GPT",
+  "quantization": "int6 per-row quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights; embeddings kept in fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA / KV head count",
+        "description": "GPT with grouped-query attention using fewer KV heads than attention heads",
+        "parameters": {
+          "layers": 11,
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.038,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.03,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup and warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.038
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Val-only training on the validation shard for the non-record aside submission",
+        "parameters": {
+          "train_files": "fineweb_val_*.bin"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Decoupled weight decay on Muon to reduce quantization gap",
+    "11-layer GPT with GQA to fit under 16MB",
+    "Int6 per-row quantization with fp16 embeddings",
+    "Sliding window evaluation with stride 64",
+    "Higher learning rate / tuned Muon settings for improved convergence",
+    "Val-only training aside demonstrating the approach"
+  ],
+  "artifact_size": "15,905,331 bytes"
+}

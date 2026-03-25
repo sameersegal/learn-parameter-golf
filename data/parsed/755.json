@@ -1,0 +1,110 @@
+{
+  "pr_number": 755,
+  "title": "Gravity Tokenizer: 1.0321 BPB via ablation leverage vocabulary optimization",
+  "author": "dcrow85",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0321,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings in a vanilla 12-layer transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 6 attention heads and 2 KV heads.",
+        "parameters": {
+          "heads": 6,
+          "kv_heads": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP uses 3x expansion (hidden size 1152).",
+        "parameters": {
+          "mlp_mult": 3,
+          "hidden": 1152
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 50,
+          "warmdown_iters": 2500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tokenizer optimization via ablation leverage scoring to replace BPE merge tokens with structurally important tokens.",
+        "parameters": {
+          "beta": 1.0,
+          "replaced_merge_tokens": 659,
+          "total_merge_tokens": 765,
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Retokenization of the training corpus using a custom gravity tokenizer built from selected vocabulary.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Ablation leverage-based tokenizer/vocabulary optimization instead of standard frequency-based BPE.",
+    "Replacement of 659/765 merge tokens while keeping vocabulary size fixed at 1024.",
+    "Demonstration that tokenizer composition alone accounts for the full BPB improvement.",
+    "Use of a frozen GPT-2 reference model to score token structural importance across FineWeb contexts.",
+    "Deterministic retokenization pipeline and correctness validation using competition evaluation code."
+  ],
+  "artifact_size": "15.6 MB"
+}

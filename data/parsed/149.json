@@ -1,0 +1,222 @@
+{
+  "pr_number": 149,
+  "title": "Add Combined Int6 + QAT + Sliding Window submission",
+  "author": "pleasedontddosme",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "last 30% of training"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "FP16 passthrough for token embeddings and last layer tied weights",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone init",
+        "description": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "phase-transition resid_mix",
+        "description": "Residual mixing initialization around phase transition"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "decoupled_weight_decay": true,
+          "higher_momentum_warmup": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "chunk_size": 256,
+          "learning_rate": 0.01,
+          "targets": [
+            "Q",
+            "V",
+            "LM head"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Learned bigram hash embedding with XOR hash",
+        "parameters": {
+          "entries": 10240,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending each token with the previous token",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider MLP block",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "last_fraction": 0.4,
+          "interval_steps": 50,
+          "cpu_accumulation": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04,
+          "optimizer": "Muon"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "value": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "z-loss",
+        "parameters": {
+          "value": 0.0001
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "TTT LoRA at evaluation with per-document adapters",
+    "Dual bigram residual table used inside the TTT evaluation loop",
+    "Label smoothing for calibration and quantization robustness",
+    "Z-loss regularization to reduce logit magnitudes and improve post-quantization performance",
+    "Combined Int6 quantization with QAT and sliding-window evaluation",
+    "FP16 tied embeddings passthrough",
+    "Late-K passthrough",
+    "Batched sliding window evaluation with stride 64",
+    "Overtone initialization and phase-transition resid_mix",
+    "Muon decoupled weight decay with AdamW for embeddings/scalars",
+    "Cosine warmdown schedule with higher Muon momentum warmup"
+  ],
+  "artifact_size": null
+}

@@ -1,0 +1,119 @@
+{
+  "pr_number": 137,
+  "title": "Record: Int6 + MLP 3x + STE QAT + NorMuon + sliding window (val_bpb 1.1666)",
+  "author": "abhishekgahlot2",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1666,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 QAT",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "MLP and attention weights; fp16 passthrough for tied embedding"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 1536 (3x expansion) to increase model capacity.",
+        "parameters": {
+          "hidden": 1536,
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": 0.01,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "grad_clip": 0.3,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoint_interval_steps": 200,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.01,
+          "grad_clip_norm": 0.3,
+          "logit_softcap": 15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Mixed quantization with int6 per-row on MLP and attention weights, fp16 passthrough for tied embedding, and QAT using a straight-through estimator.",
+        "parameters": {
+          "enable_qat": 1,
+          "ema_decay": 0.998
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 mixed quantization with STE fake-int6 QAT",
+    "3x MLP expansion to increase capacity under artifact size constraints",
+    "NorMuon optimizer with row-wise RMS normalization after Newton-Schulz orthogonalization",
+    "SWA checkpoint averaging during warmdown",
+    "Sliding window evaluation with stride 64 for improved val_bpb",
+    "Mixed quantization scheme with int6 per-row weights and fp16 tied embedding passthrough"
+  ],
+  "artifact_size": "15.22 MB"
+}

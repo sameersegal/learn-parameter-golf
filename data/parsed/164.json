@@ -1,0 +1,120 @@
+{
+  "pr_number": 164,
+  "title": "Submission: OrthoInit + Int6 MLP3x + SmearGate + BigramHash (val_bpb: 1.1524)",
+  "author": "jfprincz",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1524,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for large matrices with muP-style scaling of output projections by 1/sqrt(2 * layers) to improve early convergence."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 1536, increasing model capacity.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention int6; embeddings and bigram int8; controls fp32"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned sigmoid gate blending each token embedding with the previous token embedding before the first transformer layer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding table injecting token-pair features.",
+        "parameters": {
+          "buckets": 4096,
+          "input_dim": 128,
+          "output_dim": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "warmup_start": 0.92,
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Orthogonal + muP-scaled initialization for faster early convergence",
+    "3x wider MLP to increase capacity within the artifact budget",
+    "Mixed int6/int8 quantization to reduce artifact size",
+    "SmearGate token embedding blending with previous-token context",
+    "BigramHash embedding for token-pair feature injection",
+    "Tuned Muon optimizer settings with warmup and warmdown",
+    "Training and evaluation at 2048-token sequence length with NTK-aware RoPE",
+    "FlashAttention 3 integration for faster training steps"
+  ],
+  "artifact_size": "15.4 MB"
+}

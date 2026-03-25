@@ -1,0 +1,158 @@
+{
+  "pr_number": 738,
+  "title": "Record: VRL + Full GPTQ + 5-gram Cache + Hidden-State kNN-LM (3-seed mean val_bpb=1.0970)",
+  "author": "gowtham0992",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.097,
+  "architecture": "Transformer",
+  "quantization": "Full GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning added to the base stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion with LeakyReLU(0.5)^2",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash component used in the model stack",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "8 attention heads with 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50,
+          "description": "tight SWA every 50 steps"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window": 128
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Online 5-gram cache with adaptive lambda and pre-committed confidence gate",
+        "parameters": {
+          "n": 5,
+          "threshold": 0.7,
+          "min_observations": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hidden-state kNN-LM using a GPU ring buffer of 512-dim hidden states with L2 nearest neighbors and RBF kernel distribution",
+        "parameters": {
+          "hidden_dim": 512,
+          "k": 32,
+          "buffer_size": 30000,
+          "temperature": 50
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Hidden-State kNN-LM using stored 512-dim hidden states in a GPU ring buffer",
+    "Online 5-gram cache with adaptive lambda and pre-committed confidence gate",
+    "GPTQ calibration performed inside the training budget to satisfy competition constraints",
+    "Combination of n-gram cache and kNN cache for additive evaluation-time gains",
+    "VRL-based base stack with full GPTQ quantization"
+  ],
+  "artifact_size": "~15.7 MB"
+}

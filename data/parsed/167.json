@@ -1,0 +1,87 @@
+{
+  "pr_number": 167,
+  "title": "Depth Recurrence via Layer Sharing (3 shared blocks \u2192 1/3 params, matched BPB)",
+  "author": "SkywardSyntax",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 3.151,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses 3 unique transformer blocks cycled over multiple virtual layers with ALBERT-style weight sharing, preserving forward depth while reducing unique parameters.",
+        "parameters": {
+          "unique_layers": 3,
+          "virtual_layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares transformer block weights across repeated virtual layers.",
+        "parameters": {
+          "unique_layers": 3,
+          "virtual_layers": 9
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Preserves encoder/decoder skip connections and x0 residual blending across shared blocks to prevent representation collapse."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "combined_with": "Adam",
+          "shared_params_handling": "gradients accumulate correctly across repeated applications"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "extra recurrence at eval time",
+        "parameters": {
+          "additional_cycles": null
+        }
+      }
+    }
+  ],
+  "compression": "int8+zlib",
+  "novel_contributions": [
+    "Cycles 3 unique transformer blocks over 9 virtual layers to achieve depth recurrence with 1/3 the unique parameters.",
+    "Matches baseline BPB while reducing artifact size substantially.",
+    "Enables extra recurrence cycles at evaluation time for additional BPB gains.",
+    "Minimal code change via a NUM_UNIQUE_LAYERS environment variable.",
+    "Demonstrates compatibility with shared-parameter optimization using Muon + Adam."
+  ],
+  "artifact_size": "~1.6MB"
+}
