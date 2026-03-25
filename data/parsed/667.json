@@ -1,0 +1,119 @@
+{
+  "pr_number": 667,
+  "title": "Non-record: Fixed Bank QAT + XSA5 + Label Smoothing (1.1352)",
+  "author": "suchitj2702",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1352,
+  "architecture": "GPT",
+  "quantization": "STE int6 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all bank parameters"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Expanded XSA from the last 4 layers to the last 5 layers.",
+        "parameters": {
+          "layers": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "value": 0.05
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.003,
+          "momentum": 0.95,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Bank QAT fix implemented directly in GPT.forward() using STE int6 fake-quantization for bank parameters, with torch.compile reset/recompile.",
+        "parameters": {
+          "recompile_cost_seconds": 50,
+          "overhead_ms_per_step": 5
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Fixed broken Bank QAT by implementing STE int6 fake-quantization directly in GPT.forward() for bank parameters.",
+    "Expanded XSA from 4 layers to 5 layers.",
+    "Added label smoothing of 0.05.",
+    "Tuned TTT hyperparameters to learning rate 0.003 and momentum 0.95.",
+    "Reported that the QAT fix was too expensive due to recompilation overhead and reduced training steps."
+  ],
+  "artifact_size": "15.44 MB"
+}

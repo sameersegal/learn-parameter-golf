@@ -1,0 +1,160 @@
+{
+  "pr_number": 451,
+  "title": "Add LLMAdvisor submission: 1.14638 BPB (track_10min_16mb)",
+  "author": "harborglowvintage-oss",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.14638,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP weights int5, attention weights int6, FP16 embeddings and last-layer key projections"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a learned embedding table and projects to model dimension to capture local token-pair context.",
+        "parameters": {
+          "buckets": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending current and previous token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied and stored in FP16.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.02,
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 30,
+          "start_frac": 0.5,
+          "num_averaged_checkpoints": 49
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal",
+        "description": "Orthogonal initialization with muP-scaled outputs."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reduced batch size to increase step throughput within the 600s wallclock budget.",
+        "parameters": {
+          "batch_size_tokens": 622592
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed int5 MLP / int6 attention quantization with FP16 embeddings to fit a 10-layer model under the 16MB limit.",
+    "BigramHash(10240) feature to inject local token-pair context.",
+    "SmearGate mechanism to blend current and previous token embeddings.",
+    "Denser SWA boost schedule (every=30 steps, start_frac=0.50) with 49 averaged checkpoints.",
+    "Reduced batch size to increase the number of training steps within the 600-second budget."
+  ],
+  "artifact_size": "15,736,555 bytes"
+}

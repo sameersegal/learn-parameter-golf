@@ -1,0 +1,109 @@
+{
+  "pr_number": 454,
+  "title": "Non-record: Competitive Stack + Phonetic Tokenization Exploration (val_bpb=1.2055, 4xH100)",
+  "author": "nalediym",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2055,
+  "architecture": "Transformer",
+  "quantization": "int6 STE QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "4096-bucket hash embedding for bigram context",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending current and previous token embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal weight initialization with muP-style 1/sqrt(2L) projection scaling"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider feedforward network",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "grad_clip",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Phonetic tokenization exploration using IPA/G2P conversion and SentencePiece BPE on phonetic output",
+        "parameters": {
+          "cmudict_exceptions": 4795,
+          "word_coverage": 0.846,
+          "tokenizer_vocab_size": 1024
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Competitive training stack combining int6 STE QAT, BigramHash, SmearGate, OrthoInit, and 3x MLP",
+    "Sliding-window evaluation with stride 64 achieving val_bpb 1.2055",
+    "IPA phonetic tokenization research with a controlled comparison against standard BPE",
+    "Negative result showing phonetic encoding provides only marginal gains in isolation and is largely subsumed by the competitive training stack"
+  ],
+  "artifact_size": "19.6MB"
+}

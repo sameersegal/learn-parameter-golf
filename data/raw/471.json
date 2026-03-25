@@ -1,0 +1,12 @@
+{
+  "number": 471,
+  "title": "Add submission: 11L Frontier Stack + Value Residual + Gated Attention",
+  "author": "yuvrajyadav17",
+  "body": "",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-22T22:45:46Z",
+  "updated_at": "2026-03-22T22:45:46Z",
+  "submission_readme": "# Record: 11L Frontier Stack + Value Residual + Gated Attention\n\n**val_bpb: TBD** (sliding window stride=64, 3-seed mean) | **~15.6 MB** | 8xH100 SXM, 600s\n\n## Approach\n\nThis submission combines the proven community frontier stack with two novel additions:\n\n### Base Stack (from PRs #315, #374, #414)\n- 11 layers, 512d, 8H/4KV, MLP 3x (relu\u00b2), U-Net skips\n- SmearGate + BigramHash(2048) + OrthoInit\n- XSA on last 4 layers\n- EMA (decay=0.997) + Tight SWA\n- Partial RoPE (16/64 dims)\n- LN Scale (1/sqrt(layer+1))\n- Late QAT (STE in final portion)\n- GPTQ-lite post-training quantization\n- Int6 + zstd-22, FP16 tied embedding\n- Muon WD=0.04, momentum=0.99\n\n### Novel Additions\n\n**Value Residual / ResFormer** (arXiv:2410.17897): Layer-0 value vectors are cached and mixed (alpha=0.5) into all subsequent layers' attention values. This provides a residual pathway through the value stream, allowing deeper layers to access raw input representations. 18 learnable parameters. Dev-scale ablation (#413) showed -0.015 BPB.\n\n**Gated Attention** (arXiv:2505.06708): Per-head sigmoid gate applied to attention output. Eliminates attention sink artifacts. ~37K parameters. Dev-scale ablation (#413) showed -0.003 BPB, stacking additively with Value Residual.\n\n## Results\n\n| Seed | Steps | Sliding BPB (s64) | Artifact |\n|------|-------|--------------------|----------|\n| 1337 | TBD | TBD | TBD |\n| 42 | TBD | TBD | TBD |\n| 2025 | TBD | TBD | TBD |\n\n**Mean: TBD | Std: TBD**\n\n## Ablations\n\n| Config | BPB | Delta |\n|--------|-----|-------|\n| Full stack (this) | TBD | baseline |\n| - Value Residual | TBD | TBD |\n| - Gated Attention | TBD | TBD |\n| - Both novel | TBD | TBD |\n\n## Run Command\n\n```bash\nSEED=1337 \\\nDATA_PATH=./data/datasets/fineweb10B_sp1024/ \\\nTOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## What Failed\n\n(Document negative results here after experimentation)\n\n## What I Learned\n\n(Document key insights here)\n"
+}

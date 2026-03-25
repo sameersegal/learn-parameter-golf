@@ -1,0 +1,160 @@
+{
+  "pr_number": 449,
+  "title": "11L Gated XSA + Cosine LN Scale + Int6",
+  "author": "eb1386",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all large weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all large weight matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention with a learned per-layer sigmoid gate controlling how much self-value projection is subtracted; applied only to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Blends each token embedding with the previous token embedding through a learned per-dimension gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a learned embedding table to inject bigram context.",
+        "parameters": {
+          "vocab_size": 4096,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary embeddings to only part of the head dimensions, leaving the rest position-free.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x ReLU-squared MLP expansion.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization on all weight matrices with 1/sqrt(2L) scaling on output projections."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "late QAT activation",
+        "parameters": {
+          "start_fraction": 0.96,
+          "trigger": "lr_scale < 0.1"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Learned sigmoid-gated exclusive self-attention instead of hard on/off XSA",
+    "Cosine depth-dependent layer norm scale decay",
+    "SmearGate for blending token embeddings with previous-token embeddings",
+    "BigramHash bigram embedding via XOR hashing into a 4096-bucket table",
+    "Late QAT for adapting weights to int6 rounding near the end of training",
+    "EMA final weight averaging",
+    "Partial RoPE applied to only 16 head dimensions"
+  ],
+  "artifact_size": "under 16MB"
+}

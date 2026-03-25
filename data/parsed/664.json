@@ -1,0 +1,121 @@
+{
+  "pr_number": 664,
+  "title": "Non-record: hybrid spiking Transformer (SNN)with a multi-step spiking MLP",
+  "author": "tsbiosky",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2982,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "spiking MLP",
+        "description": "Replaces the standard Transformer feed-forward block with a multi-step leaky integrate-and-fire (LIF-style) spiking MLP while keeping dense attention and the rest of the Transformer pipeline unchanged.",
+        "parameters": {
+          "layers": 9,
+          "width": 512,
+          "attention_heads": 8,
+          "kv_heads": 4,
+          "sequence_length": 1024,
+          "snn_steps": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings as part of the baseline architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary position embeddings in the Transformer baseline.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "final serialized model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "matrix-shaped parameters"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "token embeddings and scalar/vector parameters"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "spike-rate regularization",
+        "parameters": {
+          "rate_loss": 0.0001,
+          "rate_target": 0.15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Surrogate-gradient training for spiking neurons using a sigmoid straight-through estimator.",
+        "parameters": {
+          "grad_scale": 4.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Hybrid Transformer + SNN-MLP design",
+    "Replaces only the feed-forward block with a multi-step LIF-style spiking MLP",
+    "Preserves the original Parameter Golf training, evaluation, and export pipeline",
+    "Uses surrogate-gradient training for the spiking pathway",
+    "Applies spike-rate regularization to control firing behavior",
+    "Fits under the 16 MB submission limit after int8 + zlib compression"
+  ],
+  "artifact_size": "15.78 MB"
+}

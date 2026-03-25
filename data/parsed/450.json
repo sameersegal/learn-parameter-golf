@@ -1,0 +1,180 @@
+{
+  "pr_number": 450,
+  "title": "Record: 12L + Catalytic Residuals + BigramHash(10240) + SWA + Late QAT (val_bpb=1.1466, mean 3 seeds)",
+  "author": "zachgoldfine44",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.14662,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Catalytic Residual Connections",
+        "description": "Replace x + f(x) with x + c * f(x), where c is a learned per-dimension vector initialized to ones.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth",
+        "description": "Use a 12-layer Transformer stack.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash consecutive token pairs into a larger bigram embedding table and project to model dimension.",
+        "parameters": {
+          "vocab_size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_fraction": 0.8,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.042,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.042,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 4 KV heads and 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x expansion and relu^2 activation.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with threshold 0.25 using STE int6 quantization in the final portion of training.",
+        "parameters": {
+          "threshold": 0.25
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Catalytic residual connections with learned per-dimension residual scaling",
+    "12-layer depth scaling as a sweet spot under the budget",
+    "BigramHash with 10240 buckets",
+    "Late QAT using STE int6 quantization",
+    "Stochastic Weight Averaging from the last 20% of warmdown"
+  ],
+  "artifact_size": "14,385,363 bytes"
+}

@@ -1,0 +1,131 @@
+{
+  "pr_number": 666,
+  "title": "Non-record: BitNet Ternary \u2014 65M params in 15.9MB (1.1932 BPB)",
+  "author": "chrislovescoding",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1932,
+  "architecture": "Transformer",
+  "quantization": "ternary weight quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary",
+        "bits": 2,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "layers": 12,
+          "dimensions": 768,
+          "heads": 12,
+          "kv_heads": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP with 3x hidden size.",
+        "parameters": {
+          "hidden": 2304
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections in a U-Net-like pattern to the transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Activation schedule with full-precision training for the first 30% of wallclock, then ternary STE for the remaining 70%.",
+        "parameters": {
+          "ternary_start_frac": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-Through Estimator ternary training with per-row mean-absolute scaling and thresholding to {-1, 0, +1}.",
+        "parameters": {
+          "threshold_multiplier": 0.7
+        }
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "Trains a 65M-parameter model within a 15.9MB artifact budget using ternary weight quantization.",
+    "Uses ternary STE training from the start to achieve a near-zero quantization gap.",
+    "Demonstrates that a much larger model can fit in the same budget as smaller int6 submissions.",
+    "Combines ternary quantization with grouped-query attention, tied embeddings, and U-Net skip connections.",
+    "Applies a staged training schedule that switches from full precision to ternary STE after 30% of wallclock."
+  ],
+  "artifact_size": "15,878,267 bytes"
+}

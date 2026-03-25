@@ -1,0 +1,190 @@
+{
+  "pr_number": 479,
+  "title": "Record: 10L QAT + SwiGLU + BigramHash(10240) (val_bpb=TBD)",
+  "author": "chirag-bajaj",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaces relu^2 MLP activation with a SiLU-gated linear unit using parameter-matched hidden dimension.",
+        "parameters": {
+          "hidden_dim_factor": "2/3 * mlp_mult * model_dim"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash token representation / embedding mechanism.",
+        "parameters": {
+          "dimensions": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4,
+          "layers": 10,
+          "model_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections in a U-Net-like pattern.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": "3%"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "QAT during training to eliminate quantization gap at inference.",
+        "parameters": {
+          "ste_based": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "STE-based quantization-aware training to match inference quantization",
+    "Mixed int5/int6 quantization scheme with FP16 embeddings",
+    "SwiGLU activation replacing relu^2 with parameter-matched hidden dimension",
+    "BigramHash(10240) architecture with SmearGate and GQA",
+    "Orthogonal initialization with muP-scaled projections",
+    "SWA and sliding-window evaluation setup"
+  ],
+  "artifact_size": null
+}

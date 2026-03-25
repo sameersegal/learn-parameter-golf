@@ -1,0 +1,149 @@
+{
+  "pr_number": 663,
+  "title": "V18 Manifold-Guided Architecture \u2014 val_bpb 0.434",
+  "author": "raahilg",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 0.438,
+  "architecture": "GNN-like message passing network on a precomputed token interaction graph",
+  "quantization": "per-row int8 with adaptive clipping",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "manifold-guided token interaction graph",
+        "description": "Precomputes a frozen token manifold from corpus co-occurrence statistics and uses it as graph topology for message passing instead of learning token geometry from scratch.",
+        "parameters": {
+          "vocab": 1024,
+          "spectral_dims": 320,
+          "hops": 4,
+          "attention_heads": 2,
+          "hidden_dim": 500
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sparsemax routing",
+        "description": "Uses sparsemax-weighted aggregation for differentiable sparse edge routing along manifold geodesics.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "spectrally-modulated gated hop cells",
+        "description": "Hop updates are conditioned on spectral coordinates derived from Hessian eigendecomposition and SVD coordinates.",
+        "parameters": {
+          "hops": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "manifold-guided attention",
+        "description": "Applies attention conditioned on manifold/spectral coordinates to exploit the frozen geometric prior.",
+        "parameters": {
+          "heads": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel transport across token manifold",
+        "description": "Uses manifold-aware transport of representations across the token graph.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "snapshot_at_best_loss": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay + hold + linear warmdown",
+        "parameters": {
+          "cosine_decay_to_fraction": 0.1,
+          "cosine_decay_steps": 3400,
+          "hold_steps": [
+            3400,
+            5500
+          ],
+          "linear_warmdown_to_zero": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "deterministic physics simulation initialization",
+        "description": "Token manifold positions are initialized by a fixed-seed CPU physics simulation based on co-occurrence-derived forces."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Builds a frozen token manifold from co-occurrence, directional torsion, entropic mass, directed springs, and syntactic bigram forces, then computes Hessian eigendecomposition and SVD coordinates for spectral features.",
+        "parameters": {
+          "physics_steps": 5000,
+          "spectral_modes": 256,
+          "svd_coords": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses deterministic compilation settings to avoid nondeterministic kernel selection.",
+        "parameters": {
+          "max_autotune": false
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Single-GPU training with selective gradient strategy to preserve hop specialization; hop parameters use rank 0 local gradients while non-hop parameters are averaged.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Frozen precomputed token manifold used as graph topology for the model",
+    "Physics-simulated manifold construction from corpus co-occurrence statistics",
+    "Sparsemax routing along manifold geodesics",
+    "Spectral-coordinate-conditioned attention and gated hop updates",
+    "EMA snapshot at best loss for improved quantization",
+    "Adaptive per-row int8 quantization with percentile clipping",
+    "Deterministic physics simulation and deterministic compilation for reproducibility",
+    "Selective gradient strategy to preserve hop specialization in single-GPU training"
+  ],
+  "artifact_size": "15.70 MB"
+}

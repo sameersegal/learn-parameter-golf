@@ -1,0 +1,138 @@
+{
+  "pr_number": 457,
+  "title": "11L + XSA + VRL + SWA + seq4096 + cross-doc TTT - val_bpb 1.1839",
+  "author": "carlesonielfa",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1839,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT with zlib roundtrip",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention subtracts the component of attention output aligned with the value vector in the deepest layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning adds a learnable residual from layer-0 value vectors into each layer's value vectors.",
+        "parameters": {
+          "layers": [
+            1,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token-blending gate at the embedding layer that mixes each token with the previous token.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / tied input-output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 24,
+          "fraction_last_warmdown": 0.4
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OvertoneInit",
+        "description": "Used with phase-transition resid_mix."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Cross-document test-time training with per-document rank-8 LoRA adapters trained on already-evaluated tokens and reset between documents.",
+        "parameters": {
+          "reset_between_documents": true
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Long-context training with sequence length 4096",
+    "Exclusive Self-Attention (XSA) on the deepest 4 layers",
+    "Value Residual Learning (VRL) using layer-0 value vectors",
+    "SmearGate token-blending gate at the embedding layer",
+    "Stochastic Weight Averaging over 24 checkpoints",
+    "Cross-document test-time training with rank-8 LoRA adapters",
+    "Warmdown-QAT to minimize quantization penalty"
+  ],
+  "artifact_size": "15.35 MB"
+}

@@ -1,0 +1,129 @@
+{
+  "pr_number": 470,
+  "title": "Non-record: Shared-weight transformer with extended warmdown (1.1454 val_bpb)",
+  "author": "leofeasby",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1454,
+  "architecture": "Transformer",
+  "quantization": "int8+zlib",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence / weight sharing",
+        "description": "A single transformer block is reused across 9 effective passes, forming a recurrent-style shared-weight stack.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Learned skip connections inject earlier representations back into later passes across the shared-weight stack.",
+        "parameters": {
+          "passes": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-layer scaling",
+        "description": "Layer-specific attention, MLP, and residual mixing scales are used to break symmetry across reused passes.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Token embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 16,
+          "num_kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes a hash-based bigram table with 4096 entries.",
+        "parameters": {
+          "entries": 4096
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "snapshots": 351,
+          "start_step": 32500,
+          "freq": 50
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_start_step": 4000,
+          "warmdown_iters": 41000,
+          "step_based": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04,
+          "scope": "matrix params only"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Extended warmdown training regime with long low-learning-rate phase; majority of gains occur during warmdown.",
+        "parameters": {
+          "iterations": 50000,
+          "max_wallclock_seconds": 86400
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Shared-weight transformer with a single block reused across depth",
+    "U-Net style skip connections across recurrent passes",
+    "Per-layer scaling parameters to differentiate reused passes",
+    "Step-based warmdown control decoupled from wallclock time",
+    "Demonstration that most improvement occurs during extended warmdown",
+    "Use of longer training sequence length (2048) as a major lever"
+  ],
+  "artifact_size": "13.9MB"
+}

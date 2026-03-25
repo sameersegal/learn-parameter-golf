@@ -1,0 +1,100 @@
+{
+  "pr_number": 448,
+  "title": "Add SmearGate+BigramHash context-repair submission (1.2006 BPB, 15.0MB)",
+  "author": "handemanai",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2006,
+  "architecture": "Dense 9-layer 512-dim GQA Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gating over shifted input features to repair carried-context failures under sliding-window evaluation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram embeddings providing explicit local context features.",
+        "parameters": {
+          "bigram_vocab_size": 4096,
+          "bigram_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP capacity using MLP_MULT=3.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights with fp16 embedding passthrough"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "manual logits-only exact evaluation",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Context-feature repair targeting carried-context failures under sliding-window evaluation.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "SmearGate context feature for shifted-input repair",
+    "BigramHash explicit local context embeddings",
+    "Context-repair approach that improves carried-context sliding-window behavior",
+    "int6+zstd export with fp16 embedding passthrough",
+    "Corrected evaluation path using forward_logits plus manual cross-entropy"
+  ],
+  "artifact_size": "14,999,691 bytes"
+}

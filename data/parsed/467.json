@@ -1,0 +1,189 @@
+{
+  "pr_number": 467,
+  "title": "[track_10min_16mb] 50-Epoch Cosine LoRA TTT + SOTA (10L Int5/Int6 BigramHash SWA) \u2014 Atharva Date (ADIITJ)",
+  "author": "ADIITJ",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1428,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP weights int5, attention weights int6, embeddings fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending token t with token t-1 embedding",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into learned embeddings projected to model dimension",
+        "parameters": {
+          "vocab_size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with QK-Norm and q_gain",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP uses 3x hidden width",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections between encoder and decoder halves",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.35,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "epochs": 50,
+          "learning_rate": 0.001,
+          "targets": [
+            "Q projections",
+            "V projections"
+          ],
+          "layers": 10,
+          "score_first": true,
+          "reset_between_documents": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "score-first per chunk evaluation",
+        "parameters": {
+          "chunk_size": 256,
+          "context_length": 2048,
+          "batch_size": 32
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown + cosine decay",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "ttt_cosine_epochs": 50
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for large weight matrices"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adamw_weight_decay": 0.04,
+          "grad_clip_norm": 0.3,
+          "pruning": "3% magnitude pruning"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "50-epoch cosine-scheduled LoRA test-time training applied at evaluation time",
+    "Document-isolated LoRA adaptation with fresh adapter initialization and reset between documents",
+    "Score-first per chunk protocol within each TTT epoch to avoid leakage",
+    "Combining multi-epoch LoRA TTT with the SOTA 10-layer Int5/Int6 BigramHash + SWA training stack",
+    "Using rank-8 LoRA adapters on Q and V projections across all 10 attention layers"
+  ],
+  "artifact_size": "~14.3MB"
+}

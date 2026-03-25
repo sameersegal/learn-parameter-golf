@@ -1,0 +1,87 @@
+{
+  "pr_number": 480,
+  "title": "Non-record: MoE exploration + multi-bit quantization analysis",
+  "author": "imyesung",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1456,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int5/int4 post-training quantization",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5/int4",
+        "bits": 6,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MoE",
+        "description": "2-expert soft-routing mixture-of-experts replacing the dense MLP for parameter expansion",
+        "parameters": {
+          "experts": 2,
+          "expert_multiplier": 1.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 30
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Quantization comparison across multiple attention/MLP bit-width configurations on the same trained dense model",
+        "parameters": {
+          "configurations": [
+            "attn6_mlp6",
+            "attn6_mlp5",
+            "attn6_mlp4",
+            "attn5_mlp5",
+            "attn5_mlp4"
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Preliminary negative result for a 2-expert soft-routing MoE under the 16MB artifact cap",
+    "Leaderboard-relevant comparison of multi-bit post-training quantization on the same dense model",
+    "Evidence that int5 MLP quantization is viable while int4 MLP quantization is destructive in this setup",
+    "Partial MoE training log and checkpoint table documenting the observed degradation relative to dense control"
+  ],
+  "artifact_size": "15.14 MB"
+}

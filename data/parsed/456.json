@@ -1,0 +1,203 @@
+{
+  "pr_number": 456,
+  "title": "Non-record submission: Depth Recurrence + Legal Score-First TTT (10L, 1.1532 BPB)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.15321496,
+  "architecture": "10-layer GPT / Transformer",
+  "quantization": "mixed int5/int6 quantization",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a fixed bucket embedding to provide cheap bigram context.",
+        "parameters": {
+          "dimensions": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Sigmoid gating mechanism applied to MLP outputs before residual addition.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention used in the last 3 layers.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections between paired layers (e.g., 0\u21949, 1\u21948) to improve residual flow.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3\u00d7 expansion MLP with relu\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads (2:1 GQA).",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Depth recurrence infrastructure exists but is not active in the final config; no weight sharing used.",
+        "parameters": {
+          "unique_layers": 10,
+          "num_layers": 10
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "75% of layers"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "Late QAT",
+        "bits": null,
+        "scope": "full model"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "tied token embeddings, scalars, and TTT",
+          "ttt_lr": 0.0005
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 4650,
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first full-model TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "epochs_per_chunk": 1,
+          "learning_rate": 0.0005,
+          "freeze_blocks": 0,
+          "cosine_decay": true,
+          "persistent_across_documents": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown + cosine decay",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 3000,
+          "total_steps": 5200
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Competition-legal score-first full-model test-time training integrated into sliding-window evaluation",
+    "Chunked evaluation loop that scores each chunk before training on it, enabling persistent adaptation across the validation set",
+    "Depth recurrence infrastructure included in code but disabled in the final configuration",
+    "Mixed int5/int6 quantization with zstd-22 compression to fit within the artifact budget"
+  ],
+  "artifact_size": "15,980,085 bytes"
+}

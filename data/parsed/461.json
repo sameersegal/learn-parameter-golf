@@ -1,0 +1,167 @@
+{
+  "pr_number": 461,
+  "title": "Non-record: 11L Depth Recurrence + High-Yield Legal TTT (1.14458 BPB)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.14458,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 3,
+          "chunk_size": 32768,
+          "stride": 64,
+          "freeze_blocks": 2,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 3,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "11 logical layers implemented with 10 unique shared BlockCores, reusing one core at two depths with independent normalization.",
+        "parameters": {
+          "layers": 11,
+          "unique_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary embeddings applied to only part of each head dimension, with NTK-aware scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "128-dim learned value embeddings added to value projections on deep layers only.",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention used in the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gating mechanism in the MLP/attention stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram features added as an architectural component.",
+        "parameters": {
+          "features": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP expansion factor of 3x with ReLU\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 12,
+          "start_step": 4650
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 + zstd",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "High-yield legal test-time training using SGD with momentum, multiple epochs per chunk, and freezing early blocks",
+    "Depth recurrence with 11 logical layers from 10 unique shared BlockCores",
+    "Partial RoPE using only 16 of 64 dimensions with NTK-aware scaling",
+    "Value embeddings applied only to deep layers",
+    "Layer-norm depth scaling using 1/sqrt(layer+1)",
+    "Score-first legal TTT where every validation token is scored before any weight update"
+  ],
+  "artifact_size": "14.79 MB"
+}

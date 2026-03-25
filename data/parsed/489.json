@@ -1,0 +1,137 @@
+{
+  "pr_number": 489,
+  "title": "Record: 7L MLP3x + BigramHash + SmearGate + TTT 5ep (mean val_bpb=1.1327)",
+  "author": "sofiabod",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1327,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened to 3x with ReLU\u00b2 activations.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into learned embeddings added before RMSNorm.",
+        "parameters": {
+          "hash_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension learned gate blending each token with the previous token.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary embeddings to only part of the head dimensions.",
+        "parameters": {
+          "rotary_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": {
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale depth damping",
+        "parameters": {
+          "init_scale_rule": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "tied_embedding_lr": 0.01,
+          "matrix_lr": 0.03,
+          "logit_softcap": 15
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "AdamW TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "weight_decay": 0.0,
+          "epochs": 5
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 6000
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "BigramHash(2048) token-pair hashing with learned embeddings",
+    "SmearGate token blending mechanism",
+    "Partial RoPE applied to 25% of head dimensions",
+    "Layer-wise depth damping of LN scales",
+    "AdamW test-time training for 5 epochs",
+    "Sliding window evaluation with stride 64",
+    "7-layer transformer with MLP3x ReLU\u00b2"
+  ],
+  "artifact_size": null
+}

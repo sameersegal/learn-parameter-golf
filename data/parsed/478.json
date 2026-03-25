@@ -1,0 +1,189 @@
+{
+  "pr_number": 478,
+  "title": "New SOTA: 1.12676 BPB - 11L XSA-all(11) + GPTQ-lite + EMA + Late QAT",
+  "author": "gowtham0992",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.12676,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with GPTQ-lite and mixed int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to all 11 layers instead of only the last few layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all large weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50,
+          "start_condition": "scale<0.2"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iterations": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_rule": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with int6 STE fake-quantization when LR scale drops below 0.15.",
+        "parameters": {
+          "lr_scale_threshold": 0.15
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the dimensions with NTK-aware scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram feature module with learned embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "warmup_momentum": "0.92->0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.025
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "XSA applied to all 11 layers",
+    "GPTQ-lite optimal clip percentile search",
+    "EMA with tight SWA",
+    "Late QAT int6-all triggered at low learning-rate scale",
+    "Raw binary serialization with zstd level 22 compression",
+    "Removal of Backout mechanism improved compression quality",
+    "No pruning required for int6-all fitting under the size limit"
+  ],
+  "artifact_size": "~15.7 MB"
+}

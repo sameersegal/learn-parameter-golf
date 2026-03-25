@@ -1,0 +1,143 @@
+{
+  "pr_number": 661,
+  "title": "Non-record: 30ep Cosine TTT on SwiGLU + U-Net (1xH100, val_bpb=1.1175)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1175,
+  "architecture": "Transformer",
+  "quantization": "Int6 QAT",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 30,
+          "schedule": "cosine",
+          "seed": 1337
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "ttt_epochs": 30
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "SwiGLU MLP variant used in the model stack",
+        "parameters": {
+          "hidden": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net",
+        "description": "U-Net style gated skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component for token representation",
+        "parameters": {
+          "buckets": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism included in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 8 KV heads in the attention stack",
+        "parameters": {
+          "kv_heads": 8,
+          "heads": 8,
+          "layers": 11,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9985
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Increased TTT epochs from 10 to 30 while keeping the PR #462 architecture unchanged",
+    "Applied cosine test-time training with per-layer learning rate",
+    "Used the SwiGLU + U-Net architecture with gated skip connections",
+    "Combined BigramHash, SmearGate, Partial RoPE, EMA, Late QAT, and Int6 + zstd compression",
+    "Reported improved sliding-window val_bpb of 1.1175 on 1xH100"
+  ],
+  "artifact_size": "7.5 MB"
+}

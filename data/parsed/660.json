@@ -1,0 +1,103 @@
+{
+  "pr_number": 660,
+  "title": "Non-record: Soft MoE Exploration \u2014 Dense Gating Fixes Sparse Router Collapse Under 16MB (WIP, val_bpb=1.1826)",
+  "author": "HugoOchoaLP",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1826,
+  "architecture": "Transformer",
+  "quantization": "Int5 MLP / Int6 attention",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Soft MoE",
+        "description": "Dense mixture-of-experts gating where all experts run on all tokens with learned soft weights, avoiding sparse router collapse and enabling compile-friendly execution.",
+        "parameters": {
+          "num_experts": 2,
+          "moe_layers": "last 2 layers",
+          "moe_start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used with the MoE setup.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature module used in the model.",
+        "parameters": {
+          "dimensions": 128,
+          "hash_size": 10240
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective MoE applied only to deeper layers to reduce parameter overhead and fit under the 16MB constraint.",
+        "parameters": {
+          "moe_start_layer": 8
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Dense Soft MoE variant that avoids sparse router collapse",
+    "Compile-friendly MoE design that works with torch.compile",
+    "Selective application of MoE only in the last layers to reduce overhead",
+    "Use of SmearGate and BigramHash in the model",
+    "EMA replacing SWA for weight averaging",
+    "Mixed int5 MLP / int6 attention quantization with zstd-22 compression"
+  ],
+  "artifact_size": "17.3MB"
+}

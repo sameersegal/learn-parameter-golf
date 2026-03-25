@@ -1,0 +1,215 @@
+{
+  "pr_number": 455,
+  "title": "Record: 11L Tight SWA + VE128 + XSA4 + TTT (3-seed mean val_bpb=1.1299)",
+  "author": "kasimte",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1299,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Efficient partial XSA applied to the last 4 layers, GQA-aware and zero-alloc.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings with NTK-aware scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion with relu-squared activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embedding",
+        "description": "Shared value embedding table used across layers 9 and 10 with learned per-layer scales.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate combined with BigramHash features.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash with 2048 buckets and 128-dimensional embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "MLP and attention weights; int8 for embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "warmup": "0.92->0.99 over 1500 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embeddings_lr": 0.035,
+          "scalars_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 12,
+          "interval_steps": 50,
+          "start_condition": "scale<0.2",
+          "window_steps": 600
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 3,
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "learning_rate": 0.002,
+          "batch_size": 32,
+          "freezes_first_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal initialization",
+        "description": "Orthogonal init with projection scaling by 1/sqrt(2*num_layers)."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_factor": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "wallclock_based": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT enabled during warmdown when LR scale < 0.1.",
+        "parameters": {
+          "trigger": "lr_scale<0.1"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Tight SWA restricted to late low-scale checkpoints to avoid SWA quality penalty",
+    "Test-time training on already-evaluated validation tokens",
+    "Late STE int6 quantization-aware training during warmdown",
+    "Sliding-window evaluation with stride 64 and context length 2048",
+    "Shared value embedding and partial XSA architecture refinements"
+  ],
+  "artifact_size": "15,711,898 bytes"
+}

@@ -1,0 +1,199 @@
+{
+  "pr_number": 465,
+  "title": "Record: 10L d=512 Int5-MLP Int6-Attn sp1024 (val_bpb=1.1508)",
+  "author": "LoquiAuris",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1508,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned blend with previous token representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash feature with 4096 buckets projected to model width.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x FFN expansion with ReLU\u00b2 activation.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied via linear projection.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections between symmetric layer pairs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "warmup_momentum": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.5,
+          "checkpoint_every": 50,
+          "num_checkpoints": 29
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown cosine decay",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon": 0.04,
+          "adamw": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Use of BigramHash features and SmearGate in a PR #162 transformer stack with RoPE, RMSNorm, logit softcap, and GQA.",
+        "parameters": {
+          "layers": 10,
+          "d_model": 512,
+          "vocab_size": 1024
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int5 quantization for MLP weights with Int6 quantization for attention weights under a 16 MB artifact budget.",
+    "Demonstration that sp1024 with 10 layers at d=512 outperformed larger-vocabulary sp8192 configurations.",
+    "Discovery that embedding tables can be quantized to Int6 with negligible quality loss.",
+    "Introduction of SmearGate and BigramHash within the PR #162 transformer stack.",
+    "Systematic architecture search across tokenizer sizes, widths, and depths with local Apple Silicon ablations and H100 confirmation."
+  ],
+  "artifact_size": "15,680,288 bytes"
+}

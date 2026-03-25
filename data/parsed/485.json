@@ -1,0 +1,190 @@
+{
+  "pr_number": 485,
+  "title": "Record: 10L CountInitBigram + XSA + PartialRoPE (val_bpb=1.1522)",
+  "author": "harsha-gouru",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1522,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 with int4 bigram table and zstd compression",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramLogitHead",
+        "description": "Count-initialized exact bigram lookup table used as a logit bias head before softcap, initialized from corpus transition probabilities.",
+        "parameters": {
+          "vocab_size": 1024,
+          "clipping": "[-4, 4]",
+          "smoothing_alpha": 0.25
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "bigram logit table"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every": 50,
+          "checkpoints": 22
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2800,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP hidden size expanded to 3x the model dimension.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Count-initialized exact bigram logit head initialized from corpus transition probabilities",
+    "Int4 nibble packing for signed int4 values to halve bigram table storage",
+    "XSA on the last 4 layers",
+    "Partial RoPE on 16 of 64 dimensions",
+    "Layerwise LN scaling by 1/sqrt(layer+1)"
+  ],
+  "artifact_size": "15.38 MB"
+}

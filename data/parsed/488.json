@@ -1,0 +1,161 @@
+{
+  "pr_number": 488,
+  "title": "Record: 11L Int6 QAT + Warmdown (val_bpb=1.3267, 1xH100)",
+  "author": "pkim02",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.3267,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT int6",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in an 11-layer Transformer backbone.",
+        "parameters": {
+          "layers": 11,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "mlp_mult": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds a SmearGate module at the embedding layer to inject additional signal.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a compact bigram hash embedding for extra context.",
+        "parameters": {
+          "bigram_vocab_size": 2048,
+          "bigram_dim": 96
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for large matrices with scaled projection weights."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_end": 0.99
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "used_for": "token/scalar optimizers"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 7
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.15,
+          "wallclock_based": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Wallclock-fraction warmdown to avoid iter-based scheduling issues under torch.compile overhead.",
+        "parameters": {
+          "last_fraction": 0.15
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 grouped quantization for all weights",
+    "STE fake-quantization QAT during the last 15% of wallclock",
+    "Wallclock-fraction warmdown that fixes iter-based scheduling under torch.compile overhead",
+    "SWA with 7 checkpoints during warmdown",
+    "Compact BigramHash embedding and SmearGate additions",
+    "Orthogonal initialization for large matrices",
+    "Sliding-window evaluation with stride 64",
+    "zstd-22 artifact compression"
+  ],
+  "artifact_size": "13.3 MB"
+}

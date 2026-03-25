@@ -1,0 +1,167 @@
+{
+  "pr_number": 471,
+  "title": "Add submission: 11L Frontier Stack + Value Residual + Gated Attention",
+  "author": "yuvrajyadav17",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with relu\u00b2 activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applies SmearGate as part of the frontier stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash token mixing / hashing with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "tight"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "post-training"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embedding weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Caches layer-0 value vectors and mixes them into subsequent layers' attention values with alpha=0.5.",
+        "parameters": {
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Applies a per-head sigmoid gate to attention outputs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Value Residual / ResFormer: caches layer-0 value vectors and mixes them into later layers' attention values.",
+    "Gated Attention: per-head sigmoid gate on attention outputs to reduce attention sink artifacts.",
+    "Combination of the community frontier stack with the two novel additions."
+  ],
+  "artifact_size": "~15.6 MB"
+}

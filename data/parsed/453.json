@@ -1,0 +1,163 @@
+{
+  "pr_number": 453,
+  "title": "Exploratory: PR315-derived candidate and looped-depth gate",
+  "author": "Divyesh-Thirukonda",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1248,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimensions, leaving the rest without positional bias.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention int6; embeddings int8"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000,
+          "adamw_weight_decay": 0.04,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal + muP-scaled init",
+        "description": "Orthogonal initialization with muP scaling applied to large matrices."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention used in the last layers.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending gate.",
+        "parameters": {
+          "parameters": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with projection to the model dimension.",
+        "parameters": {
+          "buckets": 2048,
+          "embedding_dim": 128,
+          "projection_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3x standard size with relu\u00b2 activation.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT flag for STE int6 fake-quantization in the final 4% of training, though post-analysis says it was constant-folded and had no effect.",
+        "parameters": {
+          "enabled": true,
+          "final_training_fraction": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Partial RoPE applied to 16 of 64 head dimensions",
+    "Layer-wise RMSNorm scaling by 1/sqrt(layer_idx+1)",
+    "EMA weight averaging during training",
+    "Mixed int6/int8 quantization with zstd compression",
+    "XSA on the last 4 layers",
+    "SmearGate token blending gate",
+    "Bigram hash embedding with projection",
+    "Orthogonal + muP-scaled initialization",
+    "Late QAT flag was included but had no effect due to constant folding"
+  ],
+  "artifact_size": "15.6 MB"
+}

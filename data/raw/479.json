@@ -1,0 +1,12 @@
+{
+  "number": 479,
+  "title": "Record: 10L QAT + SwiGLU + BigramHash(10240) (val_bpb=TBD)",
+  "author": "chirag-bajaj",
+  "body": "## Summary\n\n- **QAT (Quantization-Aware Training):** STE-based QAT during training with int5 clip for MLP, int6 clip for attention \u2014 eliminates quantization gap at inference\n- **SwiGLU activation:** Replaces relu\u00b2 with SiLU-gated linear unit, parameter-matched hidden dim (2/3 \u00d7 mlp_mult \u00d7 model_dim)\n- **Mixed int5/int6 + zstd-22 quantization:** int5 for MLP weights, int6 for attention, FP16 for embeddings\n\nArchitecture: 10 layers, 512 dim, 8 heads, 4 KV heads (GQA), BigramHash(10240), SmearGate, SWA start_frac=0.4, WD=0.04, warmdown=3000, OrthoInit + muP-scaled projections.\n\nPending 3-seed validation on 8\u00d7H100.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-23T00:23:14Z",
+  "updated_at": "2026-03-23T00:23:14Z",
+  "submission_readme": "# 10L QAT + SwiGLU + BigramHash(10240) + SWA(frac=0.4)\n\n**val_bpb: TBD** (pending 3-seed validation on 8xH100)\n\n## Run Command\n\n```bash\nbash prepare.sh\nbash eval/eval.sh\n# With specific seed\nSEED=42 bash eval/eval.sh\n```\n\n## Key Improvements over SOTA (1.14276 BPB)\n\n### QAT (Quantization-Aware Training)\n- STE-based QAT during training matches quantization at inference\n- Int5 clip [-16,15] for MLP weights, Int6 clip [-32,31] for attention\n- Eliminates the quantization gap (estimated 0.006-0.01 BPB)\n\n### SwiGLU Activation\n- Replaces relu^2 with SiLU-gated linear unit (gate * up with silu)\n- Hidden dim = 2/3 * mlp_mult * model_dim (parameter-matched)\n- Standard in modern LLMs (Llama, Mistral, Gemma)\n\n### Architecture (unchanged from SOTA base)\n- 10 layers, 512 dim, 8 heads, 4 KV heads (GQA)\n- SmearGate + BigramHash(10240, dim=128)\n- Orthogonal init with muP-scaled output projections\n- U-Net skip connections, tied embeddings\n\n### Training Hyperparameters\n- Muon optimizer: matrix_lr=0.02, WD=0.04, momentum=0.99\n- AdamW for embeddings/scalars: WD=0.04\n- warmdown=3000 iters, warmup=20 steps\n- seq_len=2048, batch=786K tokens\n- grad_clip=0.3, 3% magnitude pruning\n- SWA: start_frac=0.4, every=50 steps\n- Sliding window eval: stride=64\n"
+}

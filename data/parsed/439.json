@@ -1,0 +1,137 @@
+{
+  "pr_number": 439,
+  "title": "Non-record: AETHER block-sparse attention with Lyapunov-stable governor (12L)",
+  "author": "teerthsharma",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "GPT",
+  "quantization": "int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "block-sparse attention",
+        "description": "Partitions KV into 64-token blocks, prunes low-relevance blocks using Cauchy-Schwarz upper bounds, and falls back to dense SDPA for short sequences.",
+        "parameters": {
+          "block_size": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Preserved from the baseline as part of the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based feature/component with vocabulary size 10240.",
+        "parameters": {
+          "vocab_size": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings used in the GPT architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP2.5x",
+        "description": "Reduced MLP width multiplier from 3.0x to 2.5x.",
+        "parameters": {
+          "mlp_multiplier": 2.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth increase",
+        "description": "Increased model depth from 10 layers to 12 layers.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_percent": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Lyapunov-stable geometric governor that adaptively adjusts sparsity during training with monotonic error contraction.",
+        "parameters": {
+          "target_sparsity": 0.5,
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Chebyshev GC guard bounding false reclamation to prevent over-aggressive pruning.",
+        "parameters": {
+          "bound": "n/k^2"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Block-sparse SDPA with 64-token KV blocks and Cauchy-Schwarz pruning",
+    "Lyapunov-stable geometric governor for adaptive sparsity control",
+    "Chebyshev GC guard to bound false reclamation",
+    "12-layer architecture within the same 10-minute training budget",
+    "Lean 4 verified safety proofs for pruning soundness, governor stability, and GC bounds"
+  ],
+  "artifact_size": null
+}

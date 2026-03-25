@@ -1,0 +1,132 @@
+{
+  "pr_number": 446,
+  "title": "Record: 7L MLP3x 4kSeq LR-Tuned (val_bpb=1.1933)",
+  "author": "sofiabod",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1933,
+  "architecture": "Transformer",
+  "quantization": "standard int8 + zlib compression",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion width (hidden=1536) instead of the baseline 2x width.",
+        "parameters": {
+          "layers": 7,
+          "width": 512,
+          "hidden": 1536,
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "extra RMSNorm",
+        "description": "Adds an extra RMSNorm before attention and MLP output projections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Lower tied embedding learning rate to smooth weight distributions and reduce quantization gap.",
+        "parameters": {
+          "tied_embed_lr": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Lower matrix learning rate for smoother Muon updates.",
+        "parameters": {
+          "matrix_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reduced logit softcap to tighten output distribution and help quantization.",
+        "parameters": {
+          "logit_softcap": 15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adjusted qk gain initialization.",
+        "parameters": {
+          "qk_gain_init": 1.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "7-layer 512-dim transformer with 3x MLP width while keeping roughly the same parameter count as baseline",
+    "Training at sequence length 4096 for improved per-step quality",
+    "Lower tied embedding learning rate to create smoother weights and dramatically reduce quantization gap",
+    "Carefully tuned learning rates for matrix parameters and embeddings",
+    "Reduced logit softcap to improve both training and quantization",
+    "Longer warmdown schedule for better generalization",
+    "Standard int8 quantization with zlib compression and no QAT"
+  ],
+  "artifact_size": "15.77 MB"
+}
