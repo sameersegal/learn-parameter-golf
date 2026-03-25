@@ -1,0 +1,75 @@
+{
+  "pr_number": 697,
+  "title": "feat: depth recurrence + cosine recovery TTT",
+  "author": "Danishlynx",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1194,
+  "architecture": null,
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeats layers 4-5 to create 13 virtual layers from 11 physical layers, with per-repetition learnable scale parameters and U-Net skip connections adapted for the virtual layer count.",
+        "parameters": {
+          "repeat_layers": [
+            4,
+            5
+          ],
+          "physical_layers": 11,
+          "virtual_layers": 13
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "recovery_epochs": 20,
+          "recovery_lr": 0.001
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine recovery",
+        "parameters": {
+          "epochs": 20,
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Runs additional cosine-learning-rate epochs on all scored data after standard score-first TTT to repair int6 quantization damage, then re-scores with sliding window evaluation.",
+        "parameters": {
+          "ttt_recovery_epochs": 20,
+          "ttt_recovery_lr": 0.001
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depth recurrence by repeating layers 4-5 to expand 11 physical layers into 13 virtual layers",
+    "Per-repetition learnable scale parameters for recurrent depth",
+    "U-Net skip connections adapted for the virtual layer count",
+    "Enhanced test-time training with a cosine recovery phase after score-first TTT",
+    "Recovery phase uses additional cosine-LR epochs on all scored data to repair int6 quantization damage",
+    "Fallback from FlashAttention 3 to SDPA for non-Hopper GPUs with manual GQA head repeat for PyTorch <2.5 compatibility"
+  ],
+  "artifact_size": null
+}

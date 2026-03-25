@@ -1,0 +1,154 @@
+{
+  "pr_number": 296,
+  "title": "[Non-record] Meta-Learned TTT + Error-Guided Adaptation Analysis (val_bpb=1.1645)",
+  "author": "sseanliu",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1645,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds a small gating mechanism to inject local bigram context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds hashed bigram features for local context modeling.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in transformer blocks.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 3
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "eval_seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 4,
+          "learning_rate": 0.001,
+          "top_frac": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reptile meta-learning applied to MLP layers of the last 3 transformer blocks during the final training phase.",
+        "parameters": {
+          "outer_step_scale": 0.01,
+          "inner_steps": 3,
+          "inner_lr": 0.1,
+          "meta_steps": 1576
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4,
+          "attention_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embeddings.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Reptile meta-learning improves SmearGate models by about 0.011 BPB, outperforming naive TTT.",
+    "Error-guided TTT on the highest-loss windows is a negative result and does not improve validation loss.",
+    "A deeper 13-layer model can outperform a 10-layer baseline under sufficient compute on 8xH100.",
+    "Per-token loss analysis shows a heavy-tailed distribution where a small fraction of tokens accounts for a large share of total loss.",
+    "The submission analyzes whether meta-learned initialization can overcome SmearGate/TTT redundancy."
+  ],
+  "artifact_size": "12.7MB"
+}

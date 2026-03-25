@@ -1,0 +1,116 @@
+{
+  "pr_number": 276,
+  "title": "Non-record: local RTX 4070 shared-depth RMS interface v0",
+  "author": "riatzukiza",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.65765109,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth sharing / shared-depth",
+        "description": "Uses 4 physical blocks to implement 8 logical layers, reducing parameter count while preserving multiple logical passes.",
+        "parameters": {
+          "layers": 8,
+          "physical_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Ties input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer key/value heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RMSNorm interface",
+        "description": "Adds extra pre-projection RMSNorm in the shared-depth interface.",
+        "parameters": {
+          "extra_proj_rmsnorm": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "phase-conditioned scales",
+        "description": "Adds tiny phase-conditioned scaling parameters to stabilize the shared-depth model.",
+        "parameters": {
+          "phase_conditioned_scales": 1,
+          "phase_buckets": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "final serialized model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup",
+        "parameters": {
+          "warmup_steps": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training was capped by a 900-second wallclock limit and stopped early at 471/500 steps.",
+        "parameters": {
+          "max_wallclock_seconds": 900,
+          "stopped_step": 471,
+          "total_steps": 500
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Non-record local consumer-GPU submission under the 16MB artifact cap",
+    "Shared-depth model with 8 logical layers implemented using 4 physical blocks",
+    "Extra pre-projection RMSNorm in the shared-depth interface",
+    "Tiny phase-conditioned scales with 4 phase buckets",
+    "Tied input/output embeddings with separate tied-embedding learning rate",
+    "Int8 plus zlib roundtrip artifact packaging"
+  ],
+  "artifact_size": "5912023 bytes"
+}

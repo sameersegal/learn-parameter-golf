@@ -1,0 +1,161 @@
+{
+  "pr_number": 326,
+  "title": "Non-Record: QAT + NTK-4096 Eval + Cosine Warmdown + Aggressive SWA (val_bpb=1.2890, 1xh100)",
+  "author": "crony-io",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.289,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT via STE",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased model capacity to 10 layers with 3x MLP expansion (hidden=1536).",
+        "parameters": {
+          "layers": 10,
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate to blend consecutive token embeddings for better local context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a bigram hash embedding for local token-pair context.",
+        "parameters": {
+          "buckets": 10240,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware RoPE rescaling for longer evaluation context.",
+        "parameters": {
+          "eval_length": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "skip connections",
+        "description": "Introduced learnable U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal init",
+        "description": "Orthogonal weight initialization with gain-scaled projections and phase-transition sigmoid residual mix initialization."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_fraction": 0.35,
+          "every_steps": 25,
+          "checkpoints_averaged": 48
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "gradient_clipping": 0.3,
+          "momentum_warmup": {
+            "start": 0.92,
+            "end": 0.99,
+            "steps": 1500
+          }
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "MLPs and Attention"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "pruned_fraction": 0.05
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Quantization-aware training with straight-through estimator fake quantization instead of post-training quantization",
+    "Mixed int5/int6 quantization scheme for different layer types",
+    "NTK-aware RoPE rescaling for 4096-length evaluation",
+    "Sliding-window evaluation with stride 64",
+    "Cosine warmdown learning rate schedule",
+    "Aggressive stochastic weight averaging starting at 35% of warmdown",
+    "SmearGate local context mixing",
+    "BigramHash embedding for token-pair context",
+    "Learnable U-Net style skip connections",
+    "Orthogonal initialization with phase-transition residual mix",
+    "5% magnitude pruning",
+    "lzma compression with PRESET_EXTREME"
+  ],
+  "artifact_size": null
+}

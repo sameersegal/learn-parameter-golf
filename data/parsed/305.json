@@ -1,0 +1,171 @@
+{
+  "pr_number": 305,
+  "title": "12L Full-INT4 (MLP + Attn) + BigramHash(4096) \u2014 val_bpb 1.1672",
+  "author": "Naazimsnh02",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1672,
+  "architecture": "Transformer",
+  "quantization": "full INT4 (MLP + attention), group-wise nibble-packed gs=64",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash table for token interactions / auxiliary representation",
+        "parameters": {
+          "vocab": 4096,
+          "dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": {
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional encoding",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Symmetric skip connections between encoder and decoder halves across layers",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "adamw_for": "scalars, embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal",
+        "description": "Orthogonal initialization with muP-scaled output projections"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "10% magnitude pruning before quantisation to create zero runs that compress better",
+        "parameters": {
+          "pruning_percentile": 10
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Group INT4 nibble-packing applied to both MLP and attention weights with gs=64 fp16 scales",
+    "Freed quantization budget to enable 12 transformer layers instead of 10",
+    "U-Net skip connections across the 12-layer model",
+    "10% magnitude pruning before quantisation to improve zstd compression",
+    "BigramHash reduced to 4096 to fit within the 16 MB budget"
+  ],
+  "artifact_size": "14.4 MB"
+}

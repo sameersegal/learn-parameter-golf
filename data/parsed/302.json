@@ -1,0 +1,136 @@
+{
+  "pr_number": 302,
+  "title": "Non-record: 11L int5/int6 + XSA + online TTT w/ decay prior (single-run val_bpb=1.1520)",
+  "author": "JackYoung27",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.152,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 3 layers.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature with vocabulary size 10240.",
+        "parameters": {
+          "dimensions": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP blocks.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied fp16 embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "scope": "MLP weights in last 3 blocks",
+          "learning_rate": null,
+          "decay_prior": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Pre-Q/K RMSNorm applied to attention input before Q and K projections only.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reptile meta-learning with K=1 inner SGD step and interpolation during the last 10% of training.",
+        "parameters": {
+          "k": 1,
+          "train_fraction": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Pre-Q/K RMSNorm to stabilize the RoPE-facing path under int5/int6",
+    "Online causal TTT with Krause-style decay prior to prevent drift",
+    "Reptile meta-learning in the last 10% of training to improve eval-time TTT adaptation",
+    "Evaluation-time adaptation of MLP weights in the last 3 blocks only"
+  ],
+  "artifact_size": "15.1 MB"
+}

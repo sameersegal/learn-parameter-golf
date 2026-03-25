@@ -1,0 +1,117 @@
+{
+  "pr_number": 309,
+  "title": "Record: CLASE-Quant adaptive layer quantization (val_bpb=1.1914)",
+  "author": "NewyorkDev",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1914,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 with fp16/fp32 passthrough",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "boundary layers int8, middle layers int6, tied embeddings fp16, control tensors fp32"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "FP16 tied input/output embeddings passthrough due to dual role and sensitivity.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "GQA architecture with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings between input and output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "learning_rate": 0.03,
+          "batch_tokens": 393000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "start": 0.02,
+          "end": 0.08,
+          "schedule": "cosine warmdown"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown cosine schedule",
+        "parameters": {
+          "weight_decay": {
+            "start": 0.02,
+            "end": 0.08
+          }
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "FP16 tied embeddings with overtone spectral initialization."
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "CLASE-inspired adaptive per-layer quantization",
+    "Non-uniform quantization allocation with int8 boundary layers and int6 middle layers",
+    "FP16 passthrough for tied embeddings and FP32 passthrough for control tensors",
+    "Ramping weight decay during warmdown to tighten weight distributions for quantization",
+    "Extended context training at 2048 sequence length",
+    "Sliding window evaluation with stride 64"
+  ],
+  "artifact_size": "11.5 MB"
+}

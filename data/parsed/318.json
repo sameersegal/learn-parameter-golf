@@ -1,0 +1,154 @@
+{
+  "pr_number": 318,
+  "title": "Neural Cache: Cross-Window KV Caching for Extended Eval Context (research proposal)",
+  "author": "sseanliu",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1284,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses NTK-aware RoPE scaling for longer sequences and discusses extending effective context via cross-window KV caching.",
+        "parameters": {
+          "train_seq_len": 1024,
+          "cache_tokens": 8192,
+          "effective_context": "50K+"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the base model recipe, with only the last 4 layers enabled for XSA.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Included as part of the base model recipe.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Included as part of the base model recipe.",
+        "parameters": {
+          "bigram_vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "cross-window KV caching",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048,
+          "cache_tokens": 8192
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Eval-time technique that caches K/V pairs across sliding windows to extend effective context without training or changing model weights.",
+        "parameters": {
+          "cache_tokens": 8192,
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Cross-window KV caching at evaluation time to extend effective context beyond the sliding window.",
+    "Backward-looking-only cache that reuses already-evaluated tokens without training on validation data.",
+    "Compatibility with FlashAttention 3 for seqlen_k > seqlen_q without custom kernels.",
+    "Per-layer cache that stores only the newest stride tokens to reduce redundancy.",
+    "Proposal to mitigate long-context RoPE degradation via partial-layer caching and cache-size limits."
+  ],
+  "artifact_size": null
+}

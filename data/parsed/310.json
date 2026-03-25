@@ -1,0 +1,120 @@
+{
+  "pr_number": 310,
+  "title": "Record: 10L Seq2048 TTT LoRA WarmdownQuant (val_bpb=1.1787)",
+  "author": "vishesh9131",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1787,
+  "architecture": "Transformer",
+  "quantization": "int8 per-row quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer depth / tied embeddings / KV head count",
+        "description": "10-layer transformer with 512-dimensional hidden size, 8 attention heads, 4 KV heads, and tied embeddings.",
+        "parameters": {
+          "layers": 10,
+          "dimensions": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.98,
+        "other_params": {
+          "matrix_lr": 0.03,
+          "scalar_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 15000,
+          "always_decaying": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "targets": [
+            "Q projections",
+            "V projections",
+            "LM head"
+          ],
+          "chunk_size": 256
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init / residual mixing",
+        "description": "Overtone spectral embedding initialization with phase-transition residual mixing."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings with FP16 embeddings used to avoid int8 error compounding.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "10-layer transformer with tuned hyperparameters for the 10-minute budget",
+    "Sequence length increased to 2048 for richer context",
+    "Always-decaying warmdown schedule to tighten weights and reduce quantization penalty",
+    "Test-time training with batched LoRA adapters on Q, V projections and LM head",
+    "Overtone spectral embedding initialization with phase-transition residual mixing",
+    "Int8 per-row quantization combined with zlib compression",
+    "FP16 tied embeddings to reduce quantization error compounding"
+  ],
+  "artifact_size": "15.56 MB"
+}

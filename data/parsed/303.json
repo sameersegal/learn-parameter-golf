@@ -1,0 +1,120 @@
+{
+  "pr_number": 303,
+  "title": "[Non-record] XSA + EMA + TTT: Negative interaction study (val_bpb=1.1436)",
+  "author": "sseanliu",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1436,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention on the last layers to remove self-information from attention outputs.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used in the base model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing vocabulary mechanism.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP with 3x expansion.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "freeze_blocks": 2,
+          "momentum": 0.9,
+          "gradient_clipping": 1.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Tests whether TTT improves an XSA + EMA base model.",
+    "Finds that TTT hurts performance on the XSA + EMA model by 0.016 BPB.",
+    "Provides a negative interaction study showing XSA and TTT are mechanistically redundant.",
+    "Uses FA2 instead of FA3 due to environment constraints.",
+    "Reports reproducibility across two seeds."
+  ],
+  "artifact_size": "15.3MB"
+}

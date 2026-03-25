@@ -1,0 +1,167 @@
+{
+  "pr_number": 304,
+  "title": "Non-record: QAT + Neural Cache + LoRA TTT",
+  "author": "Bortlesboat",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4245,
+  "architecture": "Transformer",
+  "quantization": "int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "MLP layers"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "attention layers"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a BigramHash module as part of the training recipe.",
+        "parameters": {
+          "size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Included SmearGate in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Used a 3x-width MLP block.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "layers": 10,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_fraction": 0.6,
+          "interval_steps": 50,
+          "checkpoints": 24
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "neural cache",
+        "parameters": {
+          "hidden_state_dim": 512,
+          "dtype": "bf16",
+          "interpolation": "logaddexp"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal initialization used for model components."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Quantization-aware training with STE fake-quantization matched to int5/int6 export format",
+    "Neural cache during sliding-window evaluation using hidden-state similarity and logaddexp interpolation",
+    "Per-document rank-8 LoRA test-time training with entropy-gated updates",
+    "Stacking QAT, neural cache, and LoRA TTT on top of the Int5-MLP + BigramHash + SWA recipe"
+  ],
+  "artifact_size": "15.77 MB"
+}

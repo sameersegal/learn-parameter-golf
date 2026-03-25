@@ -1,0 +1,159 @@
+{
+  "pr_number": 289,
+  "title": "SmearGate + BigramHash + Int6 + SWA + U-Net Skips (1.1518 BPB)",
+  "author": "integrate-your-mind",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1518,
+  "architecture": "GPT",
+  "quantization": "per-row int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x the model dimension using relu\u00b2 activation.",
+        "parameters": {
+          "hidden": 1536,
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token-predecessor blending at the input to inject lightweight bigram context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed adjacent token-pair embedding table for bigram context.",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-to-decoder skip connections with learned per-dimension weights.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embedding and scalar parameters"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "snapshots": 7,
+          "every_steps": 200
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adam_weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "SmearGate learned token-predecessor blending at the input",
+    "BigramHash embedding with 2048 buckets for token-pair context",
+    "Per-row int6 quantization of MLP and attention weights",
+    "U-Net style skip connections with learned per-dimension weights",
+    "3x MLP expansion with relu\u00b2 activation",
+    "SWA snapshots during warmdown",
+    "Sliding-window evaluation with stride 64 as the primary score",
+    "TTT LoRA evaluation as an alternative inference-time adaptation method"
+  ],
+  "artifact_size": "15.2MB"
+}

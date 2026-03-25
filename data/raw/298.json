@@ -1,0 +1,12 @@
+{
+  "number": 298,
+  "title": "Ultimate recurrent: 21 techniques \u2014 depth recurrence, novel ops",
+  "author": "MrINVISO",
+  "body": ".",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T01:36:57Z",
+  "updated_at": "2026-03-21T02:03:41Z",
+  "submission_readme": "# Ultimate Recurrent Parameter Golf\n\n## Result\n\n| Metric | Value |\n|--------|-------|\n| val_bpb | 1.2271 |\n| model_bytes | 11,125,178 (~11.1MB) |\n| code_bytes | 64,664 (~63KB) |\n| total_bytes | 11,189,842 (~10.7MB) |\n| under_16mb | True |\n| param_count | 12,836,768 (~12.8M) |\n| steps | 6,956 |\n| ms/step | 86.26ms |\n| hardware | 8xH100 SXM |\n| wallclock | 600s |\n\n## Architecture\n\nDepth-recurrent transformer with 3 unique layers shared across 3 passes\n(effective depth 9), dim=768, 8q/2kv GQA, seq_len=2048.\n\n## Techniques\n\n### Proven (14)\n1. Depth recurrence (3 unique x 3 passes, effective depth 9)\n2. Wider dim (768 vs baseline 512)\n3. Seq len 2048 (train + eval)\n4. GQA (8q / 2kv heads)\n5. Sliding window eval (stride=64)\n6. RoPE base 500k\n7. Spectral embed init (std=0.1/sqrt(dim))\n8. Muon weight decay (0.01)\n9. Value embeddings\n10. Per-pass control params (attn_scale, mlp_scale, resid_mix)\n11. U-Net skip connections\n12. Adaptive depth (exit gate per token per pass)\n13. Confidence conditioning across passes\n14. Compression-aware auxiliary loss\n\n### Novel Original (6)\n15. Gradient Memory Recurrence\n16. Thermodynamic Compression Loss (F=E-T*S)\n17. Temporal Difference Recurrence (low-rank, rank=16)\n18. Eigenspace Token Routing\n19. Resonant Position Encoding\n20. Selective State GRU Carry (low-rank, rank=16)\n\n### Phase 1 Optimizations\n- Low-rank K projection (rank=32, saves ~415K params)\n- Low-rank TD projection (rank=16, saves ~565K params)\n- Low-rank GRU state carry (rank=16, saves ~516K params)\n\n## How to Run\n```bash\nRUN_ID=ultimate_final \\\nNUM_UNIQUE_LAYERS=3 \\\nNUM_PASSES=3 \\\nMODEL_DIM=768 \\\nNUM_KV_HEADS=2 \\\nNUM_EXPERTS=1 \\\nTRAIN_SEQ_LEN=2048 \\\nTRAIN_BATCH_TOKENS=524288 \\\nVAL_STRIDE=64 \\\nUSE_LORA_TTT=0 \\\nVAL_LOSS_EVERY=1000 \\\nMAX_WALLCLOCK_SECONDS=600 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

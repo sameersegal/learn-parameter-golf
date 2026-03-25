@@ -1,0 +1,104 @@
+{
+  "pr_number": 319,
+  "title": "Non-record: Depth Recurrence 5x3 \u2014 Weight-Shared Looping Transformer (6xH200, val_bpb=1.2716)",
+  "author": "Arth-Singh",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2716,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses 5 unique transformer layers looped 3 times to create 15 effective layers while sharing weights across loops.",
+        "parameters": {
+          "unique_layers": 5,
+          "loops": 3,
+          "effective_depth": 15,
+          "dim": 640
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares the same transformer block weights across repeated loop passes.",
+        "parameters": {
+          "unique_layers": 5,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "loop embeddings",
+        "description": "Adds learnable per-loop vectors to the residual stream so the model can distinguish different passes through the shared layers.",
+        "parameters": {
+          "num_loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "loop gates",
+        "description": "Uses learnable per-loop scalars to mix loop output with the initial representation x0; noted as over-regularized.",
+        "parameters": {
+          "num_loops": 3,
+          "initial_gate": 0.3333333333333333
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "split_optimizer": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "zero initialization for loop embeddings",
+        "description": "Loop embeddings were initialized at zero so the first loop behaves like vanilla."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "uniform gate initialization",
+        "description": "Loop gates were initialized to 1/num_loops (0.33), which the author identifies as over-regularizing."
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depth recurrence via looping a small set of shared transformer layers to achieve greater effective depth.",
+    "Weight-shared looping transformer with 5 unique layers repeated 3 times.",
+    "Loop embeddings to differentiate repeated passes through shared weights.",
+    "Loop gates to mix loop outputs with the initial residual stream.",
+    "Exploration of a depth-width tradeoff by reallocating saved parameters to wider hidden dimension.",
+    "Negative finding that conservative loop gating and removing skip connections hurt performance."
+  ],
+  "artifact_size": "15M params"
+}

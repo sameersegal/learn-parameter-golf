@@ -1,0 +1,12 @@
+{
+  "number": 291,
+  "title": "Non-record: 11L SwiGLU + XSA4 + EMA + U-Net + AdamW TTT (pending compute)",
+  "author": "mohosy",
+  "body": "## Non-record: 11L SwiGLU + XSA4 + EMA + U-Net + AdamW TTT + BigramHash(8192)\n\n**val_bpb: pending** \u2014 awaiting compute credits for 8xH100 verification\n\n### Approach\n\nFull frontier stack built on proven techniques from top submissions:\n\n| Component | Details |\n|-----------|---------|\n| **SwiGLU FFN** | Star-ReLU activation, hidden=1792 |\n| **U-Net skips** | Learned gating, encoder=5, decoder=6 |\n| **XSA4** | Exclusive Self Attention on last 4 layers |\n| **EMA** | decay=0.9985, replaces SWA |\n| **AdamW TTT** | lr=0.0005, 10 epochs, legal score-first protocol |\n| **Partial RoPE** | 16 dims only |\n| **LN Scale** | 1/sqrt(layer_idx+1) per block |\n| **BigramHash** | 8192 buckets, 128 dim |\n| **Quantization** | Int6 + GPTQ-lite + zstd-22 |\n\n### Credits\n- SwiGLU + U-Net + GEPA architecture: @JoeProAI (#462)\n- XSA + EMA + Partial RoPE + LN Scale: @felipe-parodi (#398)\n- AdamW TTT: @sjp611 (#442)\n- Late QAT: @fbedev (#410)\n\n### Status\nApplied for compute grant, will update with verified score once credits arrive.\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T00:10:38Z",
+  "updated_at": "2026-03-23T00:19:41Z",
+  "submission_readme": "# 11L EMA + XSA + TTT + Int6 MLP3x (pending compute)\n\n## Approach\n\nBuilds on PR #287 (jfprincz, val_bpb=1.1271, 15.5MB) by adding test-time training (TTT). TTT runs during eval only so artifact size is unchanged.\n\n### What's new over #287\n- **TTT**: Full-weight SGD on val data before scoring (3 epochs, lr=0.002, momentum=0.9)\n- Freezes first 2 blocks during TTT for stability\n- Full DDP support\n\n### Inherited from #287\n- 11 layers, 512-dim, 8 heads, 4 KV heads (GQA)\n- 3x MLP (1536 hidden), relu-squared\n- EMA (decay=0.997) replacing SWA\n- XSA on last 4 layers\n- Int6 per-row quant + zstd-22\n- SmearGate + BigramHash (2048)\n- Muon WD=0.04, momentum=0.99\n- FlashAttention, OrthoInit, muP\n\n### Expected improvement\nTTT has shown ~0.003-0.005 bpb improvement in PRs #254, #264, #281. Applied to #287's 1.1271 base, projected score: ~1.122-1.124.\n\n## Checklist\n- [x] Submission folder\n- [x] `README.md`, `submission.json`, `train_gpt.py`\n- [ ] Training log (pending compute)\n- [ ] BPB score (pending compute)\n"
+}

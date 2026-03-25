@@ -1,0 +1,12 @@
+{
+  "number": 284,
+  "title": "Add non-record local A100 PR60-stack reproduction",
+  "author": "DanishjeetSingh",
+  "body": "Adds a non-record 16MB submission folder for a local 1xA100 reproduction of the PR60-style stack (10L + FP16 tied embedding export + Muon WD + overtone init + residual mix + sliding eval).\r\n\r\n  Key result: final_int8_zlib_roundtrip_exact val_bpb = 1.41057617\r\n  Size: 11,124,153 bytes (int8+zlib total)\r\n  Train cap: 600s (step 716)\r\n\r\n  Included:\r\n  - README.md\r\n  - submission.json\r\n  - train.log\r\n  - train_gpt.py (exact snapshot used)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T23:07:05Z",
+  "updated_at": "2026-03-20T23:07:05Z",
+  "submission_readme": "This non-record submission reproduces the public PR60-style stack on local `1xA100` hardware under a strict 10-minute train cap.\n\nGoal:\n- Test transfer of the PR60 recipe to constrained local throughput.\n- Provide a reproducible negative result useful for compute-scaling analysis.\n\nRecipe included in this script:\n- Sliding-window final eval (`EVAL_STRIDE=64`)\n- FP16 tied embedding export (`tok_emb` kept fp16)\n- 10 transformer layers\n- Decoupled Muon weight decay\n- Overtone spectral embedding init\n- Phase-transition residual mixing\n\nRun setup:\n- Hardware: `1x NVIDIA A100-SXM4-40GB`\n- Dataset: `fineweb10B_sp1024`\n- `TRAIN_SHARDS=80`\n- `MAX_WALLCLOCK_SECONDS=600`\n- `EVAL_STRIDE=64`\n\nCommand:\n```bash\nRUN_ID=exp_a100_20260320_pr60stack_v1 \\\nMAX_WALLCLOCK_SECONDS=600 \\\nEVAL_STRIDE=64 \\\ntorchrun --standalone --nproc_per_node=1 train_gpt.py\n```\n\nObserved outcome (`train.log`):\n- Stop: `step:716`, `train_time:600393ms` (`step_avg:838.54ms`)\n- Final: `final_int8_zlib_roundtrip_exact val_bpb:1.41057617`\n- Artifact: `Total submission size int8+zlib: 11124153 bytes`\n- Final eval time: `568060ms`\n\nInterpretation:\n- The stack remains under the 16MB limit, but local single-GPU throughput reaches fewer optimization steps within the same wallclock budget, yielding weaker BPB than faster multi-GPU settings.\n\nIncluded files:\n- `train_gpt.py` (exact PR60-style script snapshot used)\n- `train.log` (full run log)\n- `submission.json` (metadata)\n"
+}

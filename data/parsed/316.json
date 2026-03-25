@@ -1,0 +1,147 @@
+{
+  "pr_number": 316,
+  "title": "Non-record: 12L Low-Rank Q + QAT (1xH100, pre-quant 1.2035)",
+  "author": "SkywardSyntax",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2035,
+  "architecture": "12-layer Transformer",
+  "quantization": "int6 quantization with Low-Rank Q and int7 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Inherited gating modification from prior SOTA records.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Inherited bigram-based hashing component from prior SOTA records.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Low-Rank Q",
+        "description": "Factorizes Q as dim\u2192128\u2192dim to reduce parameters and speed up training.",
+        "parameters": {
+          "rank": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "12 layers",
+        "description": "Increases transformer depth from 10 to 12 layers using savings from Low-Rank Q.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 7,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1024
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FTLE-guided per-row precision allocation was tested as a quantization strategy but found to be a negative result.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Stride-OGD evaluation-time vocabulary bias optimization was implemented but found too slow as-is.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone spectral init",
+        "description": "Spectral initialization inherited from prior SOTA records."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Low-Rank Q factorization (r=128) to reduce Q parameters and speed up training",
+    "Adding a 12th transformer layer using the compute savings from Low-Rank Q",
+    "Quantization-aware training with STE for int7 to reduce the pre-quant/post-quant gap",
+    "FTLE-guided per-row precision exploration with a clear negative result showing uniform quantization is better",
+    "Stride-OGD evaluation-time vocabulary bias optimization",
+    "Cross-disciplinary research pipeline spanning Apple Silicon prototyping, A100 validation, and H100 refinement"
+  ],
+  "artifact_size": "15.2MB"
+}

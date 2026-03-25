@@ -1,0 +1,155 @@
+{
+  "pr_number": 297,
+  "title": "Late STE QAT + Int6 MLP3x + SmearGate + BigramHash + OrthoInit + Overtone + SWA + SGD TTT (int6+zstd-22)",
+  "author": "davidpuertolas",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.16292025,
+  "architecture": "GPT-style Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "MLP and attention weight matrices / full model quantized artifact"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded feed-forward network width to 3x the model dimension.",
+        "parameters": {
+          "hidden": 1536,
+          "model_dim": 512,
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending current token embedding with previous token embedding for cheap bigram-like signal.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram embedding path keyed by adjacent token pairs.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with Overtone-style / muP-style scaling."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.5,
+          "every": 200
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.038,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.0003,
+          "momentum": 0.95
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "qat_start_frac": 0.85,
+          "qat_lr_factor": 0.5,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.038,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Late STE QAT activated only in the last ~15% of wallclock to reduce quantization noise during most of training.",
+    "Int6 per-row quantization with zstd level 22 compression to fit under the 16MB artifact cap.",
+    "3x MLP expansion (hidden size 1536) combined with SmearGate and BigramHash architectural additions.",
+    "Orthogonal / Overtone-style initialization for large matrices.",
+    "SWA over the second half of warmdown before quantization.",
+    "Full-model SGD test-time training instead of LoRA TTT."
+  ],
+  "artifact_size": "15,948,643 bytes"
+}

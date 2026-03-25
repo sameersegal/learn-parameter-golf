@@ -1,0 +1,152 @@
+{
+  "pr_number": 291,
+  "title": "Non-record: 11L SwiGLU + XSA4 + EMA + U-Net + AdamW TTT (pending compute)",
+  "author": "mohosy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 + GPTQ-lite",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "SwiGLU feed-forward network with Star-ReLU activation and hidden size 1792.",
+        "parameters": {
+          "hidden": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net",
+        "description": "U-Net style skip connections with learned gating between encoder and decoder paths.",
+        "parameters": {
+          "encoder": 5,
+          "decoder": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9985
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0005,
+          "epochs": 10,
+          "protocol": "legal score-first"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the head dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature augmentation with fixed bucketed representation.",
+        "parameters": {
+          "buckets": 8192,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "epochs": 10,
+          "protocol": "score-first"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "SwiGLU FFN with Star-ReLU activation",
+    "U-Net style learned gating skip connections",
+    "Exclusive Self Attention on the last 4 layers",
+    "EMA replacing SWA",
+    "AdamW test-time training with score-first protocol",
+    "Partial RoPE on 16 dimensions",
+    "Layerwise LN scaling by inverse square root of layer index",
+    "BigramHash with 8192 buckets and 128 dimensions",
+    "Int6 quantization with GPTQ-lite and zstd-22 compression"
+  ],
+  "artifact_size": "15.5MB"
+}

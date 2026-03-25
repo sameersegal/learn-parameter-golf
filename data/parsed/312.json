@@ -1,0 +1,143 @@
+{
+  "pr_number": 312,
+  "title": "Record: Int6 + Canon ACD (K=3) + Muon WD 0.04 + SWA + Sliding Eval (val_bpb=1.1668)",
+  "author": "chanwoo-park-official",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.16682362,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention int6; other large tensors int8"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Canon ACD",
+        "description": "Canon layers placed before attention, before MLP, and in widened MLP hidden stream, avoiding the expensive QKV placement.",
+        "parameters": {
+          "set": "ACD",
+          "kernel": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding added as context extra.",
+        "parameters": {
+          "bigram_vocab_size": 2048,
+          "bigram_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate context/architecture component used alongside bigram hash embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened with multiplier 3.0.",
+        "parameters": {
+          "mlp_mult": 3.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "adam_weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "enabled": 1,
+          "every": 200,
+          "start_lrmul": 0.5,
+          "averaged_checkpoints": 8
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adam_weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Mixed int6 quantization for MLP and attention with int8 for other large tensors",
+    "Canon ACD placement with kernel size 3 to retain Canon benefits while avoiding QKV cost",
+    "Bigram hash embedding and SmearGate context extras",
+    "Muon + Adam mixed optimization with momentum warmup and warmdown",
+    "SWA near the end of training",
+    "Sliding-window evaluation with stride 64 as the main comparison metric"
+  ],
+  "artifact_size": "13,267,347 bytes"
+}

@@ -1,0 +1,152 @@
+{
+  "pr_number": 290,
+  "title": "Record: 11L + Partial XSA + TTT + BatchOpt (val_bpb=1.1354)",
+  "author": "ibarrajo",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1354,
+  "architecture": "11L Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Partial exclusive self-attention applied only to the last 3 layers to debias self-attention efficiently in a GQA-aware way.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Extended positional encoding using a larger RoPE base.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 7
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism used in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing with 2048 buckets used in the base architecture.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used in the base architecture."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Partial XSA applied to the last 3 layers",
+    "Test-time training with 3-epoch full-model SGD and early block freezing",
+    "Batch size optimization to 524K tokens for more gradient updates",
+    "RoPE base increased to 50K",
+    "Sliding-window evaluation with stride 64",
+    "Int6 quantization with zstd-22 compression under the 16MB limit"
+  ],
+  "artifact_size": "15.85 MB"
+}

@@ -1,0 +1,173 @@
+{
+  "pr_number": 322,
+  "title": "11L SmearGate + BigramHash(10240) + Causal TTT + Mixed Int5/Int6 + SWA",
+  "author": "romainsantoli-web",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "GPT",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GPT",
+        "description": "11-layer GPT-style model with U-Net skip connections, GQA, RoPE, tied embeddings, and logit softcap.",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "softcap": 30
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned sigmoid gate blending each token embedding with the previous position to capture local context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Explicit bigram statistics via hashed consecutive token pairs with an embedding projected into model dimension.",
+        "parameters": {
+          "hash_size": 10240,
+          "embedding_dim": 128,
+          "projected_dim": 512
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "steps_per_chunk": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention/bigram int6, FP16 for tied embeddings and last-layer key projections"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.042
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "z-loss",
+        "parameters": {
+          "weight": 0.0001
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "fraction": 0.4,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.042,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_end": 0.99,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.042,
+        "momentum": null,
+        "other_params": {
+          "tied_embed_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "3% magnitude pruning to improve compressibility.",
+        "parameters": {
+          "pruning_fraction": 0.03
+        }
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "11-layer GPT with U-Net skip connections, GQA, and RoPE",
+    "SmearGate learned sigmoid gating for local context",
+    "BigramHash(10240) explicit bigram statistics",
+    "Causal test-time training that scores tokens before adaptation",
+    "Mixed int5/int6 quantization scheme",
+    "3% magnitude pruning for better compression",
+    "Stochastic Weight Averaging (SWA)",
+    "Tuned hyperparameters including Muon/AdamW settings, weight decay, gradient clipping, and warmdown"
+  ],
+  "artifact_size": null
+}

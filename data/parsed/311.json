@@ -1,0 +1,94 @@
+{
+  "pr_number": 311,
+  "title": "Non-record: Internal control port on the PR180 stack",
+  "author": "small-cactus",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "PR180 stack",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "internal control / late-attention control",
+        "description": "Ports a late-attention internal-control method onto the PR180 stack, applying control on top of the existing recipe rather than replacing it.",
+        "parameters": {
+          "late_layers": 3,
+          "apply_to": "attn",
+          "gate_fuse_mode": "k"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Detached gate-controlled attention scaling to modulate attention with control gates.",
+        "parameters": {
+          "detach_gates": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "EMA-zscore energy normalization with clipping to stabilize the control signal.",
+        "parameters": {
+          "energy_norm": "ema_zscore",
+          "energy_clip": 0.99
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Compile-path fixes to prevent the recurrent control path from blowing up graph size in the public script.",
+        "parameters": {
+          "compile_model": false,
+          "compile_zeropower": true,
+          "compile_control_scan": false
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fast iteration support for public-track debugging, including capped validation for smoke runs and eval progress logging.",
+        "parameters": {
+          "val_loss_every": 0,
+          "val_max_tokens": 4194304
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonWD04"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Late-attention internal control ported onto the PR180 stack",
+    "Detached gate-controlled attention scaling with gate_fuse_mode=k",
+    "EMA-zscore energy normalization with clipping",
+    "Compile-path fixes for recurrent control to keep the public script runnable on multi-GPU pods",
+    "Fastcheck/debug support with capped validation and eval progress logging"
+  ],
+  "artifact_size": null
+}

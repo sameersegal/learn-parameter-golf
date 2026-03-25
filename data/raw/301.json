@@ -1,0 +1,12 @@
+{
+  "number": 301,
+  "title": "Non-record: Int6 QAT + MLP1472 + SlidingWindow + TTT (val_bpb=1.1807)",
+  "author": "lookin-zz",
+  "body": "## Submission (Updated)\n\n- **Track:** track_non_record_16mb\n- **val_bpb:** 1.1807 (with TTT) / 1.1991 (post-quant without TTT)\n- **Artifact size:** 15,781,354 / 16,000,000 bytes\n- **Approach:** 9L 512d GPT with int6 STE QAT (0.0017 quant gap), MLP hidden=1472, aggressive warmdown, FP16 tied embeddings, batched sliding window eval (stride=64), and full-weight test-time training (3 epochs SGD, freeze first 2 blocks, -0.018 BPB).\n\n## Update from v1\n- Added test-time training: full-weight SGD on validation data during eval\n- BPB improved from 1.1958 \u2192 **1.1807**\n\nSee `records/track_non_record_16mb/2026-03-21_Int6_QAT_MLP1472_SlidingWindow/README.md` for details.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-21T02:52:19Z",
+  "updated_at": "2026-03-21T18:53:24Z",
+  "submission_readme": "# Int6 QAT MLP1472 SlidingWindow + TTT\n\n**val_bpb: 1.1807** (with TTT) | Post-quant: 1.1991 | Artifact: 15.78MB\n\n## Approach\n\n1. **Int6 QAT:** STE fake-quantize in last 20% of training. Quant gap: 0.0017.\n2. **MLP hidden=1472:** 21.2M params in 15.78MB via int6+zstd.\n3. **Warmdown 20K iters + FP16 tied embeddings.**\n4. **Sliding window eval (stride=64):** 62s on 8xH100.\n5. **TTT:** Full-weight SGD (lr=0.002, momentum=0.9), 3 epochs on val data, freeze first 2 blocks. -0.018 BPB. 113s.\n\n## Results\n\n| Stage | val_bpb |\n|-------|---------|\n| Pre-quant | 1.1974 |\n| Post-quant (int6+QAT) | 1.1991 |\n| **After TTT** | **1.1807** |\n\n## Config\n\n9L, 512d, 8/4 heads (GQA), MLP 1472, 1024 vocab. 11,937 steps at 50.3ms on 8xH100.\n\n## Reproduction\n\n```\nWARMDOWN_ITERS=20000 MLP_HIDDEN=1472 QUANT_BITS=6 QAT_START_FRAC=0.8 \\\nEVAL_STRIDE=64 MUON_WD=0 ADAM_WD=0 EMA_DECAY=0 SMEARGATE=0 BIGRAM_HASH_BUCKETS=0 \\\nTTT_EPOCHS=3 TTT_LR=0.002 TTT_MOMENTUM=0.9 TTT_FREEZE_BLOCKS=2 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

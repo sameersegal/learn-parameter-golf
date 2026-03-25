@@ -1,0 +1,155 @@
+{
+  "pr_number": 694,
+  "title": "10L Int5-MLP + BigramHash(4096) + SWA (1.1507 BPB)",
+  "author": "Bortlesboat",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1507,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 QAT",
+        "bits": 5,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a bigram hash embedding/cache-like component to the model.",
+        "parameters": {
+          "size": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections inspired by U-Net are added to the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "layers": 10,
+          "heads": 8,
+          "kv_heads": 4,
+          "d_model": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "fraction": 0.4
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal weight initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Neural cache used during evaluation to interpolate cached hidden-state predictions with model outputs.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Reduced BigramHash size for reliable artifact size margin across seeds",
+    "Mixed int5 MLP / int6 attention quantization with post-quantization roundtrip",
+    "Stochastic Weight Averaging over the last 40% of warmdown",
+    "Neural cache evaluation-time interpolation",
+    "Per-document LoRA test-time training",
+    "Quantization-aware training with STE fake quantization"
+  ],
+  "artifact_size": "15.62MB"
+}

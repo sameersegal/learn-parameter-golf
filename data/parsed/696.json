@@ -1,0 +1,140 @@
+{
+  "pr_number": 696,
+  "title": "Add non-record JEPA byte-level encoder-decoder submission",
+  "author": "gravelBridge",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2622,
+  "architecture": "JEPA encoder-decoder",
+  "quantization": "int6 QAT",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "JEPA encoder-decoder",
+        "description": "Uses a two-stage JEPA architecture with a depth-recurrent encoder and a causal decoder conditioned on encoder latents instead of a standard causal GPT.",
+        "parameters": {
+          "encoder_layers": 5,
+          "encoder_repeats": 2,
+          "decoder_layers": 7,
+          "model_dim": 480,
+          "encoder_heads": 6,
+          "encoder_kv_heads": 3,
+          "decoder_heads": 4,
+          "patch_size": 8,
+          "latent_dim": 192
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 2,
+          "stride": 256,
+          "chunk_tokens": 32768,
+          "batch_seqs": 32,
+          "all_parameters_adapt": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2047,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "SIGReg",
+        "parameters": {
+          "applied_to": "latent projection / encoder outputs"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Byte-level tokenizer with vocab 260 and no BPE.",
+        "parameters": {
+          "vocab_size": 260
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "JEPA encoder-decoder architecture as an alternative to standard causal GPT submissions",
+    "Pure byte-level tokenizer with vocab 260 and no BPE",
+    "Depth-recurrent encoder with patch-based latent projection",
+    "INT6 optimal-clip quantization with STE QAT during warmdown",
+    "Sliding-window test-time training over all parameters"
+  ],
+  "artifact_size": "15.7MB"
+}

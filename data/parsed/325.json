@@ -1,0 +1,151 @@
+{
+  "pr_number": 325,
+  "title": "Add Looped Transformer Design non-record submission (non tuned)",
+  "author": "Aum08Desai",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.14620421,
+  "architecture": "Looped Transformer",
+  "quantization": "late int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence / looped transformer",
+        "description": "Transformer with a shared recurrent core and repeated looped execution to increase effective depth.",
+        "parameters": {
+          "num_layers": 6,
+          "loop_core_layers": 2,
+          "loop_repeats": 5,
+          "loop_attn_every": 2,
+          "effective_executed_layers": 14
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings applied only to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 10,
+          "num_kv_heads": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Includes XSA attention extras over the last few tokens.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Bigram features",
+        "description": "Adds token-side bigram vocabulary and embedding features.",
+        "parameters": {
+          "bigram_vocab_size": 2048,
+          "bigram_dim": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "exact": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "ln_scale": 1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late quantization-aware training applied after initial training.",
+        "parameters": {
+          "late_qat": 1,
+          "qat_threshold": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Looped transformer with a shared recurrent core",
+    "Partial RoPE with LN scaling",
+    "Late QAT for int6 artifact fitting",
+    "XSA attention over the last 4 tokens",
+    "Bigram token-side features",
+    "Demonstrates a non-record recurrent-depth design point under the 10-minute and 16MB constraints"
+  ],
+  "artifact_size": "15,589,099 bytes"
+}

@@ -1,0 +1,124 @@
+{
+  "pr_number": 286,
+  "title": "Record: 10L Int5-MLP + SmearGate + BigramHash + Late QAT (val_bpb=1.1628)",
+  "author": "chris-buckley",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1628,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 export with late QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "gated residual smearing for cheap inter-token mixing",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "4096-bucket bigram embedding for token-pair context without a full bigram table",
+        "parameters": {
+          "vocab_size": 4096,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal init",
+        "description": "orthogonal initialization with muP-style output projection scaling for stable deep training"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "decoupled_weight_decay": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.5,
+          "every_steps": 50,
+          "num_checkpoints": 15
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "final phase only"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "full_tail_handling": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adam_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "late QAT starting at 85% wallclock to avoid always-on STE instability while closing most of the quantization gap",
+        "parameters": {
+          "start_frac": 0.85
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed-precision int5 MLP / int6 attention export to fit a 10-layer model under the 16 MB cap",
+    "SmearGate for cheap inter-token mixing without learned parameters",
+    "BigramHash 4096-bucket bigram embedding for token-pair context",
+    "Late QAT starting at 85% wallclock instead of always-on STE",
+    "Orthogonal initialization with muP-style output projection scaling",
+    "Decoupled Muon weight decay and SWA during warmdown",
+    "Sliding-window evaluation with stride 64 and full-tail handling"
+  ],
+  "artifact_size": "15,481,841 bytes"
+}
