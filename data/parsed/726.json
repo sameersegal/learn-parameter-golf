@@ -1,0 +1,168 @@
+{
+  "pr_number": 726,
+  "title": "Memmap multi-shard data pipeline + GPU prefetch + LeakyReLU\u00b2 + Legal TTT + Parallel Muon",
+  "author": "DeepReinforce",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1147,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA on the last four layers as part of the custom PR #549-style architecture stack.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE only partially across the model.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes BigramHash in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2",
+        "description": "MLP nonlinearity using leaky ReLU with negative slope 0.5 followed by squaring before the down projection.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50,
+          "start_condition": "warmdown LR scale below 0.2"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "frozen_blocks": 2,
+          "gradient_clip": 1.0,
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Memmap multi-shard data pipeline with global window sampling, coprime stride over shards, merged slab reads, and asynchronous CPU/GPU prefetch using a daemon thread plus CUDA streams/events.",
+        "parameters": {
+          "memmap": true,
+          "multi_shard": true,
+          "gpu_prefetch": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Memmap-based multi-shard distributed token loader",
+    "Global training window sampling across shards with coprime stride and diversity-aware shard weighting",
+    "Merged slab reads to reduce mmap churn",
+    "Asynchronous CPU batch construction with GPU prefetch via CUDA streams and events",
+    "Legal score-first test-time training with chunk-wise adaptation",
+    "LeakyReLU\u00b2 MLP nonlinearity",
+    "Parallel Muon optimizer usage"
+  ],
+  "artifact_size": "~15.23 MB"
+}

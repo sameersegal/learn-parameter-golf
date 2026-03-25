@@ -1,0 +1,163 @@
+{
+  "pr_number": 187,
+  "title": "Record: Pre-Enrichment + Encoder Recurrence + XSA + SmearGate + BigramHash (val_bpb=1.1629)",
+  "author": "Idan3011",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1629,
+  "architecture": "U-Net Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-table embedding for token bigrams projected to model dimension and added before the residual stream.",
+        "parameters": {
+          "table_size": "4096x64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension learnable gate blending each token with the previous token's embedding.",
+        "parameters": {
+          "parameters": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP width configuration.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Applies encoder recurrence by running the encoder blocks twice with RMS norm stabilization between passes.",
+        "parameters": {
+          "passes": 2,
+          "encoder_layers": 5,
+          "decoder_layers": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention removes self-value bias from attention output via orthogonal projection on the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "pre-enrichment",
+        "description": "Wider nonlinear embedding transformation before the residual stream: 512\u2192768\u2192512 with GELU and RMS norm.",
+        "parameters": {
+          "input_dim": 512,
+          "hidden_dim": 768,
+          "output_dim": 512
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3300
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone init",
+        "description": "Non-standard initialization adapted from prior work."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GELU pre-enrichment block before transformer layers.",
+        "parameters": {
+          "bottleneck": "512->768->512"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "GELU pre-enrichment with a wider 512\u2192768\u2192512 bottleneck before the transformer blocks",
+    "2x encoder recurrence applied only to the encoder half of a U-Net transformer architecture",
+    "Exclusive Self Attention (XSA) on the last 4 layers to remove self-value bias",
+    "SmearGate for token-to-previous-token embedding blending",
+    "BigramHash token bigram embedding added to the input representation",
+    "EMA replacing SWA to reduce quantization gap",
+    "Int6 QAT with lzma compression to fit within the artifact limit"
+  ],
+  "artifact_size": "15.05 MB"
+}

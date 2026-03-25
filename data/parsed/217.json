@@ -1,0 +1,122 @@
+{
+  "pr_number": 217,
+  "title": "Record: SP4096 int6+zstd 10L496 overtone+phase sliding (val_bpb=1.1753)",
+  "author": "kshitizz36",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.17528238,
+  "architecture": "Transformer",
+  "quantization": "int6-style quantization in int8 container",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Token embedding weights are kept tied/passthrough in fp16.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.04,
+          "tied_embed_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "eval_batch_seqs": 256
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Overtone spectral initialization with phase-transition residual mixing."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition residual mixing initialization."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SentencePiece tokenizer with 4096 vocabulary size.",
+        "parameters": {
+          "vocab_size": 4096
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "4096-vocab SentencePiece tokenizer",
+    "int6-range quantization in an int8 container to improve zstd compressibility",
+    "zstd level 22 compression",
+    "fp16 passthrough for token embeddings",
+    "sliding-window evaluation with stride 64 and long context coverage",
+    "overtone spectral initialization",
+    "phase-transition residual mixing"
+  ],
+  "artifact_size": "14,672,752 bytes"
+}

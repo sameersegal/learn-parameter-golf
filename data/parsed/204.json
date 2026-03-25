@@ -1,0 +1,125 @@
+{
+  "pr_number": 204,
+  "title": "Add record: INT6 10L SWA NorMuon, val_bpb=1.2320",
+  "author": "Akasxh",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.232,
+  "architecture": "GPT",
+  "quantization": "INT6",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "layers": 10,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "mlp_hidden": 1088
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.95
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "snapshots": 50,
+          "every_steps": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 32,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 20000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Aggressive warmdown from step 0 to encourage tighter weight distributions for quantization.",
+        "parameters": {
+          "warmdown_iters": 20000
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "INT6 quantization enabling a larger 10-layer architecture within the 16MB budget",
+    "Stochastic Weight Averaging with 50 snapshots before quantization",
+    "NorMuon optimizer with decoupled weight decay",
+    "Aggressive warmdown schedule starting from step 0",
+    "Use of NTK RoPE evaluation at 4096 context, though it degraded post-quant performance"
+  ],
+  "artifact_size": "14.2MB"
+}

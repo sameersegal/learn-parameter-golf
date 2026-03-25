@@ -1,0 +1,104 @@
+{
+  "pr_number": 222,
+  "title": "Non-record: WiderMLP + FP16 Embed + Stride-32 (val_bpb=1.1601)",
+  "author": "ansh-deriv",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1601,
+  "architecture": "GPT",
+  "quantization": "mixed int6/int8 with fp16 tied embedding",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider feedforward network increasing model capacity.",
+        "parameters": {
+          "mlp_mult": 3,
+          "hidden_size": 1536,
+          "num_layers": 10,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Tied token embedding weights with fp16 passthrough serialization for the embedding matrix.",
+        "parameters": {
+          "fp16_passthrough": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "layers 2-8 int6; layers 0/1/9 int8 per-row; embeddings fp16"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start_momentum": 0.92,
+          "warmup_steps": 1500,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based sliding window eval",
+        "parameters": {
+          "stride": 32,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Wider MLP via MLP_MULT=3 to improve capacity and validation bpb.",
+    "fp16 tied embedding export to avoid quantization loss on the embedding matrix.",
+    "Mixed int6/int8 quantization scheme with int6 on middle layers and int8 on edge layers.",
+    "Stride-32 sliding window evaluation using long preceding context for better bpb.",
+    "Tuned Muon optimizer settings including momentum warmup and separate learning rates."
+  ],
+  "artifact_size": "18.97MB"
+}

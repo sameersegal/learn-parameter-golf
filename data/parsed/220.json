@@ -1,0 +1,82 @@
+{
+  "pr_number": 220,
+  "title": "[WIP] SSM LRU Baseline \u2014 First State Space Model Submission",
+  "author": "timothywangdev",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.848,
+  "architecture": "Linear Recurrent Unit (LRU) state space model",
+  "quantization": null,
+  "optimizer": "MuonAdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LRU / state space model",
+        "description": "Replaces transformer attention with a Linear Recurrent Unit state space model using complex diagonal recurrence.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel scan",
+        "description": "Uses a cumulative-sum trick in log-space for parallel recurrence computation, intended to be torch.compile friendly.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "gated projection",
+        "description": "Applies a sigmoid gate on the SSM output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU^2 MLP",
+        "description": "Uses a ReLU-squared MLP similar to the transformer baseline.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "MuonAdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "param_groups": "SSM-aware parameter groups; Adam for A/B/C/D and Muon for projections"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "no_recomputation": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses SSM-specific parameter grouping where A/B/C/D are optimized separately from projection layers.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "First non-transformer submission to parameter golf using an LRU state space model",
+    "Complex diagonal recurrence with parallel scan in log-space",
+    "SSM blocks claimed to be smaller than attention blocks at equivalent dimension",
+    "SSMs can absorb the MLP, reducing block size",
+    "No KV cache with native sliding window evaluation",
+    "MuonAdamW with SSM-aware parameter groups"
+  ],
+  "artifact_size": "16MB"
+}

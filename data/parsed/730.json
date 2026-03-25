@@ -1,0 +1,156 @@
+{
+  "pr_number": 730,
+  "title": "Fix: move Ternary UNet submission folder from track_10min_16mb to track_non_record_16mb",
+  "author": "janwww",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.157,
+  "architecture": "Ternary U-Net Transformer",
+  "quantization": "FP8 QAT with ternary weights",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "fp_params / model artifact"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary",
+        "bits": 2,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net",
+        "description": "U-Net encoder/decoder with learned skip weights and residual mixing on top of a Transformer backbone",
+        "parameters": {
+          "layers": 10,
+          "dim": 768,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Factored tied embedding with a 254-dimensional bottleneck",
+        "parameters": {
+          "embed_dim": 254,
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "YaRN positional encoding variant",
+        "parameters": {
+          "max_len": 2048,
+          "rope_base": 5000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "4x relu\u00b2 MLP expansion with fused gate and up projection",
+        "parameters": {
+          "mlp_mult": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.0,
+        "momentum": 0.95,
+        "other_params": {
+          "backend_steps": 3,
+          "momentum_warmup_start": 0.85,
+          "momentum_warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.2
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "adam_wd": 0.05
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "ones-init",
+        "description": "Learned skip weights initialized to ones"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Base-3 packing for model compression",
+        "parameters": {
+          "packing": "base-3 + LZMA"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Ternary U-Net Transformer architecture",
+    "NeoMuon optimization for ternary STE gradient attenuation",
+    "4x relu\u00b2 MLP expansion",
+    "Factored tied embedding with 254-dimensional bottleneck",
+    "YaRN positional encoding with 8192 BPE",
+    "FP8 QAT to reduce artifact size",
+    "Base-3 + LZMA compression",
+    "Sliding-window evaluation with stride 16"
+  ],
+  "artifact_size": "15.99 MB"
+}

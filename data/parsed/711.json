@@ -1,0 +1,186 @@
+{
+  "pr_number": 711,
+  "title": "Partitioned MoE + BigramHash + SlidingWindow + Int5/Int6 (Complexity-ML)",
+  "author": "Complexity-ML",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a learned embedding bucket space to enrich token representation.",
+        "parameters": {
+          "buckets": 10240,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Previous-token gating mechanism applied after BigramHash and before the block stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mixture of Experts",
+        "description": "Partitioned MoE with layer-wise expert routing and tiered capacity allocation across input, middle, and output layers.",
+        "parameters": {
+          "layers": 9,
+          "tiers": 3,
+          "experts_per_tier": {
+            "input": 2,
+            "middle": 4,
+            "output": 4
+          }
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention used in input and output partitions.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings used in input and output partitions.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "INL BetaMu PID",
+        "description": "Error-gated causal conv1d dynamics with learnable equilibrium mu in middle layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6, tied embeddings fp16"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "window": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-layer hash routing using token and layer IDs to deterministically route tokens to experts.",
+        "parameters": {
+          "token_multiplier": 36313,
+          "layer_multiplier": 27191
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Layer budget partitioning into three tiers to allocate capacity where marginal BPB gain is highest.",
+        "parameters": {
+          "tiers": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Sort-and-split MoE dispatch with U-Net skip connections and fullgraph-safe execution.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Per-layer hash routing for expert selection",
+    "Layer budget partitioning into input/middle/output tiers",
+    "INL BetaMu PID dynamics in middle layers",
+    "BigramHash learned pair-token embedding",
+    "SmearGate previous-token gating",
+    "Mixed int5/int6 quantization with pruning",
+    "Sliding window evaluation",
+    "SWA with Muon optimizer settings",
+    "LoRA test-time training"
+  ],
+  "artifact_size": null
+}

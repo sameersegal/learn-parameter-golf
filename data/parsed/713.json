@@ -1,0 +1,143 @@
+{
+  "pr_number": 713,
+  "title": "Record: 10L + Batched LoRA TTT (mean val_bpb=1.1180, 3 seeds)",
+  "author": "hypery11",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.118,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "10-layer transformer with 3x MLP blocks using LeakyReLU(0.5)^2 activation.",
+        "parameters": {
+          "layers": 10,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a BigramHash component with bucketed hashing and learned projection.",
+        "parameters": {
+          "buckets": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate and value residual connections with per-head gated attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings with a 1024-vocab setup.",
+        "parameters": {
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "learning_rate": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "batch_size_docs": 64,
+          "chunk_length": 256,
+          "epochs": 3,
+          "targets": [
+            "Q",
+            "V",
+            "LM head"
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-document batched test-time training with fresh initialization and optimizer reset for each document; short documents under 512 tokens are scored without TTT.",
+        "parameters": {
+          "short_doc_threshold": 512
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "10-layer transformer with several custom architectural additions",
+    "Per-document batched LoRA test-time training",
+    "64 documents processed in parallel during TTT",
+    "Mixed int5/int6 quantization with zstd-22 compression",
+    "EMA weight averaging and Muon optimizer training",
+    "Score on final TTT epoch only"
+  ],
+  "artifact_size": "15.75 MB"
+}

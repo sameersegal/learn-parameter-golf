@@ -1,0 +1,12 @@
+{
+  "number": 221,
+  "title": "Submission: 10L + Sliding Window eval (mean val_bpb=1.1899)",
+  "author": "shajalahamedcse",
+  "body": "\r\n**Key idea:** \r\nThe model was like a student who studied short paragraphs but was being tested on long chapters \u2014 so we asked: what if it practiced on long text too? We changed one line (train_seq_len = 4096) so it trained on 4096-token passages instead of 1024, teaching it real long-range patterns, then evaluated it with overlapping windows (stride=64) so every word gets maximum context during scoring. We ran it on Modal 8\u00d7H100 GPUs, got a consistent mean of 1.1899 across 3 random seeds (1337, 42, 7)\r\n\r\nCombine `train_seq_len=4096` with 10 layers and sliding window evaluation (stride=64)\r\n## Seed results\r\n\r\n| Seed | val_bpb | Artifact size |\r\n|------|---------|--------------|\r\n| 1337 | 1.1900 | 15,115,793 B |\r\n| 42   | 1.1908 | 15,128,724 B |\r\n| 7    | 1.1888 | 15,154,068 B |\r\n| **mean** | **1.1899** | \u2264 16MB \u2713 |\r\n| **std**  | **0.0008** | |\r\n\r\n## Config\r\n\r\n```\r\nnum_layers     = 10\r\ntrain_seq_len  = 4096\r\neval_stride    = 64  (sliding window)\r\nwarmdown_iters = 3600\r\nmatrix_lr      = 0.04\r\nmuon_momentum  = 0.95\r\n```\r\n\r\n## Hardware\r\n\r\nModal 8\u00d7H100 SXM, `torchrun --standalone --nproc_per_node=8`, `MAX_WALLCLOCK_SECONDS=600`",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T15:12:53Z",
+  "updated_at": "2026-03-20T23:20:43Z",
+  "submission_readme": "# Seq4096 Training + 10L + Sliding Window Eval\n\n## Result\n\n| Seed | val_bpb | Artifact |\n|------|---------|----------|\n| 1337 | 1.1900 | 15,115,793 B |\n| 42   | 1.1908 | 15,128,724 B |\n| 7    | 1.1888 | 15,154,068 B |\n| **mean** | **1.1899** | |\n| **std**  | **0.0008** | |\n\n## Key change\n\nTrain on **4096-token sequences** instead of 1024. The model sees longer\ndependencies during training, improving predictions. All other settings\nfollow the sliding window SOTA baseline (10 layers, eval_stride=64,\nFP16 embeddings, Muon + weight decay, Overtone init).\n\n## Hyperparameters\n\n```\nnum_layers     = 10\ntrain_seq_len  = 4096\neval_stride    = 64\nwarmdown_iters = 3600\nmatrix_lr      = 0.04  (default)\nmuon_momentum  = 0.95  (default)\n```\n\n## Hardware\n\nModal 8\u00d7H100 SXM, `torchrun --standalone --nproc_per_node=8`\nTraining capped at 600 seconds (`MAX_WALLCLOCK_SECONDS=600`).\n"
+}

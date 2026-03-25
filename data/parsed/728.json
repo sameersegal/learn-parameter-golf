@@ -1,0 +1,168 @@
+{
+  "pr_number": 728,
+  "title": "Record: Val-Calibrated GPTQ + XSA-all + BigramHash 3072\u00d7112",
+  "author": "abaybektursun",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1142,
+  "architecture": "Transformer",
+  "quantization": "Full Hessian GPTQ int6 (val-calibrated)",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention applied on all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Wider bigram hash embedding/table used to improve quality while staying under artifact budget",
+        "parameters": {
+          "vocab_size": 3072,
+          "dimension": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times widened MLP with LeakyReLU squared",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Position-mixing gate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Encoder-decoder skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Attention uses 8 GQA heads and 4 KV heads",
+        "parameters": {
+          "gqa_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Validation-data GPTQ calibration using forward-only Hessian collection on validation tokens instead of training tokens",
+        "parameters": {
+          "calib_batches": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective \u00b11 pruning by reconstruction error",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Parallel Muon optimizer with parameter banking and overlapped communication",
+        "parameters": {
+          "parameter_banks": 4
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Validation-data GPTQ calibration to avoid eval-time training-data access",
+    "BigramHash widened to 3072 \u00d7 112",
+    "Full Hessian GPTQ int6 quantization with val calibration",
+    "XSA-all stack combined with selective pruning and artifact-budget tuning",
+    "Parallel Muon optimizer context enabling ~6.95k steps in 600s"
+  ],
+  "artifact_size": "~15.86 MB"
+}

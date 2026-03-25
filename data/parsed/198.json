@@ -1,0 +1,152 @@
+{
+  "pr_number": 198,
+  "title": "11-Layer Int6 + WD=0.04 + SWA + FA3 (val_bpb: 1.1318)",
+  "author": "jfprincz",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1318,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention int6; embeddings int8"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with hidden size 1536 and relu\u00b2 activation.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending gate added to the residual stream.",
+        "parameters": {
+          "parameters": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding for token-pair features into the residual stream.",
+        "parameters": {
+          "bigram_vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Sequence uses NTK-aware RoPE.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FlashAttention 3",
+        "description": "Uses direct flash_attn_func calls for attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "warmdown_iters": 3000,
+          "adamw_weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoint_avg_count": 8,
+          "warmdown_lr_scale_threshold": 0.5,
+          "checkpoint_interval_steps": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal plus muP-scaled initialization on large matrices."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adamw_wd": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Increased depth to 11 transformer layers to gain capacity while staying under the artifact limit via int6 compression.",
+    "Applied weight decay 0.04 to keep weights quantization-friendly and improve int6 compression.",
+    "Used stochastic weight averaging over roughly 8 checkpoints during warmdown.",
+    "Evaluated with sliding-window stride 64 for near-full context scoring.",
+    "Reduced bigram vocabulary from 4096 to 2048 to save artifact space with minimal BPB impact.",
+    "Kept and combined prior techniques including OrthoInit + muP, 3x MLP, SmearGate, BigramHash, and FlashAttention 3."
+  ],
+  "artifact_size": "15.7 MB"
+}

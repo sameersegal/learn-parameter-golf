@@ -1,0 +1,164 @@
+{
+  "pr_number": 206,
+  "title": "Record: Int6 STE + SmearGate + Seq2048 + OrthoInit + RoPE50K + SWA/100 (mean val_bpb=1.1507)",
+  "author": "dexhunter",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1507,
+  "architecture": "Transformer",
+  "quantization": "int6 STE QAT",
+  "optimizer": "NorMuon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 STE QAT",
+        "bits": 6,
+        "scope": "all weights except fp16 tied embedding"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blends token embeddings with predecessor representations.",
+        "parameters": {
+          "params": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP layers enabled by int6 compression savings.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary position embeddings with adjusted base frequency for longer context.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied; embedding tensor is kept in fp16 and not quantized.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "NorMuon",
+        "weight_decay": 0.02,
+        "momentum": 0.99,
+        "other_params": {
+          "beta2": 0.95,
+          "warmup_start": 0.92,
+          "matrix_lr": 0.021,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 100,
+          "start_fraction_of_warmdown": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 1984
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization applied to all non-zero-init linear layers."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "U-Net style skip connections with learnable per-layer per-dimension skip weights.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 straight-through estimator quantization during training",
+    "SmearGate token-to-predecessor embedding blending",
+    "Wider 3x MLP enabled by quantization savings",
+    "Orthogonal initialization across non-zero-init linear layers",
+    "Longer 2048-token training context with RoPE base 50K",
+    "Frequent SWA checkpoint averaging every 100 steps",
+    "Sliding-window evaluation with stride 64",
+    "U-Net skip connections in the model"
+  ],
+  "artifact_size": "14.79MB"
+}

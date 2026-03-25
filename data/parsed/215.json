@@ -1,0 +1,159 @@
+{
+  "pr_number": 215,
+  "title": "Non-Record: 11L Low-Rank on Q192 (val_bpb=1.1548) 14.7MB in decimal",
+  "author": "JayCheng113",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1548,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "low-rank Q",
+        "description": "Factorized the Q projection into down/up matrices with rank 192 to reduce parameters and improve compressibility.",
+        "parameters": {
+          "rank": 192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth",
+        "description": "Used 11 transformer layers with encoder-decoder skip connections (5 encoder + 6 decoder).",
+        "parameters": {
+          "layers": 11,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Used tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Used a 3x MLP width with relu-squared activation.",
+        "parameters": {
+          "mlp_mult": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applied rotary positional embeddings.",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.038,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.038
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Explored Legendre-based initialization for resid_mix parameters, though it did not improve results."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Clean compile cache was used for each run to ensure reproducibility and consistent compilation behavior.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Low-rank Q factorization with rank 192 to exploit the apparent low-rank structure of Q projections.",
+    "11-layer encoder-decoder skip-connected Transformer within the 16MB budget.",
+    "Int6 per-row quantization combined with zstd-22 compression for model weights.",
+    "Sliding-window evaluation with stride 64 for final scoring.",
+    "Analysis-driven exploration of alternative ideas such as Legendre resid_mix initialization, content-dependent pre-rotation, and depth-attention residuals."
+  ],
+  "artifact_size": "14.7MB"
+}

@@ -1,0 +1,76 @@
+{
+  "pr_number": 185,
+  "title": "Non-record: Wider-shallower 4x768 + QAT (1xH100, 1.3043 bpb)",
+  "author": "dttdrv",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.3043,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "wider-shallower Transformer",
+        "description": "Uses a 4-layer, 768-dimensional model with grouped-query attention to improve performance at matched wallclock.",
+        "parameters": {
+          "layers": 4,
+          "dimensions": 768,
+          "heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.06,
+          "grad_clip": 0.5,
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Wider-shallower 4x768 architecture with grouped-query attention",
+    "Increased QK gain to sharpen attention",
+    "Muon optimizer tuning with gradient clipping and beta2 adjustment",
+    "Straight-through estimator quantization-aware training after warmup",
+    "Reduced int8 quantization gap from about 0.03 to 0.0016 bpb",
+    "Batch-size sweep on H100 to find 262K tokens optimal for single-GPU training"
+  ],
+  "artifact_size": null
+}

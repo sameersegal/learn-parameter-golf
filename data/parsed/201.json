@@ -1,0 +1,164 @@
+{
+  "pr_number": 201,
+  "title": "LAWA-EMA frontier fork (pr198 base, SWA -> LAWA val_bpb=1.1551)",
+  "author": "machdragon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1551,
+  "architecture": "Transformer",
+  "quantization": "int6 quantization with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights; int8 embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Added SmearGate module",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added BigramHash embedding component",
+        "parameters": {
+          "vocab_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Added U-Net style skip connections across layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Used NTK-aware rotary positional embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995,
+          "dtype": "float32",
+          "update_frequency": "every_step"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Overtone init",
+        "description": "SVD-based power-law embedding spectrum initialization for smoother int6 quantization"
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used on large matrices"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "partial-window fix",
+        "parameters": {
+          "only_full_windows": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "grad_clip": 0.3,
+          "warmdown_iters": 1200
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fixed BigramHashEmbedding.proj zero-init override bug",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LAWA-EMA replacing SWA with every-step exponential moving average",
+    "Overtone initialization using SVD power-law embedding spectrum",
+    "BigramHashEmbedding projection zero-init fix",
+    "Sliding window evaluation boundary fix",
+    "Int6 quantized submission with reduced artifact size"
+  ],
+  "artifact_size": "12.7 MB"
+}

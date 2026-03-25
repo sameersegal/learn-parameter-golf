@@ -1,0 +1,199 @@
+{
+  "pr_number": 211,
+  "title": "Add WaveletWeightedWidenet submission directory with README and metadata",
+  "author": "dubthecat",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1719,
+  "architecture": "Transformer",
+  "quantization": "mixed int8 / ternary VQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied FP16 token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "12-layer transformer with 8 attention heads and 4 KV heads (GQA).",
+        "parameters": {
+          "layers": 12,
+          "heads": 8,
+          "kv_heads": 4,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "encoder-decoder skip connections",
+        "description": "U-Net style skip connections between first 6 encoder layers and last 6 decoder layers.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "phase-transition residual mixing",
+        "description": "Uses sigmoid-scheduled residual mixing per layer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Applies logit softcap at 30.0.",
+        "parameters": {
+          "softcap": 30.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary VQ",
+        "bits": 1,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "warmup_momentum": 0.85,
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "parameter_groups": [
+            "token embedding",
+            "ternary MLP weights",
+            "scalar/control params"
+          ],
+          "learning_rates": {
+            "token_embedding": 0.6,
+            "ternary_mlp_weights": 0.02,
+            "scalar_control_params": 0.04
+          }
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "targets": [
+            "Q",
+            "V",
+            "LM head"
+          ],
+          "chunk_size": 256,
+          "batch_size": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Tied FP16 embeddings use overtone spectral initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iterations": 2500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.01,
+          "applied_to": "ternary weights"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-Through Estimator used for ternary weight quantization during training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "relu\u00b2 activation between ternary linear layers.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "12-layer transformer with wider MLPs and U-Net style encoder-decoder skip connections",
+    "Ternary MLP weights compressed with vector quantization to about 1 bit per parameter",
+    "Hybrid compression scheme combining ternary VQ for MLPs and int8 for attention layers",
+    "Four-way optimizer split across embeddings, attention, ternary MLP weights, and scalar/control parameters",
+    "Sliding-window evaluation and optional TTT LoRA adaptation"
+  ],
+  "artifact_size": "15,367,830 bytes (~14.7MB)"
+}

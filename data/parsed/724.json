@@ -1,0 +1,130 @@
+{
+  "pr_number": 724,
+  "title": "Record: 10L + 7-gram eval cache (mean val_bpb=1.0717)",
+  "author": "hypery11",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.0717,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer",
+        "description": "10-layer transformer with 512d hidden size, 8/4 GQA, 3x MLP LeakyReLU(0.5)^2, BigramHash, SmearGate, value residual, gated attention, U-Net skip connections, and tied embeddings.",
+        "parameters": {
+          "layers": 10,
+          "dimensions": 512,
+          "gqa": "8/4",
+          "bigramhash_buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based token feature component with 10240 buckets and 128-dimensional representation.",
+        "parameters": {
+          "buckets": 10240,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used in the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval with backward-looking 7-gram cache",
+        "parameters": {
+          "order": 7,
+          "alpha": 0.4,
+          "hash_buckets": 4000000,
+          "min_count": 2,
+          "score_first": true,
+          "deterministic": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT-like cache update",
+        "parameters": {
+          "gradient_updates": false,
+          "ttt": false
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "10-layer transformer with a compact architecture tuned for the competition constraints",
+    "Backward-looking 7-gram evaluation cache to improve validation performance during inference",
+    "Score-first cache update strategy with deterministic evaluation and no gradient-based test-time adaptation",
+    "Mixed int5/int6 quantization combined with zstd-22 compression to fit within the artifact size limit",
+    "Use of EMA, pruning, and BigramHash/SmearGate/U-Net skip architectural enhancements"
+  ],
+  "artifact_size": "15.75 MB"
+}

@@ -1,0 +1,149 @@
+{
+  "pr_number": 731,
+  "title": "Record: 1.0400 BPB -- Hedge Mixer + VRL + AdamW TTT + Polyak EMA",
+  "author": "pentxayc",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.04,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 quantization",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning with a residual connection from layer 0's value output to all subsequent layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation squared",
+        "parameters": {
+          "negative_slope": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA-4",
+        "description": "Cross-Token Self-Attention applied on the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 query heads and 4 KV heads",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram feature table used in the model",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0005,
+          "test_time_training": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "polyak_decay": 0.998,
+          "freeze_first_blocks": 9,
+          "unfreeze_last_blocks": 2,
+          "epochs_per_chunk": 3,
+          "byte_weighted_loss": true,
+          "adaptive_cosine_lr": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "adaptive cosine decay",
+        "parameters": {
+          "ramp_multiplier_start": 1,
+          "ramp_multiplier_end": 3,
+          "ramp_fraction": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hedge Mixer online ensemble combining neural predictions with unigram, bigram, trigram, and entropy experts using multiplicative weights",
+        "parameters": {
+          "experts": 5,
+          "eta": 0.1,
+          "deferred_updates": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Value Residual Learning (VRL) in the transformer",
+    "5-expert Hedge Mixer during evaluation",
+    "Deferred score-first Hedge weight updates",
+    "AdamW test-time training with Polyak EMA",
+    "Byte-weighted loss for TTT",
+    "Adaptive cosine learning rate during TTT",
+    "Freeze-first-9-blocks / unfreeze-last-2-blocks TTT scheme",
+    "Int6 mixed quantization with lzma compression"
+  ],
+  "artifact_size": "15,999,919 bytes"
+}

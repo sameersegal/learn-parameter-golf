@@ -1,0 +1,187 @@
+{
+  "pr_number": 714,
+  "title": "Add 11L RotaryFix + LegalTTT + BIGRAM3072 \u2014 val_bpb 1.11869 (3-seed m\u2026",
+  "author": "Upsalla",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.11869,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6 with late QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary NTK-scaling bug fix; train_seq_len=2048 is correctly propagated to both base_model and eval_model instead of being hardcoded to 1024.",
+        "parameters": {
+          "train_seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Expanded bigram vocabulary size for the hash-based bigram component.",
+        "parameters": {
+          "vocab_size": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with LeakyReLU(0.5)^2.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings using 16 of 64 dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE enabled in layers 9-10.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "chunk_size": 32768
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 3,
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT threshold tuning to extend quantization-aware adaptation time.",
+        "parameters": {
+          "threshold": 0.57
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Fixed a Rotary NTK-scaling bug by correctly propagating train_seq_len=2048 to both training and evaluation models.",
+    "Applied a previously unreported eval_model Rotary fix affecting the causal TTT scoring window.",
+    "Increased BigramHash vocabulary size to 3072.",
+    "Raised the late QAT threshold to 0.57 to allow substantially more QAT steps.",
+    "Used torch.no_grad() instead of torch.inference_mode() during TTT scoring to avoid Autograd graph corruption across RoPE cache boundaries.",
+    "Introduced Legal TTT: score-first, backward-looking test-time training on already-scored chunks."
+  ],
+  "artifact_size": "~16.06 MB"
+}

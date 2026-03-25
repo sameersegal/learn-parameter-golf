@@ -1,0 +1,12 @@
+{
+  "number": 724,
+  "title": "Record: 10L + 7-gram eval cache (mean val_bpb=1.0717)",
+  "author": "hypery11",
+  "body": "## Results\n\n| Seed | val_bpb |\n|------|---------|\n| 42   | 1.0531  |\n| 1337 | 1.0814  |\n| 2024 | 1.0805  |\n| **Mean** | **1.0717** |\n| Std  | 0.0160  |\n\n- Artifact: 15.75 MB\n- Train: 600s on 8xH100 SXM\n- Eval: ~195s (well under 600s)\n\n## Method\n\n10-layer transformer with backward-looking 7-gram eval cache.\n\nBase model: 512d, 8/4 GQA, 3x MLP LeakyReLU(0.5)^2, BigramHash 10240, SmearGate, value residual, gated attention, U-Net skip, tied embeddings. Mixed int5/int6 quantization + zstd-22, 5% pruning, EMA 0.995.\n\n7-gram cache: fixed alpha=0.40, 4M XOR-hash buckets, min_count=2. Score-first (cache updated after scoring). Deterministic, no TTT, no gradient updates.\n\n- [x] 8xH100 SXM, train \u2264600s\n- [x] Eval \u2264600s\n- [x] Artifact \u226416MB\n- [x] 3-seed validation",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-25T14:29:00Z",
+  "updated_at": "2026-03-25T14:29:00Z",
+  "submission_readme": "# 10L + 7-gram Eval Cache\n\n## Results\n\n| Seed | val_bpb | Eval time |\n|------|---------|-----------|\n| 42   | 1.0531  | 195s      |\n| 1337 | 1.0814  | ~195s     |\n| 2024 | 1.0805  | ~195s     |\n| **Mean** | **1.0717** | |\n| Std  | 0.0160  | |\n\nArtifact size: 15.75 MB. Train: 600s on 8xH100 SXM. Eval: ~195s.\n\n## Architecture\n\n- 10 layers, 512 dim, 8/4 GQA heads\n- 3x MLP with LeakyReLU(0.5)^2\n- BigramHash (10240 buckets, 128 dim)\n- SmearGate, value residual, gated attention\n- U-Net skip connections, tied embeddings\n- Mixed int5 (MLP) / int6 (attention) quantization + zstd-22\n- 5% magnitude pruning, EMA (0.995)\n- Muon (lr=0.02, mom=0.99, WD=0.04) + AdamW\n\n## 7-gram Eval Cache\n\nBackward-looking n-gram cache applied during sliding-window evaluation:\n\n- Order 7, fixed alpha=0.40, 4M hash buckets, min_count=2\n- XOR-based context hashing with prime multipliers\n- Score-first: each token scored by model before entering cache\n- Deterministic: identical results given same weights and data\n- No TTT, no gradient updates at eval time\n- Adds zero learned parameters\n"
+}
