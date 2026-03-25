@@ -28,6 +28,13 @@ Parameter Golf has a critical rule: **you must score tokens before training on t
 This is sometimes called "online learning" — you learn from the data stream as you go, but you always predict before you see the answer.`,
     },
     {
+      type: "animation",
+      title: "Interactive: Test-Time Training",
+      animationId: "ttt-demo",
+      content:
+        "Watch the score-first TTT loop in action. Each chunk is scored first (blue), then trained on (yellow). Toggle between Full TTT and LoRA TTT to compare. Adjust the epoch count to see how more training per chunk reduces loss further.",
+    },
+    {
       type: "code",
       title: "Score-First TTT Implementation",
       language: "python",

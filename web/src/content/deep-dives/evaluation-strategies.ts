@@ -23,6 +23,13 @@ The simplest evaluation: chop the document into non-overlapping chunks of \`seq_
 Overlapping windows let every token (except the very first) benefit from a full context of prior tokens. You only *score* the tokens in the non-overlapping "stride" portion, but the model *sees* the full window. This is strictly better than non-overlapping evaluation.`,
     },
     {
+      type: "animation",
+      title: "Interactive: Sliding Window Evaluation",
+      animationId: "sliding-window-demo",
+      content:
+        "Drag the stride slider to see how the evaluation window moves across a document. Yellow tokens are scored; blue tokens provide context. Notice how a smaller stride means more overlap and more compute, but every scored token gets full context.",
+    },
+    {
       type: "code",
       title: "Sliding Window Evaluation",
       language: "python",

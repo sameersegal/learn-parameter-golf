@@ -11,6 +11,14 @@ const animationRegistry: Record<
     () => import("./animations/QuantizationDemo"),
     { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
   ),
+  "sliding-window-demo": dynamic(
+    () => import("./animations/SlidingWindowDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
+  "ttt-demo": dynamic(
+    () => import("./animations/TTTDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
 };
 
 export default function AnimationContainer({
