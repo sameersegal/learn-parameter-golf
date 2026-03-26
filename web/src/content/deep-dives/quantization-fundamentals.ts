@@ -79,45 +79,71 @@ print(f"Mean absolute error: {error:.6f}")  # Typically ~0.003`,
     {
       type: "text",
       title: "Quantization at Inference Time",
-      content: `A natural question: if we quantize weights to int4 or int8, do we just dequantize everything back to float16 before running inference? If so, isn't quantization just a file-size trick?
+      content: `Here's a question that trips up almost everyone the first time: if we quantize weights to int4 or int8 for storage, do we just dequantize everything back to float16 before running inference? And if so, isn't quantization just a zip file for models — a file-size trick with no runtime benefit?
 
-**The answer: dequantization happens, but only on-the-fly — never all at once.**
+This is a great question. And the answer reveals why quantization is far more powerful than compression.
+
+### The Naive Mental Model (and Why It's Wrong)
+
+You might picture inference with a quantized model like this: load the int4 file from disk, expand all the weights back to float16 in GPU memory, then run the model normally. If that were true, quantization would only help with download size and disk space. Once the model is in VRAM, you'd be back to square one — same memory footprint, same speed.
+
+**That is not how it works.** In practice, dequantization happens on-the-fly, one small tile at a time. The full-precision weights never exist all at once.
 
 ### How It Actually Works
 
-During inference with a quantized model:
+Think of it like streaming a video. You don't download the entire movie to RAM before pressing play. You decode one frame at a time, watch it, then discard it. Quantized inference works the same way:
 
-1. **Weights stay compressed in memory** (e.g., INT4/INT8 tensors in VRAM)
-2. **At compute time**, a small tile or block of weights is dequantized to FP16/BF16 just before the matrix multiply
-3. The dequantized values are used for the GEMM (general matrix multiply), then discarded
-4. The next tile is dequantized, and so on
+1. **Weights stay compressed in VRAM.** The GPU holds int4 or int8 tensors — that's the canonical representation.
+2. **At compute time**, the GPU dequantizes a small block of weights (say, a 128-element tile) to float16 right before the matrix multiply.
+3. The dequantized tile feeds into the GEMM (general matrix multiply), produces its output, and gets discarded.
+4. The next tile streams in. Rinse, repeat.
 
-You never inflate the full model back to FP16 in memory. The bulk of VRAM holds the compressed weights at all times.
+The key insight: you never inflate the full weight matrix back to float16 in memory. A 70B-parameter model in int4 sits in ~35 GB of VRAM, not ~140 GB. The dequantization overhead is tiny — a few extra instructions per tile — because modern GPUs are absurdly fast at arithmetic compared to memory access.
 
-### Why This Matters Beyond File Size
+### The Four Benefits (Ranked by Impact)
 
-| Benefit | Mechanism |
-|---------|-----------|
-| **Memory / VRAM** | Weights stored as INT4/INT8 — a 70B model goes from ~140 GB (FP16) to ~35 GB (INT4) |
-| **Disk / file size** | Smaller downloads and storage (critical for Parameter Golf's 16 MB limit) |
-| **Memory bandwidth** | Less data moved from VRAM to compute units per layer |
-| **Inference latency** | LLM decoding is memory-bandwidth-bound, so fewer bytes = faster tokens |
+Quantization isn't just one trick. It delivers four distinct benefits, and the most important one surprises most people:
 
-The **memory bandwidth** saving is arguably the most important benefit in production. LLM inference at batch size 1 is almost entirely memory-bandwidth-bound — the GPU spends most of its time waiting for weights to arrive from VRAM, not doing math. Moving 4-bit weights instead of 16-bit weights means ~4× less data transfer per layer, translating almost directly to ~4× faster token generation.
+| Benefit | What Happens | Scale of Impact |
+|---------|-------------|-----------------|
+| **1. Memory bandwidth** | Less data moves from VRAM to compute cores per layer | **Biggest win for production LLM inference** |
+| **2. Memory / VRAM** | Weights stored as int4/int8 — fit larger models on smaller GPUs | 2-4x more model per GPU |
+| **3. Inference latency** | Fewer bytes to move = faster token generation | Near-linear speedup at low batch sizes |
+| **4. Disk / file size** | Smaller downloads and storage | Critical for Parameter Golf's 16 MB limit |
 
-### Hardware-Native Low-Precision Compute
+Let's unpack the top one, because it's the least obvious.
 
-Some hardware can skip the dequantize step entirely:
+### Memory Bandwidth: The Hidden Bottleneck
 
-- **NVIDIA Hopper (H100)**: Native FP8 tensor cores — matmuls run directly in 8-bit
-- **INT8 tensor cores** (Ampere and later): Direct INT8×INT8 accumulation
-- **\`LLM.int8()\`**: Mixed-precision decomposition that keeps outlier features in FP16 while computing the rest in INT8
+When an LLM generates text one token at a time (batch size 1), the GPU does surprisingly little math per byte of weight data it reads. For each token, the model must read *every* weight in *every* layer exactly once. The matrix multiplies themselves are tiny — just a matrix-vector product. The GPU finishes the arithmetic almost instantly, then sits idle, waiting for the next chunk of weights to arrive from VRAM.
 
-These approaches avoid the dequantize→multiply→discard cycle entirely for supported precisions, yielding even larger speedups.
+This makes LLM decoding **memory-bandwidth-bound**, not compute-bound. The speed limit isn't how fast the GPU can multiply — it's how fast it can read weights from memory.
 
-### Implications for Parameter Golf
+Now the punchline lands: if your weights are int4 instead of float16, you're moving **4x less data** through the memory bus per layer. The GPU's compute units were already underutilized, so spending a few cycles on dequantization costs almost nothing. The net result? Roughly **4x faster token generation**. Not from doing less math — from feeding the GPU faster.
 
-In the competition context, the primary quantization benefit is artifact size — submissions must fit within 16 MB. But the same techniques that shrink the artifact also make the model faster to evaluate, since the competition's evaluation pipeline loads and runs the quantized weights directly. Submissions using GPTQ or STE QAT aren't just small — they're designed so that the quantized representation *is* the model, not a compressed shuttle format that gets expanded before use.`,
+> **Key Insight:** For autoregressive LLM inference, quantization is primarily a *bandwidth optimization*, not a compute optimization. You're not making the math cheaper — you're making the data smaller so it arrives sooner.
+
+This is why quantization gives such dramatic real-world speedups even though it adds a dequantization step. The dequantize cost is noise compared to the bandwidth savings.
+
+### When You Don't Even Need to Dequantize
+
+On newer hardware, some precisions skip the dequantize step entirely and compute directly in low precision:
+
+- **NVIDIA Hopper GPUs (H100)**: Native FP8 tensor cores run matrix multiplies directly in 8-bit floating point. No conversion needed.
+- **INT8 tensor cores** (Ampere and later): Direct INT8 x INT8 multiplication with INT32 accumulation. The weights and activations stay in int8 throughout.
+- **\`LLM.int8()\`** ([Dettmers et al., 2022](https://arxiv.org/abs/2208.07339)): A clever mixed-precision scheme that identifies outlier features (the ~0.1% of hidden dimensions with unusually large values) and keeps those in float16. Everything else computes in int8. This gets near-float16 accuracy with most of the int8 speed benefit.
+
+These approaches eliminate the dequantize-multiply-discard cycle entirely. The quantized format isn't just how the model is stored — it's how the model *thinks*.
+
+### What This Means for Parameter Golf
+
+In the competition, the 16 MB artifact limit makes file size the primary concern. But here's what's important to internalize: the quantized representation *is* the model. It's not a compressed shuttle format that gets unpacked before use.
+
+When PR #809 (0.295 BPB) exports its model with GPTQ int5, those int5 weights are the final artifact. The evaluation pipeline loads and runs them directly. When PR #620 (0.9443 BPB) uses int8 per-row quantization, the int8 values aren't an intermediate format — they're the weights the model uses to make predictions.
+
+This distinction matters because it means submissions aren't fighting quantization error as an afterthought. Techniques like **STE QAT** (Straight-Through Estimator Quantization-Aware Training, used by 83 submissions) train the model *knowing* it will live in low precision. The training process learns weights that are robust to quantization from the start. And **GPTQ** carefully redistributes quantization error across columns using second-order information, minimizing the damage at export time.
+
+The model was always meant to be quantized. The quantized weights aren't a lossy copy — they're the real thing.`,
     },
     {
       type: "text",
