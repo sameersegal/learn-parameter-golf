@@ -1,0 +1,159 @@
+{
+  "pr_number": 893,
+  "title": "Record: Two-Pass Order-12 N-gram Backoff + Parallel Muon \u2014 val_bpb 0.1310 (3-seed)",
+  "author": "aryanbhosale",
+  "status": "open",
+  "val_bpb": 0.131,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "passes": 2,
+          "cache_orders": "2-12",
+          "cold_cache_chunks": 50
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Muon",
+        "description": "Parallel Muon optimizer with parameter banking and batched Newton-Schulz.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash feature module.",
+        "parameters": {
+          "size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention mechanism with gating.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Residual value pathway in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA4 attention/sequence module.",
+        "parameters": {
+          "variant": "XSA4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "16/64": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation.",
+        "parameters": {
+          "mlp_multiplier": "3x",
+          "power": 2,
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 65536
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Two-pass evaluation with order-12 N-gram backoff rescoring",
+    "Entropy-adaptive alpha blending for N-gram/model interpolation",
+    "Backward-looking N-gram cache updated only after scoring",
+    "Parallel Muon optimization with parameter banking",
+    "Large hash-based N-gram cache over validation tokens"
+  ],
+  "artifact_size": "~15.85 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,67 @@
+{
+  "pr_number": 886,
+  "title": "RFC: A framework for deciding the n-gram question",
+  "author": "abaybektursun",
+  "status": "open",
+  "val_bpb": 0.3779,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-table based n-gram caching/mixing built from already-scored tokens during evaluation.",
+        "parameters": {
+          "orders": "2-9",
+          "buckets": 4000000
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "epochs": 8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Eval-time n-gram caching/mixing that preserves strict causality by using only already-scored tokens",
+    "Demonstration that a pure n-gram cache can outperform the neural base model on FineWeb validation",
+    "Finding that smaller hash tables with more collisions can improve BPB because collisions help counts cross the min_count threshold",
+    "Global all-reduce synchronization of n-gram hash table deltas across GPUs to avoid cache fragmentation",
+    "Proposal to cap eval-time memory or per-token latency as a competition rule clarification"
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

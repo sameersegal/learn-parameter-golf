@@ -1,0 +1,158 @@
+{
+  "pr_number": 890,
+  "title": "Record: Order-Adaptive 9-gram Backoff + Distributed Prefill \u2014 val_bpb 0.4405 (3-seed mean)",
+  "author": "sofiabod",
+  "status": "open",
+  "val_bpb": 0.4405,
+  "architecture": "Transformer",
+  "quantization": "int5 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers of the transformer.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash module used in the architecture.",
+        "parameters": {
+          "buckets": 4096,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual enhancement on later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-adaptive entropy-gated multi-order n-gram backoff cache with per-order thresholds and distributed cache prefill during evaluation.",
+        "parameters": {
+          "orders": "2-9",
+          "hash_buckets_per_order": 4000000,
+          "min_count": 2,
+          "alpha_range": [
+            0.05,
+            0.6
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Order-adaptive entropy-gated 9-gram backoff cache",
+    "Per-order entropy thresholds for blending neural and n-gram predictions",
+    "Distributed cache prefill to avoid cold-start caches across ranks",
+    "Score-first backward-looking evaluation cache",
+    "Multi-order backoff from 2-gram through 9-gram"
+  ],
+  "artifact_size": "15,101,371 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

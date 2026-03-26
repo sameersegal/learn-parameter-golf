@@ -1,0 +1,146 @@
+{
+  "pr_number": 895,
+  "title": "Non-record: 4-Hour Progressive Depth \u2014 val_bpb 1.0889",
+  "author": "iverbovoy",
+  "status": "open",
+  "val_bpb": 1.0889,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaced unique transformer blocks with 3 shared blocks repeated across depth, using progressive repeats to reach 15 effective layers.",
+        "parameters": {
+          "shared_blocks": 3,
+          "repeats": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "effective_layers": 15
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared weights across repeated blocks instead of unique layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Removed baseline U-Net skip connections; Cross-Repeat Skip was used instead.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Added value embeddings mixed into the residual stream at each effective layer.",
+        "parameters": {
+          "tables": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Cross-Repeat Skip: each block receives a weighted residual from its output in the previous repeat, making recurrence stateful.",
+        "parameters": {
+          "learned_scales": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Loop embedding: learned per-layer vector added before each block as depth-wise positional encoding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 38
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "window": 1024
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "Adam": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Progressive depth recurrence scaling study with shared-weight recurrence",
+    "Cross-Repeat Skip to make recurrence stateful",
+    "Value embeddings mixed into the residual stream",
+    "Loop embedding as depth-wise positional encoding",
+    "Large-scale SWA over 38 checkpoints",
+    "Hedge Mixer evaluation adapted from prior submissions"
+  ],
+  "artifact_size": "12.83MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
