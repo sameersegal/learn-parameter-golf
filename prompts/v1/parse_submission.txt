@@ -1,0 +1,93 @@
+You are an expert at analyzing machine learning competition submissions for the "Parameter Golf" challenge on GitHub (openai/parameter-golf).
+
+Given a pull request submission below, extract structured information. If a field cannot be determined from the text, use null.
+
+## PR Details
+- PR Number: $pr_number
+- Title: $title
+- Author: $author
+- State: $state
+- Labels: $labels
+
+## PR Body
+$body
+
+## Submission README (from the PR's branch)
+$readme
+
+---
+
+## Technique Vocabulary & Definitions
+
+When extracting `training_techniques`, classify each technique into one of the categories below. Each entry is a dictionary with `"category"` and `"data"` (a category-specific key-value dict). Only include techniques that are explicitly mentioned or strongly implied.
+
+### 1. `quantization`
+Reducing the numerical precision of model weights to save artifact size.
+- **data**: `method` (str: e.g., "int8", "int6", "int5", "fp16", "mixed int6/int8", "QAT", "GPTQ", "GPTQ-lite", "STE QAT", "bitsandbytes"), `bits` (int or null: e.g., 6, 8), `scope` (str or null: which parts — e.g., "all", "MLP", "embeddings", "block weights")
+
+### 2. `architecture_modification`
+Structural changes to the model architecture beyond a standard Transformer.
+- **data**: `component` (str: e.g., "XSA", "SmearGate", "BigramHash", "RoPE", "Partial RoPE", "MLP3x", "depth recurrence", "weight tying", "tied embeddings", "KV head count"), `description` (str: brief explanation of the modification), `parameters` (dict or null: any relevant hyperparameters like `{"layers": 4}`, `{"dimensions": 16}`)
+
+### 3. `optimizer_technique`
+Optimizer choice and associated tuning beyond standard Adam/AdamW.
+- **data**: `method` (str: e.g., "Muon", "Parallel Muon", "Adam", "AdamW", "SGD", "LAMB"), `weight_decay` (float or null), `momentum` (float or null), `other_params` (dict or null: any other relevant optimizer parameters)
+
+### 4. `weight_averaging`
+Post-training or during-training weight averaging schemes.
+- **data**: `method` (str: e.g., "SWA", "EMA", "Polyak averaging"), `parameters` (dict or null: e.g., `{"decay": 0.4}`, `{"start_step": 120}`)
+
+### 5. `compression`
+Compression of the final artifact (model + code) to fit within the 16MB limit.
+- **data**: `method` (str: e.g., "zstd", "zlib", "gzip", "lzma", "custom"), `level` (int or null: compression level if specified)
+
+### 6. `evaluation_technique`
+Techniques applied during evaluation/inference to improve val_bpb.
+- **data**: `method` (str: e.g., "sliding window eval", "long context eval", "stride-based eval"), `parameters` (dict or null: e.g., `{"stride": 64}`, `{"context_length": 4096}`)
+
+### 7. `test_time_training`
+Adapting the model at test time on already-evaluated tokens (TTT).
+- **data**: `method` (str: e.g., "LoRA TTT", "full TTT", "score-first TTT"), `parameters` (dict or null: e.g., `{"rank": 8}`, `{"learning_rate": 0.001}`)
+
+### 8. `initialization`
+Non-standard weight initialization strategies.
+- **data**: `method` (str: e.g., "OrthoInit", "spectral init", "resid mix"), `description` (str or null: brief explanation)
+
+### 9. `sequence_length`
+Training or evaluation at non-default sequence lengths.
+- **data**: `train_length` (int or null), `eval_length` (int or null)
+
+### 10. `lr_schedule`
+Learning rate scheduling strategies.
+- **data**: `method` (str: e.g., "warmdown", "cosine decay", "linear warmup", "warmdown3500"), `parameters` (dict or null: e.g., `{"warmdown_steps": 3500}`)
+
+### 11. `regularization`
+Regularization techniques beyond standard dropout.
+- **data**: `method` (str: e.g., "dropout", "weight decay", "label smoothing", "layerwise LN scale"), `parameters` (dict or null)
+
+### 12. `other`
+Any other notable technique not covered above.
+- **data**: `description` (str: what the technique does), `parameters` (dict or null)
+
+---
+
+## Instructions
+Extract the following fields as a JSON object:
+
+- **pr_number**: (integer) The PR number
+- **title**: (string) The PR title
+- **author**: (string) The GitHub username of the author
+- **status**: (string) One of: "merged", "open", "closed", "disqualified". Infer from state/labels.
+- **is_record**: (boolean) Whether this submission set a new record at the time. Look for labels or mentions of "record" or "best".
+- **val_bpb**: (float or null) The validation bits-per-byte score reported. Look for numbers like "1.234 bpb" or "val bpb: 1.234".
+- **architecture**: (string or null) Model architecture used (e.g., "Transformer", "LSTM", "RNN", "GPT-2", "Mamba", etc.)
+- **quantization**: (string or null) Top-level summary of quantization approach (e.g., "int6 QAT", "mixed int6/int8")
+- **optimizer**: (string or null) Primary optimizer used (e.g., "Adam", "AdamW", "Muon")
+- **training_techniques**: (array of objects) Each object has:
+  - `"category"`: one of the category names above (e.g., "quantization", "architecture_modification", "weight_averaging", etc.)
+  - `"data"`: a dictionary with the category-specific fields defined above
+- **compression**: (string or null) Compression method for the artifact (e.g., "zstd-22", "zlib", "gzip")
+- **novel_contributions**: (array of strings) Key novel ideas or contributions described in this submission.
+- **artifact_size**: (string or null) Total artifact size if mentioned (e.g., "10MB", "256KB")
+
+Respond with ONLY the JSON object, no other text.

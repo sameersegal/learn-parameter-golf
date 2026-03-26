@@ -274,6 +274,12 @@ def null_field_analysis(subs):
     return result
 
 
+def prompt_version_distribution(subs):
+    """Count how many parsed files have each prompt_version value."""
+    counts = Counter(s.get("prompt_version", "v1 (unversioned)") for s in subs)
+    return dict(counts.most_common())
+
+
 def status_analysis(subs):
     """Analyze the status field distribution."""
     return dict(Counter(s.get("status", "MISSING") for s in subs).most_common())
@@ -382,6 +388,13 @@ def temporal_drift(subs):
 def generate_markdown(report):
     """Generate a human-readable markdown report."""
     lines = ["# Vocabulary Audit Report\n"]
+
+    # Prompt versions
+    if "prompt_versions" in report:
+        lines.append("## Prompt Version Distribution\n")
+        for version, count in report["prompt_versions"].items():
+            lines.append(f"- **{version}**: {count}")
+        lines.append("")
 
     # Status
     lines.append("## Status Distribution\n")
@@ -553,6 +566,7 @@ def main():
 
     report = {
         "total_submissions": len(subs),
+        "prompt_versions": prompt_version_distribution(subs),
         "status_distribution": status_analysis(subs),
         "is_record": is_record_analysis(subs),
         "category_frequency": category_frequency(subs),
