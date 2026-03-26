@@ -78,6 +78,49 @@ print(f"Mean absolute error: {error:.6f}")  # Typically ~0.003`,
     },
     {
       type: "text",
+      title: "Quantization at Inference Time",
+      content: `A natural question: if we quantize weights to int4 or int8, do we just dequantize everything back to float16 before running inference? If so, isn't quantization just a file-size trick?
+
+**The answer: dequantization happens, but only on-the-fly — never all at once.**
+
+### How It Actually Works
+
+During inference with a quantized model:
+
+1. **Weights stay compressed in memory** (e.g., INT4/INT8 tensors in VRAM)
+2. **At compute time**, a small tile or block of weights is dequantized to FP16/BF16 just before the matrix multiply
+3. The dequantized values are used for the GEMM (general matrix multiply), then discarded
+4. The next tile is dequantized, and so on
+
+You never inflate the full model back to FP16 in memory. The bulk of VRAM holds the compressed weights at all times.
+
+### Why This Matters Beyond File Size
+
+| Benefit | Mechanism |
+|---------|-----------|
+| **Memory / VRAM** | Weights stored as INT4/INT8 — a 70B model goes from ~140 GB (FP16) to ~35 GB (INT4) |
+| **Disk / file size** | Smaller downloads and storage (critical for Parameter Golf's 16 MB limit) |
+| **Memory bandwidth** | Less data moved from VRAM to compute units per layer |
+| **Inference latency** | LLM decoding is memory-bandwidth-bound, so fewer bytes = faster tokens |
+
+The **memory bandwidth** saving is arguably the most important benefit in production. LLM inference at batch size 1 is almost entirely memory-bandwidth-bound — the GPU spends most of its time waiting for weights to arrive from VRAM, not doing math. Moving 4-bit weights instead of 16-bit weights means ~4× less data transfer per layer, translating almost directly to ~4× faster token generation.
+
+### Hardware-Native Low-Precision Compute
+
+Some hardware can skip the dequantize step entirely:
+
+- **NVIDIA Hopper (H100)**: Native FP8 tensor cores — matmuls run directly in 8-bit
+- **INT8 tensor cores** (Ampere and later): Direct INT8×INT8 accumulation
+- **\`LLM.int8()\`**: Mixed-precision decomposition that keeps outlier features in FP16 while computing the rest in INT8
+
+These approaches avoid the dequantize→multiply→discard cycle entirely for supported precisions, yielding even larger speedups.
+
+### Implications for Parameter Golf
+
+In the competition context, the primary quantization benefit is artifact size — submissions must fit within 16 MB. But the same techniques that shrink the artifact also make the model faster to evaluate, since the competition's evaluation pipeline loads and runs the quantized weights directly. Submissions using GPTQ or STE QAT aren't just small — they're designed so that the quantized representation *is* the model, not a compressed shuttle format that gets expanded before use.`,
+    },
+    {
+      type: "text",
       title: "Quantization Techniques Used in Parameter Golf",
       content: `### int6 (Most Popular)
 
