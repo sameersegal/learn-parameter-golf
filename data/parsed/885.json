@@ -1,0 +1,136 @@
+{
+  "pr_number": 885,
+  "title": "Record: LeakyReLU(0.9)\u00b2 + N-gram Cache + Entropy-Reg QAT \u2014 val_bpb 0.9958 (3-seed mean)",
+  "author": "lolrazh",
+  "status": "open",
+  "val_bpb": 0.9958,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": null,
+          "context_length": null
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs_per_chunk": 3,
+          "chunk_size": 32768
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Backward-looking n-gram cache / hash tables used during evaluation to blend cached predictions with neural outputs.",
+        "parameters": {
+          "orders": "2-7",
+          "buckets_per_order": 4000000,
+          "alpha": 0.2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU with slope 0.9 followed by squaring.",
+        "parameters": {
+          "negative_slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "front3_back1_6_middle5"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "entropy-reg QAT",
+        "parameters": {
+          "loss_term": "residual.pow(2).mean()",
+          "applied_when": "lr_scale < 0.15"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Backward-looking 7-gram evaluation cache with score-first updating",
+    "Entropy-regularized QAT to reduce quantization gap",
+    "Mixed int5/int6 quantization with layer-sensitive bit allocation",
+    "LeakyReLU(0.9) squared activation choice",
+    "Score-first test-time training on already-scored chunks"
+  ],
+  "artifact_size": "~14.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,125 @@
+{
+  "pr_number": 884,
+  "title": "submission: LeakyReLU2 + TrigramHashEmbedding (1.1448 bpb)",
+  "author": "BhatiaUday",
+  "status": "open",
+  "val_bpb": 1.1448,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hash-based trigram embedding that XOR-hashes 3 consecutive token IDs into 2048 buckets and projects to model dimension.",
+        "parameters": {
+          "vocab_size": 2048,
+          "trigram_dim": 48,
+          "project_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 in the MLP to preserve negative gradient flow.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "decay": 0.997,
+          "swa_interval_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "schedule": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses gradient accumulation scaled by world size to keep effective batch size constant across 1-GPU and 8-GPU runs.",
+        "parameters": {
+          "grad_accum_formula": "8 // world_size"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "TrigramHashEmbedding extending BigramHash to 3-token context",
+    "XOR prime hashing of trigrams into 2048 buckets",
+    "LeakyReLU(0.5)^2 MLP activation",
+    "Proportional wallclock validation on 1\u00d7H100 to match 8\u00d7H100 training trajectory",
+    "EMA + Tight SWA with GPTQ-lite int6 and LZMA compression"
+  ],
+  "artifact_size": "~15.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -82659,5 +82659,652 @@
     "artifact_size": "15.4-15.6 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 880,
+    "title": "Record: PhraseCache + OrderAdaptive N-gram + RegimeTracker — val_bpb 0.1003 (3-seed mean)",
+    "author": "RoyiRa",
+    "status": "open",
+    "val_bpb": 0.1003,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int5",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs": 2,
+            "learning_rate": 0.0001,
+            "freeze_blocks": 2
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.998
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "lr": 0.0001
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "adaptive": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "pct": 0.05
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash component used in the model architecture.",
+          "parameters": {
+            "dim": 128,
+            "size": 6144
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied across all layers with windowed setting.",
+          "parameters": {
+            "layers": 11,
+            "ws": 8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "VE128 module used in later layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP with LeakyReLU activation.",
+          "parameters": {
+            "multiplier": 3.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU(0.5)^2 activation used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Long Phrase Cache using variable-length suffix matching with rolling hashes.",
+          "parameters": {
+            "probes": [
+              48,
+              36,
+              28,
+              20,
+              16
+            ]
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Order-adaptive entropy gating for n-gram cache blending.",
+          "parameters": {
+            "orders": [
+              2,
+              9
+            ]
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Online regime tracker that modulates alpha based on detected text regime.",
+          "parameters": {
+            "window": 4096,
+            "alpha_multiplier_range": [
+              0.7,
+              1.5
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Long Phrase Cache with variable-length suffix matching",
+      "Order-Adaptive Entropy Gating",
+      "Online Regime Tracker",
+      "3-seed mean val_bpb of 0.1003"
+    ],
+    "artifact_size": "~15.7 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 881,
+    "title": "Record: WaterLOO — Full-Rescore N-gram Cache with Self-Exclusion (val_bpb 0.0990)",
+    "author": "simon-marcus",
+    "status": "open",
+    "val_bpb": 0.099,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Full-rescore two-pass n-gram cache evaluation over the entire validation stream using a prebuilt global cache",
+          "parameters": {
+            "ngram_orders": "2-12",
+            "full_stream_rescore": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Leave-one-out self-exclusion during pass 2 by subtracting each token's own context and context-target counts before scoring",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Vectorized cache construction using np.bincount",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Complementary training enabled",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Full-rescore n-gram cache evaluated over the entire validation stream",
+      "Leave-one-out self-exclusion that removes each token's own cache contribution during rescoring",
+      "Fast vectorized cache construction with np.bincount",
+      "Demonstration that the full-rescore architecture remains strong even without self-inclusion"
+    ],
+    "artifact_size": "~15.87 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 882,
+    "title": "Non-record: LeakyReLU(0.5)^2 + TrigramHash on PR414 stack (1.3762 bpb, 1xA100)",
+    "author": "IshiPareek",
+    "status": "open",
+    "val_bpb": 1.3762,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Replaced ReLU² with LeakyReLU(0.5)² in the MLP to keep neurons active during training.",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TrigramHash",
+          "description": "Groups 3 consecutive tokens into 8192 buckets before attention to add richer local context.",
+          "parameters": {
+            "buckets": 8192,
+            "n_gram": 3
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "LeakyReLU(0.5)^2 activation in the MLP",
+      "TrigramHash token grouping into 8192 buckets before attention",
+      "Built on PR 414 stack with EMA, GPTQ-lite, warmdown3500, and QAT@0.15"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 883,
+    "title": "Order-13 N-gram Oracle + Score-First TTT (0.0308 BPB)",
+    "author": "THUQiXuan",
+    "status": "open",
+    "val_bpb": 0.03083,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BackoffNgramMixer",
+          "description": "GPU-vectorized logistic context mixer combining neural logits with order-2 through order-13 n-gram backoff probabilities.",
+          "parameters": {
+            "max_order": 13,
+            "experts": 13
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "phases": 2
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "final artifact"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "custom",
+          "level": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Pre-filling order-2 through order-13 n-gram tables from the full training set before the training loop",
+      "Score-first test-time training where each validation chunk is fully scored before any weight updates",
+      "A pretrained n-gram oracle passed into evaluation to eliminate cold-start behavior",
+      "GPU-vectorized backoff n-gram mixer combining neural and n-gram predictions"
+    ],
+    "artifact_size": "3.66MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 884,
+    "title": "submission: LeakyReLU2 + TrigramHashEmbedding (1.1448 bpb)",
+    "author": "BhatiaUday",
+    "status": "open",
+    "val_bpb": 1.1448,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TrigramHash",
+          "description": "Hash-based trigram embedding that XOR-hashes 3 consecutive token IDs into 2048 buckets and projects to model dimension.",
+          "parameters": {
+            "vocab_size": 2048,
+            "trigram_dim": 48,
+            "project_dim": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU(0.5)^2 in the MLP to preserve negative gradient flow.",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "decay": 0.997,
+            "swa_interval_steps": 50
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_momentum_start": 0.92,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "schedule": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Uses gradient accumulation scaled by world size to keep effective batch size constant across 1-GPU and 8-GPU runs.",
+          "parameters": {
+            "grad_accum_formula": "8 // world_size"
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "TrigramHashEmbedding extending BigramHash to 3-token context",
+      "XOR prime hashing of trigrams into 2048 buckets",
+      "LeakyReLU(0.5)^2 MLP activation",
+      "Proportional wallclock validation on 1×H100 to match 8×H100 training trajectory",
+      "EMA + Tight SWA with GPTQ-lite int6 and LZMA compression"
+    ],
+    "artifact_size": "~15.6 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 885,
+    "title": "Record: LeakyReLU(0.9)² + N-gram Cache + Entropy-Reg QAT — val_bpb 0.9958 (3-seed mean)",
+    "author": "lolrazh",
+    "status": "open",
+    "val_bpb": 0.9958,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6 QAT",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": null,
+            "context_length": null
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "epochs_per_chunk": 3,
+            "chunk_size": 32768
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Backward-looking n-gram cache / hash tables used during evaluation to blend cached predictions with neural outputs.",
+          "parameters": {
+            "orders": "2-7",
+            "buckets_per_order": 4000000,
+            "alpha": 0.2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU with slope 0.9 followed by squaring.",
+          "parameters": {
+            "negative_slope": 0.9
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": null,
+          "scope": "front3_back1_6_middle5"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "entropy-reg QAT",
+          "parameters": {
+            "loss_term": "residual.pow(2).mean()",
+            "applied_when": "lr_scale < 0.15"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.9,
+          "other_params": {
+            "grad_clip": 1
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "ema_decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "across_chunks": true
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 32768
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Backward-looking 7-gram evaluation cache with score-first updating",
+      "Entropy-regularized QAT to reduce quantization gap",
+      "Mixed int5/int6 quantization with layer-sensitive bit allocation",
+      "LeakyReLU(0.9) squared activation choice",
+      "Score-first test-time training on already-scored chunks"
+    ],
+    "artifact_size": "~14.0 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
