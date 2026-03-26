@@ -15,22 +15,19 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-3">Parameter Golf Field Guide</h1>
-        <p className="text-lg text-[var(--muted)] max-w-2xl">
-          Learn how to fit a language model into 16MB. This site breaks down
-          every technique used in OpenAI&apos;s{" "}
-          <a
-            href="https://github.com/openai/parameter-golf"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Parameter Golf
-          </a>{" "}
-          competition — from quantization and architecture tricks to test-time
-          training — with interactive deep dives, real submission data, and code.
-        </p>
-      </div>
+      <p className="text-lg text-[var(--muted)] mb-8">
+        Learn how to fit a language model into 16MB. This site breaks down
+        every technique used in OpenAI&apos;s{" "}
+        <a
+          href="https://github.com/openai/parameter-golf"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Parameter Golf
+        </a>{" "}
+        competition — from quantization and architecture tricks to test-time
+        training — with interactive deep dives, real submission data, and code.
+      </p>
 
       <StatsCards />
 

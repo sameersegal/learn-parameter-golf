@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Submission } from "@/lib/types";
 
-type SortKey = "pr_number" | "val_bpb" | "author" | "architecture";
+type SortKey = "pr_number" | "val_bpb" | "author";
 type SortDir = "asc" | "desc";
 
 export default function Leaderboard({
@@ -24,12 +24,9 @@ export default function Leaderboard({
       } else if (sortKey === "pr_number") {
         av = a.pr_number;
         bv = b.pr_number;
-      } else if (sortKey === "author") {
+      } else {
         av = a.author;
         bv = b.author;
-      } else {
-        av = a.architecture;
-        bv = b.architecture;
       }
       if (av == null) return 1;
       if (bv == null) return -1;
@@ -55,8 +52,9 @@ export default function Leaderboard({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[var(--border)] text-[var(--muted)]">
+            <th className="text-center p-2 w-10">Record</th>
             <th
-              className="text-left p-2 cursor-pointer hover:text-white"
+              className="text-left p-2 cursor-pointer hover:text-white w-16"
               onClick={() => toggleSort("pr_number")}
             >
               PR#{arrow("pr_number")}
@@ -74,13 +72,6 @@ export default function Leaderboard({
             >
               val_bpb{arrow("val_bpb")}
             </th>
-            <th
-              className="text-left p-2 cursor-pointer hover:text-white"
-              onClick={() => toggleSort("architecture")}
-            >
-              Arch{arrow("architecture")}
-            </th>
-            <th className="text-center p-2">Record</th>
           </tr>
         </thead>
         <tbody>
@@ -89,10 +80,23 @@ export default function Leaderboard({
               key={s.pr_number}
               className="border-b border-[var(--border)] hover:bg-[var(--border)]/30 transition-colors"
             >
-              <td className="p-2">
-                <Link href={`/pr/${s.pr_number}`}>#{s.pr_number}</Link>
+              <td className="p-2 text-center">
+                {s.is_record && (
+                  <span className="text-[var(--accent)]" title="Record submission">
+                    ★
+                  </span>
+                )}
               </td>
-              <td className="p-2 max-w-xs truncate">
+              <td className="p-2">
+                <a
+                  href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  #{s.pr_number}
+                </a>
+              </td>
+              <td className="p-2">
                 <Link
                   href={`/pr/${s.pr_number}`}
                   className="no-underline text-[var(--foreground)] hover:text-white"
@@ -103,16 +107,6 @@ export default function Leaderboard({
               <td className="p-2 text-[var(--muted)]">{s.author}</td>
               <td className="p-2 text-right font-mono">
                 {s.val_bpb?.toFixed(4) ?? "N/A"}
-              </td>
-              <td className="p-2 text-[var(--muted)]">
-                {s.architecture ?? "—"}
-              </td>
-              <td className="p-2 text-center">
-                {s.is_record && (
-                  <span className="text-[var(--accent)]" title="Record submission">
-                    ★
-                  </span>
-                )}
               </td>
             </tr>
           ))}

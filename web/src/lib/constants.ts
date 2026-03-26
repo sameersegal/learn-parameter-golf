@@ -21,9 +21,8 @@ export const CATEGORY_META: Record<
 export const ALL_CATEGORIES = Object.keys(CATEGORY_META) as TechniqueCategory[];
 
 export const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/techniques", label: "Techniques" },
   { href: "/learn", label: "Learn" },
+  { href: "/techniques", label: "Techniques" },
   { href: "/emerging", label: "Emerging" },
   { href: "/prs", label: "PRs" },
 ];

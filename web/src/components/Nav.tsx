@@ -11,7 +11,7 @@ export default function Nav() {
     <nav className="border-b border-[var(--border)] bg-[var(--card)]">
       <div className="max-w-7xl mx-auto px-4 flex items-center h-14 gap-6">
         <Link href="/" className="font-bold text-lg text-[var(--accent)] no-underline">
-          Parameter Golf
+          PG Field Guide
         </Link>
         <div className="flex gap-4">
           {NAV_LINKS.map((link) => (
