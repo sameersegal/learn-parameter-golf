@@ -150,10 +150,12 @@ A critical design choice: **reset the LoRA weights for each new document**. With
 | Parameters trained | ~20M (81% of model) | ~50-100K (<0.5%) |
 | Epochs needed | 30 | 3-5 |
 | Forgetting risk | High (needs frozen blocks) | Low (base model frozen) |
-| Best BPB achieved | 1.1175 | 1.116 |
 | Compute cost | High | Low |
+| Submissions using it | 57 | 67 |
 
-The performance is remarkably similar. LoRA TTT achieves within 0.002 BPB of full TTT at a fraction of the compute cost.`,
+LoRA TTT is slightly more popular due to its simplicity and lower compute cost. Both achieve similar BPB improvements when combined with other techniques — the choice often comes down to available eval-time compute.
+
+**Sensitivity note**: LoRA rank is a key parameter. Rank 4 minimizes overhead but may underfit on long documents. Rank 8 (most common) balances adaptation quality and speed. Rank 16+ rarely helps and increases per-document reset cost.`,
     },
     {
       type: "code",
@@ -284,31 +286,45 @@ PR #509 documented going from 10 to 30 epochs and seeing a 10.8% BPB improvement
 
 ### Intra-Chunk Cosine Decay
 
-Several top submissions use **cosine learning rate decay within each chunk's training loop**. The LR starts at the base value and decays to ~0 over the chunk's epochs. This prevents overfitting to early tokens in the chunk.`,
+Several top submissions use **cosine learning rate decay within each chunk's training loop**. The LR starts at the base value and decays to ~0 over the chunk's epochs. This prevents overfitting to early tokens in the chunk.
+
+### Chunk Size Sensitivity
+
+Chunk size controls the granularity of adaptation:
+- **256 tokens** (common for LoRA TTT): Fine-grained adaptation, frequent resets
+- **2048 tokens**: Coarser adaptation, used in top submissions like PR #809
+- **32768 tokens** (full TTT): Larger chunks, fewer adaptation steps per document
+
+Smaller chunks adapt faster but see less context per adaptation step. The right choice depends on document length and TTT variant.
+
+### Interactions with Other Techniques
+
+- **Quantization**: The base model stays quantized during TTT. LoRA adapters operate in full precision on top of quantized weights. GPTQ int5 + LoRA TTT is used by the current best submission (PR #809).
+- **Evaluation strategy**: The score-first protocol interacts with sliding window evaluation — stride determines how many tokens are scored before training. Most TTT submissions use stride=64.
+- **N-gram mixing**: The strongest submissions combine TTT with N-gram backoff caches, achieving sub-0.3 BPB. The N-gram component handles long-range patterns while TTT adapts the neural model.`,
     },
     {
       type: "text",
       title: "When NOT to Use TTT",
-      content: `A counterintuitive finding: **the two highest-scoring confirmed submissions don't use TTT at all**.
+      content: `TTT is widely used among top submissions — 78 submissions use score-first TTT and 67 use LoRA TTT. Among the current top 10, most combine TTT with N-gram backoff techniques. However, some competitive submissions skip TTT entirely, relying on strong N-gram mixing or architectural innovations instead.
 
-- PR #505: **1.1181 BPB** — SwiGLU activation, int6 QAT, no TTT
-- PR #535: **1.1204 BPB** — LeakyReLU², full GPTQ quantization, no TTT
+For example, PR #843 (0.283 BPB) and PR #840 (0.287 BPB) achieve top-10 scores using N-gram backoff without TTT, while PR #809 (0.295 BPB) and PR #826 (0.295 BPB) achieve similar scores with TTT included.
 
-### Why No-TTT Can Win
+### When TTT Might Not Help
 
-1. **Artifact budget**: TTT doesn't add parameters, but a model designed for TTT may allocate capacity differently (e.g., fewer layers but more adaptable) vs. one that just needs to be good at inference
+1. **Strong N-gram component**: If your N-gram backoff is already capturing most of the per-document adaptation, TTT's marginal gain shrinks
 
-2. **Training efficiency**: Time spent implementing TTT infrastructure is time not spent on architecture search, better quantization, or training longer
+2. **Evaluation compute budget**: TTT multiplies eval compute by 10-30x. In a competition with time constraints, this matters
 
-3. **Evaluation overhead**: TTT multiplies eval compute by 10-30x. In a competition with time constraints, this matters
+3. **Short documents**: TTT needs enough tokens to learn meaningful adaptations. On very short documents, the overhead outweighs the benefit
 
-4. **Robustness**: TTT can hurt on short documents or documents that differ significantly from training distribution
+4. **Catastrophic forgetting risk**: Full TTT (not LoRA) can hurt on documents that differ significantly from training distribution if not enough blocks are frozen
 
 ### The Bottom Line
 
-TTT is a powerful tool that provides ~10% BPB improvement when done right (30 epochs, SGD, frozen early blocks, cosine decay). But it's not a prerequisite for winning. The best approach depends on your artifact's architecture — if your quantization and architecture are already pushing the frontier, TTT may not justify its complexity.
+TTT remains a powerful technique — score-first TTT with 30 epochs, SGD, frozen early blocks, and cosine decay reliably improves BPB by ~10% on its own. But in the current competition landscape, the biggest gains come from combining TTT with N-gram backoff, not from TTT alone.
 
-**Recommended approach**: Get your base model as good as possible first. Add TTT last, and measure whether it actually helps your specific setup.`,
+**Recommended approach**: Get your base model and evaluation strategy right first. Add TTT last, and measure whether it actually helps your specific setup. If you have N-gram mixing, test whether TTT provides additional improvement on top of it.`,
     },
   ],
 };

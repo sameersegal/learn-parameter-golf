@@ -79,35 +79,50 @@ print(f"Mean absolute error: {error:.6f}")  # Typically ~0.003`,
     {
       type: "text",
       title: "Quantization Techniques Used in Parameter Golf",
-      content: `### int8 Per-Row (Most Popular)
+      content: `### int6 (Most Popular)
 
-Used by the current record holder (PR #620). Each row of the weight matrix gets its own scale factor, striking a good balance between compression and precision.
+int6 is the most widely used format across Parameter Golf submissions (119 entries), followed closely by int8 (110 entries). int6 offers a strong balance: at 0.75 bytes per parameter, a 10M-param model fits in ~7.5 MB, leaving room for metadata and compression overhead within the 16MB budget.
 
-**Key insight**: Per-row quantization preserves the relative magnitudes within each output neuron's weight vector better than global quantization.
+**Key insight**: int6 has only 64 quantization levels compared to int8's 256. This sounds like a big drop, but in practice the quality difference is modest — most weight values cluster near zero, so the lower precision matters less than you'd expect.
+
+### int8 Per-Row
+
+Used by many strong submissions including PR #620 (0.9443 BPB). Each row of the weight matrix gets its own scale factor, preserving relative magnitudes within each output neuron's weight vector better than global quantization.
+
+**Sensitivity note**: Moving from int8 to int6 typically costs ~0.01-0.02 BPB but saves 25% storage. Moving from int8 to int4 saves 50% but can cost 0.05+ BPB without careful calibration.
 
 ### Mixed Precision (int5/int6)
 
-Some submissions use different bit-widths for different layer types:
+57 submissions use different bit-widths for different layer types:
 - **int5** for MLP weights (less sensitive to precision)
 - **int6** for attention weights (more sensitive)
 - **float16** for tied embeddings and critical projections
 
-This asymmetric approach recognizes that not all parameters contribute equally to model quality.
+This asymmetric approach recognizes that not all parameters contribute equally to model quality. The key tuning decision is *which* layers to assign lower precision — attention projections and embedding layers are typically more sensitive than MLP internals.
 
 ### GPTQ (Post-Training Quantization)
 
-GPTQ is a one-shot weight quantization method that uses approximate second-order information (Hessian) to minimize quantization error. It processes weights column-by-column, updating remaining columns to compensate for quantization error in already-processed columns.
+GPTQ is a one-shot weight quantization method that uses approximate second-order information (Hessian) to minimize quantization error. It processes weights column-by-column, updating remaining columns to compensate for quantization error in already-processed columns. Used by many top submissions including the current best (PR #809, 0.295 BPB) at int5.
+
+**Sensitivity note**: GPTQ calibration quality depends heavily on the calibration dataset. Using validation-distribution text for calibration consistently outperforms random text.
 
 ### Percentile Clipping
 
-The record submission uses 99.99984th percentile clipping before quantization. This clips extreme outlier values that would otherwise waste dynamic range:
+PR #620 uses 99.99984th percentile clipping before quantization. This clips extreme outlier values that would otherwise waste dynamic range:
 
 \`\`\`python
 threshold = torch.quantile(weight.abs(), 0.9999984)
 weight_clipped = weight.clamp(-threshold, threshold)
 \`\`\`
 
-This tiny sacrifice in outlier accuracy significantly improves quantization precision for the remaining 99.99% of values.`,
+This tiny sacrifice in outlier accuracy significantly improves quantization precision for the remaining 99.99% of values.
+
+### Interactions with Other Techniques
+
+Quantization doesn't exist in isolation:
+- **Compression** (zstd, lzma): Applied on top of quantized weights to further reduce artifact size. Lower-bit quantization often compresses better because the value distribution is more concentrated.
+- **Test-time training**: Quantized models can still be adapted at inference time via TTT or LoRA. The frozen base weights stay quantized while adaptation happens in full precision.
+- **QAT (Quantization-Aware Training)**: Training with simulated quantization noise (STE QAT, used by 83 submissions) produces weights that are inherently more robust to quantization than post-training methods.`,
     },
   ],
 };
