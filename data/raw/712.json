@@ -1,0 +1,12 @@
+{
+  "number": 712,
+  "title": "Submit 1x A100 QAT Fix - 1.4078 BPB (Non-Record) [v3]",
+  "author": "Shuvam-Banerji-Seal",
+  "body": "Single-device (A100) run tuning hyperparams down from multi-device scales to ensure proper LR scheduling.\n\n- Swaps `torch.quantile` for `w.amax().clamp_min` to evade a 30x compiler performance penalty in Triton.\n- Fully addresses all previous review feedback on unused dependencies and imports.\n- Fixes bigram embeddings missing validations when size < 2.\n- Log message properly tracks compressor variable strings.\n\nCloses #707",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-25T13:07:48Z",
+  "updated_at": "2026-03-25T13:43:07Z",
+  "submission_readme": "# Single A100 QAT Performance Fix\n\n## Summary\nThis non-record submission tunes a standard `modded-nanogpt`-derived parameters stack so that Quantization-Aware Training (QAT) fits robustly within the 10-minute constraint on a single A100. Previous SOTA variants utilized `torch.quantile`, but passing that to Triton generated a severe 30x GPU performance penalty. By pivoting the internal clip factor estimator of `CastedLinear` to `w.abs().amax(dim=1)`, we bypass the compiler issue entirely.\n\nWe also constrained the gradient accum sizing from multi-GPU scales down to 131K tokens, ensuring the model successfully clears 2600 descending iterations before gracefully terminating into an SWA and evaluating, instead of starving the LR decay schedule.\n\n## Results\n* **Hardware:** 1x A100 (80GB)\n* **Training Loop Length:** 10 Minutes (Wallclock Cap - 2600 iterations; excludes final sliding-window evaluation)\n* **End-to-End Runtime (Training + Final Sliding-Window Eval):** ~33 Minutes (per `train.log`)\n* **Validation BPB:** `1.4078`\n* **Artifact Size:** `15.77 MB` (int6 + zstd)\n\n* **Author:** Shuvam Banerji Seal (https://github.com/Shuvam-Banerji-Seal)\n"
+}

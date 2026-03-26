@@ -1,0 +1,114 @@
+{
+  "pr_number": 66,
+  "title": "ArjunAutoResearch: MLP 3x + STE int6 QAT + seq4096 + sliding window. val_bpb 1.1632",
+  "author": "arjun-krishna1",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.16323,
+  "architecture": "Transformer",
+  "quantization": "STE int6 QAT / mixed int6 quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP with 3x expansion (hidden size 1536 instead of 1024).",
+        "parameters": {
+          "hidden": 1536,
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "batch_tokens": 393216,
+          "warmdown_iters": 3000,
+          "momentum_warmup_steps": 1500,
+          "momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT int6",
+        "bits": 6,
+        "scope": "CastedLinear weights / MLP and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/fp16",
+        "bits": 6,
+        "scope": "MLP and attention weights int6, tied embedding fp16 passthrough"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embedding as output head and keeps it in fp16 to avoid quantization penalty.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "AutoResearch agent harness that used GitHub CLI to inspect open PRs, bucket them by expected impact, and compose high-impact techniques automatically.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Built an AutoResearch agent harness to autonomously inspect and compose techniques from open PRs",
+    "Combined wider MLP, long-context training, optimizer tuning, STE int6 QAT, mixed int6 quantization, fp16 tied embedding passthrough, and sliding-window evaluation",
+    "Used int6 quantization savings to enable a 3x wider MLP within the artifact size limit",
+    "Applied sliding-window evaluation with stride 64 over 4096-token context to improve validation score",
+    "Reported multi-seed results with statistical significance"
+  ],
+  "artifact_size": "15,265,243 bytes"
+}

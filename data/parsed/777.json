@@ -1,0 +1,154 @@
+{
+  "pr_number": 777,
+  "title": "Record: 0.9623 BPB \u2014 7-Gram Entropy Cache + XSA-all + EBLS",
+  "author": "Robby955",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9623,
+  "architecture": "Transformer",
+  "quantization": "val-calibrated GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "7-gram entropy-adaptive causal cache / PPM-style n-gram backoff blended with the neural model during evaluation",
+        "parameters": {
+          "orders": "2-7",
+          "buckets_per_table": 4194304,
+          "min_count": 2,
+          "alpha_base": 0.05,
+          "alpha_range": 0.55,
+          "alpha_scale": 2.0,
+          "alpha_threshold": 4.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA-all applied across all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EBLS",
+        "description": "Empirical Bayes Layer Sharing with shared blocks and loops",
+        "parameters": {
+          "shared_blocks": 3,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Low-rank adaptation used in the model",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding/component used in the architecture",
+        "parameters": {
+          "vocab": 3072,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with reduced KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with LeakyReLU squared activation",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "entropy-adaptive cache blending",
+        "parameters": {
+          "alpha_formula": "0.05 + 0.55 * sigmoid(2 * (H - 4.0))"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "7-gram causal entropy-adaptive n-gram cache blended with neural predictions",
+    "Strictly backward-looking cache updates with no oracle/min(NLL) selection",
+    "Entropy-based adaptive alpha that increases cache weight when model entropy is high",
+    "EBLS layer sharing with 3 shared blocks and 3 loops",
+    "XSA-all across all 11 layers",
+    "Val-calibrated GPTQ int6 quantization combined with LZMA compression"
+  ],
+  "artifact_size": "~15.87 MB"
+}

@@ -1,0 +1,154 @@
+{
+  "pr_number": 779,
+  "title": "Record: BackoffNgramMixer + Drift-Free TTT (3-seed mean val_bpb=0.6683)",
+  "author": "deanbrr",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.6683,
+  "architecture": "Transformer",
+  "quantization": "int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a hash-based n-gram cache / mixer with multi-order backoff over orders 2-7.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP block in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 nonlinearity.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied in all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "qttt": 1,
+          "eta": 0.02,
+          "learning_rate": 3e-05,
+          "chunk_tokens": 1048576,
+          "epochs": 1,
+          "adaptive_lr": 0,
+          "polyak": 0,
+          "freeze_blocks": 1
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "none",
+        "parameters": {
+          "adaptive_lr": 0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive n-gram mixing with multi-order backoff (orders 2-7) using only already-scored tokens; mixed probability always applied without oracle gating.",
+        "parameters": {
+          "alpha_formula": "0.05 + 0.55 * sigmoid(2 * (H - 4.0))"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "BackoffNgramMixer with multi-order n-gram backoff from orders 2-7",
+    "Entropy-adaptive mixing coefficient based on model entropy rather than target peeking",
+    "Drift-free TTT configuration that avoids late-chunk degradation",
+    "Score-first, backward-looking test-time training compliant with competition rules",
+    "Pure eval-time n-gram cache improvement requiring no retraining or architectural changes"
+  ],
+  "artifact_size": "15.63 MB"
+}

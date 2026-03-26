@@ -1,0 +1,150 @@
+{
+  "pr_number": 794,
+  "title": "Muon Optimizer Tuning: val_bpb 1.3346 by jeremyschied",
+  "author": "jeremyschied",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.3346,
+  "architecture": "NanoGPT",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.05,
+          "muon_backend_steps": 6,
+          "muon_momentum_warmup_steps": 300,
+          "grad_clip_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 900
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram feature component in the architecture.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Attention-related component applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP stack with LeakyReLU squared activation.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "online n-gram cache eval",
+        "parameters": {
+          "ngram_max_n": 5,
+          "ngram_lambda": 0.15,
+          "confidence_threshold": 0.5,
+          "min_count": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "activation": "LeakyReLU(0.5)^2"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "5-gram eval cache with confidence gating",
+    "Strictly causal online n-gram language model built during evaluation",
+    "Safety-gated log-sum-exp interpolation that only applies n-gram predictions when they improve NLL",
+    "Parallel Muon tuning on baseline NanoGPT",
+    "LeakyReLU squared MLP and other architecture refinements from the base record",
+    "Eval-time improvement with zero GPU cost from CPU-side n-gram lookups"
+  ],
+  "artifact_size": "~15.9 MB"
+}

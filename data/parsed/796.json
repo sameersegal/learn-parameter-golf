@@ -1,0 +1,161 @@
+{
+  "pr_number": 796,
+  "title": "Record: 0.6567 BPB \u2014 Prefill Cache + 7-Gram Entropy-Adaptive + EBLS",
+  "author": "Robby955",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.6567,
+  "architecture": "EBLS Transformer",
+  "quantization": "Val-GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EBLS",
+        "description": "Empirical Bayes Layer Sharing with 3 shared blocks x 3 loops and 2 unique layers.",
+        "parameters": {
+          "layers": 11,
+          "shared_blocks": 3,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Auxiliary hash-based bigram component.",
+        "parameters": {
+          "vocab_size": 3072,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with LeakyReLU squared activation.",
+        "parameters": {
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4,
+          "attention_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "rope_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "7-gram causal cache with entropy-adaptive blending",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "min_count": 2,
+          "buckets_per_table": 4194304,
+          "entropy_base": 0.05,
+          "entropy_range": 0.55,
+          "entropy_scale": 2.0,
+          "entropy_threshold": 4.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Distributed cache pre-fill for evaluation ranks using only preceding tokens to make multi-GPU evaluation identical to single-GPU sequential evaluation.",
+        "parameters": {
+          "distributed_ranks": 8
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Distributed cache pre-fill for multi-GPU evaluation",
+    "7-gram causal cache with backoff cascade",
+    "Entropy-adaptive blending between model and n-gram predictions",
+    "EBLS architecture with shared blocks and loops",
+    "Val-GPTQ int6 quantization with LZMA compression"
+  ],
+  "artifact_size": "~15.87 MB"
+}

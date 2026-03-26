@@ -1,0 +1,159 @@
+{
+  "pr_number": 733,
+  "title": "Record: XSA-all + Depth Recurrence + Hedge Mixer TTT (val_bpb=1.0278, 3-seed mean)",
+  "author": "stukenov",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.0278,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied to all layers instead of only the last few layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual Learning",
+        "description": "Blends layer 0 value outputs into subsequent attention via learned sigmoid gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gates on attention outputs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CROWN-Q curvature-weighted quantization penalty during warmdown to encourage flatter minima for quantization robustness.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are repeated to create 13 virtual layers from 11 physical layers.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 13,
+          "repeated_layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hedge Mixer",
+        "description": "GPU-vectorized online context mixing with neural, unigram, bigram, trigram, and entropy experts.",
+        "parameters": {
+          "experts": 5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(i+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "XSA applied to all 11 layers",
+    "Value Residual Learning",
+    "Gated Attention",
+    "CROWN-Q curvature-weighted quantization penalty",
+    "Depth recurrence with layers 4 and 5 repeated into 13 virtual layers",
+    "5-expert Hedge Mixer for legal score-first TTT",
+    "Score-first test-time training with tokens scored before any weight update"
+  ],
+  "artifact_size": "~15.8 MB"
+}

@@ -1,0 +1,154 @@
+{
+  "pr_number": 64,
+  "title": "Record: DominationV3 + GPTQ-lite + TTT25 (mean val_bpb=1.1250, 3 seeds)",
+  "author": "yesbhautik",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.12495076,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 quantization with GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN Scale",
+        "parameters": {
+          "scale_rule": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "mlp, attn, tok_emb"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "mlp, attn, tok_emb"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "orthoinit": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash local-context component.",
+        "parameters": {
+          "vocab_size": 4096,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses per-dimension SmearGate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is removed/disabled to save time for more training steps.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 25,
+          "learning_rate": 0.012,
+          "momentum": 0.9,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses 11 layers, 512 model dimension, 8 heads, 4 KV heads, and 3x MLP expansion.",
+        "parameters": {
+          "layers": 11,
+          "model_dim": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "mlp_hidden": 1536
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "GPTQ-lite optimal clip percentile search during int6 quantization",
+    "25-epoch aggressive SGD test-time training on already-graded tokens",
+    "Partial RoPE with LN Scale and XSA removed to enable more training steps",
+    "Per-dimension SmearGate combined with BigramHash local context",
+    "Mixed int6 quantization of MLP, attention, and token embeddings with zstd-22 compression",
+    "Muon optimizer with OrthoInit and U-Net skip connections"
+  ],
+  "artifact_size": "under 16MB"
+}

@@ -1,0 +1,110 @@
+{
+  "pr_number": 70,
+  "title": "Submission: Wider MLP 3x + int6 quant + sliding window eval, val_bpb=1.1659",
+  "author": "jfprincz",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1659,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Widened the MLP expansion from 2x to 3x (hidden size 1536) to improve performance.",
+        "parameters": {
+          "mlp_mult": 3.0,
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "int6 per-row on MLP and attention projection weights; int8 per-row on embeddings and other tensors"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "momentum_warmup_steps": 1500,
+          "momentum_warmup_start": 0.92,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "momentum_warmup_steps": 1500,
+          "momentum_warmup_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Wider 3x MLP expansion to increase model capacity while staying under the artifact limit",
+    "Mixed precision quantization with int6 per-row for MLP and attention weights and int8 for embeddings/other tensors",
+    "Sliding window evaluation with stride 256 to improve validation score using more context per scored token",
+    "Use of zstd level 22 compression to fit the larger model within the 16MB submission limit",
+    "Optimizer tuning for Muon with custom learning rates and momentum warmup/warmdown settings"
+  ],
+  "artifact_size": "14,855,508 bytes"
+}

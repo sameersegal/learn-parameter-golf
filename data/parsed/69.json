@@ -1,0 +1,178 @@
+{
+  "pr_number": 69,
+  "title": "SubSixteen v2: Int6 QAT + MLP 3x + SWA + Sliding Window (val_bpb 1.1708)",
+  "author": "TevBenji",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1708,
+  "architecture": "GPT",
+  "quantization": "STE fake-int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 1536 (3x expansion) and reduced depth to fit under the artifact limit.",
+        "parameters": {
+          "layers": 9,
+          "hidden_dim": 1536,
+          "vocab_size": 1024,
+          "dim": 512,
+          "gqa_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses NTK-aware RoPE.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 16,
+          "interval_steps": 200
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Overtone SVD initialization with power-law shaping."
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Phase-transition resid_mix initialization."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02,
+          "orthogonalization": "Newton-Schulz"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.03,
+          "lr_scalars": 0.02
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000,
+          "momentum_warmup_steps": 1500,
+          "momentum_start": 0.92,
+          "momentum_end": 0.99
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "decoupled": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-through estimator fake quantization during forward pass to improve post-training int6 robustness.",
+        "parameters": {
+          "quant_range": [
+            -31,
+            31
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "STE fake-int6 QAT for quantization-aware training",
+    "MLP 3x expansion enabled by int6 artifact savings",
+    "Stochastic Weight Averaging over 16 checkpoints",
+    "zstd-22 compression for the final artifact",
+    "Sliding window evaluation with stride 64 and context length 4096",
+    "Muon optimizer with Newton-Schulz orthogonalization"
+  ],
+  "artifact_size": "14,603,588 bytes"
+}

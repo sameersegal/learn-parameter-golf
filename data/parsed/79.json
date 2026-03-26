@@ -1,0 +1,109 @@
+{
+  "pr_number": 79,
+  "title": "Depth Recurrence: 3x3x1024 (non-record, pending H100)",
+  "author": "Marvbuster",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.8698,
+  "architecture": "Transformer",
+  "quantization": "Int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 unique transformer blocks are repeated 3 times for an effective depth of 9, reusing blocks across repeats without U-Net skip connections.",
+        "parameters": {
+          "unique_blocks": 3,
+          "repeats": 3,
+          "effective_depth": 9,
+          "dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied to reduce parameters.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 24,
+          "kv_heads": 12
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.85,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "muon_backend_steps": 7,
+          "qk_gain_init": 2.0,
+          "qk_gain": 2.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "NorMuon training variant used alongside Int6 QAT.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth recurrence with 3 unique transformer blocks repeated 3 times",
+    "Trading architectural diversity for width to fit a larger dimension within the parameter budget",
+    "Int6 QAT to increase parameter capacity within the 16MB artifact budget",
+    "Use of NorMuon, which reportedly improved BPB",
+    "Sliding window evaluation with stride 64",
+    "Systematic search over multiple architectural strategies and hyperparameters"
+  ],
+  "artifact_size": "14.7MB"
+}

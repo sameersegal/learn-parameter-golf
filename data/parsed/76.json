@@ -1,0 +1,151 @@
+{
+  "pr_number": 76,
+  "title": "12L Int5-MLP + SmearGate + BigramHash + SWA (val_bpb 1.1433)",
+  "author": "unixmadtoonslab",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.14327,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP weights int5 per-row, attention weights int6 per-row, fp16 embedding passthrough"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension sigmoid gate blending token embedding with previous token embedding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash embedding for token-pair context.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder split with learned per-dimension skip weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP expansion enabled by compression savings.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.98,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with 1/sqrt(2*num_layers) output projection scaling."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.0
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Mixed int5/int6 per-row quantization to save artifact space while preserving accuracy.",
+    "12-layer transformer enabled by int5 compression savings.",
+    "SmearGate token-to-previous-token blending mechanism.",
+    "BigramHash token-pair context embedding.",
+    "U-Net style skip connections with learned per-dimension skip weights.",
+    "Orthogonal initialization with scaled output projection.",
+    "SWA checkpoint averaging during warmdown.",
+    "Warmdown timing fix that ignores torch.compile overhead in step-time estimation.",
+    "Sliding window evaluation with stride 256."
+  ],
+  "artifact_size": "16MB"
+}

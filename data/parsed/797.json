@@ -1,0 +1,167 @@
+{
+  "pr_number": 797,
+  "title": "Record: 7-gram N-gram Cache (0.8960 bpb)",
+  "author": "armantsaturian",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.896,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Extended XSA to all layers instead of only the last few layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with LeakyReLU(0.5)^2 activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes a BigramHash component in the model.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied FP16 embeddings with softcap.",
+        "parameters": {
+          "softcap": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": "every 50 steps"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "7-gram n-gram cache",
+        "parameters": {
+          "orders": "2-7",
+          "backoff_beta": 1e-06,
+          "alpha": 0.2,
+          "score_before_update": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "disabled",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Streaming single-pass cache built during evaluation with recursive backoff and fixed cache/neural blending.",
+        "parameters": {
+          "cache_neural_mix": "80/20",
+          "near_zero_backoff_beta": 1e-06
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Streaming single-pass 7-gram n-gram cache applied during evaluation",
+    "Near-zero backoff beta so longest n-gram match dominates",
+    "Fixed 80/20 cache-to-neural blending",
+    "Extended XSA to all 11 layers",
+    "LeakyReLU(0.5)^2 MLP and Parallel Muon base model",
+    "Score-before-update cache legality-preserving evaluation"
+  ],
+  "artifact_size": "~15.92 MB"
+}

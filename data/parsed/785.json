@@ -1,0 +1,165 @@
+{
+  "pr_number": 785,
+  "title": "Applied Async Prefetching Boost Performance of Any Approach",
+  "author": "SirSaltySalmon",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.53642888,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2 MLP",
+        "description": "Uses LeakyReLU with negative slope 0.5 followed by squaring before the down projection; rewritten as h * h for compiler fusion friendliness.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Pinned async training batch prefetch with background CPU batch preparation, pin_memory, bounded queue, and optional dedicated CUDA copy stream for overlapping H2D transfers with compute.",
+        "parameters": {
+          "prefetch": 1,
+          "prefetch_queue": 2,
+          "copy_stream": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA with last-N token attention/history.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram vocabulary / hashing-based token component.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "enabled": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "late QAT"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 0,
+          "momentum": 0.9,
+          "batch_seqs": 32,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Pinned async batch prefetching to overlap CPU batch preparation and GPU compute",
+    "Optional dedicated CUDA copy stream for non-blocking host-to-device transfers",
+    "Compiler fusion-friendly rewrite of the LeakyReLU\u00b2 MLP using h * h and explicit weight casting",
+    "Demonstrated modest step-count improvement in 600s and slightly better val_bpb versus the base run"
+  ],
+  "artifact_size": null
+}

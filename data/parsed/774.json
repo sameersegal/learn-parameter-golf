@@ -1,0 +1,181 @@
+{
+  "pr_number": 774,
+  "title": "Record: Order-Adaptive Entropy Gating + XSA-All (val_bpb=0.9370)",
+  "author": "travispchen",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.937,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Self-Attention extended from the last 4 layers to all 11 transformer layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened to 3x hidden size with LeakyReLU^2 activation.",
+        "parameters": {
+          "hidden_size_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used as part of the model architecture.",
+        "parameters": {
+          "buckets": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embedding",
+        "description": "Value Embedding applied on later layers.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "adam_weight_decay": 0.04,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "multi-order n-gram eval",
+        "parameters": {
+          "orders": [
+            2,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-adaptive entropy gating that sets entropy thresholds based on matched n-gram order during evaluation.",
+        "parameters": {
+          "entropy_center": 3.0,
+          "slope": 0.25,
+          "min_order": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-first legality via n-gram cache updated only after scoring each sliding window batch.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Order-adaptive entropy gating with per-n-gram-order entropy thresholds",
+    "Extension of XSA from the last 4 layers to all 11 layers",
+    "Improved n-gram evaluation by trusting higher-order matches at lower entropy thresholds",
+    "Score-first n-gram cache legality during evaluation"
+  ],
+  "artifact_size": "~15.9 MB"
+}

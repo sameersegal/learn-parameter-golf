@@ -1,0 +1,12 @@
+{
+  "number": 788,
+  "title": "Record: 11L + order-adaptive 9-gram backoff (mean val_bpb=0.9059)",
+  "author": "hypery11",
+  "body": "## Results\n\n| Seed | val_bpb |\n|------|---------|\n| 42   | 0.9067  |\n| 1337 | 0.9059  |\n| 2024 | 0.9050  |\n| **Mean** | **0.9059** |\n| Std  | 0.0009  |\n\n- Artifact: 13.99 MB\n- Train: 600s on 8xH100 SXM\n- Eval: ~150s\n\n## Method\n\n11-layer transformer with XSA-all, LeakyReLU(0.5)^2, Value Residual, Gated Attention. GPTQ-lite int6 + zstd-22.\n\nOrder-adaptive entropy-gated n-gram backoff cache (orders 2-9). Higher-order matches use lower entropy threshold for mixing. Score-first, deterministic, no TTT.\n\n- [x] 8xH100 SXM, train <=600s\n- [x] Eval <=600s (~150s)\n- [x] Artifact <=16MB (13.99MB)\n- [x] 3-seed validation (std 0.0009)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-26T00:16:37Z",
+  "updated_at": "2026-03-26T00:16:37Z",
+  "submission_readme": "# 11L XSA-all + Order-Adaptive 9-gram Backoff\n\n## Results\n\n| Seed | val_bpb |\n|------|---------|\n| 42   | 0.9067  |\n| 1337 | 0.9059  |\n| 2024 | 0.9050  |\n| **Mean** | **0.9059** |\n| Std  | 0.0009  |\n\nArtifact: 13.99 MB. Train: 600s on 8xH100 SXM. Eval: ~150s.\n\n## Architecture\n\n- 11 layers, 512 dim, 8/4 GQA heads\n- XSA (Exclusive Self-Attention) on all 11 layers\n- LeakyReLU(0.5)^2, 3x MLP\n- BigramHash (10240, 128d), SmearGate\n- Value Residual, Gated Attention, LN scaling\n- GPTQ-lite int6 + zstd-22\n- EMA(0.997), Tight SWA, Late QAT\n\n## Order-Adaptive N-gram Eval Cache\n\nMulti-order backoff (2 through 9-gram) with order-adaptive entropy gating:\n\n- Higher-order matches (9-gram) get lower entropy threshold, trusting n-gram even when model is moderately confident\n- Lower-order matches (2-gram) require high model uncertainty before trusting n-gram\n- Formula: `center = 3.0 - 0.25 * (matched_order - 2)`, `alpha = 0.05 + 0.55 * sigmoid(2 * (H - center))`\n- Separate hash tables per order (no cross-order collision)\n- Score-first, deterministic, no TTT\n"
+}

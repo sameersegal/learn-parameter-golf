@@ -1,0 +1,12 @@
+{
+  "number": 791,
+  "title": "submission/2026-03-25_WSD_CosineDecay_Schedule",
+  "author": "ShihChunHao",
+  "body": "## Summary\n\n- Replace linear warmdown LR schedule with **Warmup-Stable-Decay (WSD)** cosine schedule\n  - 5% warmup \u2192 75% stable at peak LR \u2192 20% cosine decay\n  - Prevents premature LR decay, especially critical under step-limited training budgets\n- Built on SOTA base (10L, MLP3x, SmearGate, BigramHash 10240, int5/int6, SWA 0.4, zstd-22)\n- No existing submission uses cosine decay or WSD schedule\n\n## Preliminary Results (1 GPU, seed=42)\n\n| Config | val_bpb | artifact_bytes |\n|--------|---------|---------------|\n| 1 GPU, 600s, ~877 steps | 1.2824 | 15,767,236 |\n\n8xH100 3-seed results pending.\n\n## Run Command\n\n```bash\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-26T00:59:59Z",
+  "updated_at": "2026-03-26T00:59:59Z",
+  "submission_readme": "# WSD Cosine Decay Schedule\n\n**val_bpb: TBD (8xH100)** \u2014 Preliminary 1-GPU result: 1.2824 BPB\n\n## Key Change\n\nReplace the default linear warmdown LR schedule with a **Warmup-Stable-Decay (WSD)** cosine schedule:\n\n| Phase | Fraction | LR behavior |\n|-------|----------|-------------|\n| Warmup | 0-5% of steps | Linear 0 \u2192 peak |\n| Stable | 5-80% of steps | Constant at peak LR |\n| Decay | 80-100% of steps | Cosine decay \u2192 0 |\n\nThe original schedule computes warmdown based on `warmdown_iters` and remaining wallclock time, which can cause LR to start decaying from very early in training (especially with fewer steps). WSD ensures the model trains at peak LR for the majority of the run.\n\n## Base Techniques (inherited from SOTA)\n\n- 10 layers, 512-dim, MLP 3x expansion\n- SmearGate + BigramHash(10240)\n- Mixed int5 (MLP) / int6 (attention) quantization\n- SWA (start_frac=0.4, every=50 steps)\n- Orthogonal init + Muon optimizer (WD=0.04)\n- zstd-22 compression\n- Sliding window eval (stride=64)\n\n## Preliminary Results (1 GPU, seed=42)\n\n| Config | val_bpb | artifact_bytes |\n|--------|---------|---------------|\n| 1 GPU, 600s, ~877 steps | 1.2824 | 15,767,236 |\n\n8xH100 3-seed results pending.\n\n## Run Command\n\n```bash\n# Single GPU\npython train_gpt.py\n\n# 8xH100 (competition setting)\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n\n# With specific seed\nSEED=42 torchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n"
+}

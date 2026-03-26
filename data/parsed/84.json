@@ -1,0 +1,94 @@
+{
+  "pr_number": 84,
+  "title": "Add mirrored-recurrence MLX non-record submission",
+  "author": "cschubiner",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 2.23647175,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses mirrored recurrence to reuse 9 unique transformer blocks across 18 logical layers, running the second half in reverse with mirrored skip structure.",
+        "parameters": {
+          "layers": 18,
+          "unique_layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Reuses the same block weights across multiple logical layers to keep parameter budget nearly unchanged.",
+        "parameters": {
+          "layers": 18,
+          "unique_layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Embeddings are tied.",
+        "parameters": {
+          "tied": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all tensor state"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Serializes only tensor state and excludes Python schedule lists used for recurrent control flow.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Mirrored recurrence with 18 logical layers built from 9 unique transformer blocks",
+    "Forward encoder schedule followed by reverse decoder schedule to reuse weights symmetrically",
+    "Tied embeddings and reduced KV head count under a 16MB cap",
+    "Serialization fix that exports only tensor state for recurrent schedules",
+    "Non-record experiment demonstrating added logical depth and compute without a second set of block weights"
+  ],
+  "artifact_size": "8040848 bytes"
+}

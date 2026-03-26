@@ -1,0 +1,76 @@
+{
+  "pr_number": 54,
+  "title": "RQZ-Golf v1: Depth recurrence for parameter efficiency",
+  "author": "TheCause",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.5283,
+  "architecture": "U-Net-style encoder/decoder with a recurrent shared layer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaces some unique layers with a single shared recurrent layer applied multiple times to save parameters while increasing effective depth.",
+        "parameters": {
+          "unique_layers": 7,
+          "recurrent_passes": 3,
+          "effective_depth": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares weights across recurrent passes of the same layer.",
+        "parameters": {
+          "recurrent_passes": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "iteration embeddings",
+        "description": "Uses learned per-pass embeddings so the recurrent layer is aware of which iteration it is on.",
+        "parameters": {
+          "passes": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "residual scaling",
+        "parameters": {
+          "scale": "1/sqrt(K)"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "test-time compute scaling",
+        "parameters": {
+          "train_passes": 3,
+          "inference_passes": [
+            6,
+            8
+          ]
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depth recurrence using a shared recurrent layer applied K times to reduce parameter count.",
+    "Learned iteration embeddings to distinguish recurrent passes.",
+    "Residual scaling by 1/sqrt(K) for stability.",
+    "Ability to increase K at inference time for better BPB without changing model size.",
+    "U-Net-style encoder/decoder with skip connections combined with recurrent depth sharing."
+  ],
+  "artifact_size": null
+}

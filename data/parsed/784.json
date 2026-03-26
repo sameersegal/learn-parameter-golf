@@ -1,0 +1,151 @@
+{
+  "pr_number": 784,
+  "title": "Non-record: Depth Recurrence + XSA + LeakyReLU\u00b2 (val_bpb 1.2065)",
+  "author": "iverbovoy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2065,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaces unique blocks with shared blocks repeated across depth, creating effective layers via recurrence.",
+        "parameters": {
+          "blocks": 3,
+          "repeats": 4,
+          "effective_layers": 12,
+          "dim": 832
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Cross-Repeat Skip",
+        "description": "Adds a learned weighted residual from the previous repeat to make depth recurrence stateful.",
+        "parameters": {
+          "repeat_scales": "learned per-repeat"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied to the last 4 effective layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "Adds extra embedding tables mixed into the residual stream at each effective layer.",
+        "parameters": {
+          "tables": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Loop Embedding",
+        "description": "Adds a learned per-layer vector before each block as depth-wise positional encoding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU^2",
+        "description": "Uses LeakyReLU(0.5)^2 instead of relu^2.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "window": 1024
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Depth recurrence with Cross-Repeat Skip to turn stateless weight sharing into stateful recurrence",
+    "Exclusive Self-Attention on the last 4 effective layers",
+    "LeakyReLU(0.5)^2 activation replacing relu^2",
+    "Value Embeddings mixed into the residual stream",
+    "Loop Embedding as depth-wise positional encoding",
+    "GPTQ-lite post-training quantization with best-of-5 clip percentiles",
+    "zstd-22 compression and SWA for artifact optimization"
+  ],
+  "artifact_size": "15.87MB"
+}

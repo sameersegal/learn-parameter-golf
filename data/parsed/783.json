@@ -1,0 +1,125 @@
+{
+  "pr_number": 783,
+  "title": "Non-record: PR703 + shard-order curriculum + GPTQ cache-backout (1.1171)",
+  "author": "petergpt",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.11709895,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "full model / banked-attn and MLP surface"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "PR703-style branch with tied embeddings and a 11-layer trunk; includes cache/backout path and banked-attn/MLP surface.",
+        "parameters": {
+          "layers": 11,
+          "bigram_vocab_size": 1536,
+          "cache_layer": 7
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "muon_quant_momentum": 1,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "iterations": 9000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-ranked shard curriculum that reorders training shards using a lightweight scorer so harder shards are seen earlier.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Score-ranked shard-order curriculum",
+    "Tighter final int6 + lzma packing",
+    "GPTQ cache-backout branch carryover from PR703",
+    "Single-seed non-record submission under the 16MB cap"
+  ],
+  "artifact_size": "15,909,560 bytes"
+}

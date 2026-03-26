@@ -1,0 +1,131 @@
+{
+  "pr_number": 792,
+  "title": "11L LeakyReLU\u00b2 + XSA-all + Full GPTQ + 5-gram Backoff (1.0340 BPB)",
+  "author": "xexyz",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.034,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ / QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2",
+        "description": "Uses LeakyReLU(0.5) squared in the MLP instead of relu\u00b2 to improve gradient flow.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied to all transformer layers instead of only the last few layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "Tight SWA"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "n-gram backoff",
+        "parameters": {
+          "order": 5,
+          "backoff_orders": [
+            5,
+            4,
+            3,
+            2
+          ],
+          "entropy_adaptive": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "cache_update_after_scoring": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive alpha blending between model predictions and n-gram cache.",
+        "parameters": {
+          "alpha_low": 0.05,
+          "alpha_high": 0.4,
+          "entropy_threshold": 4.0
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU(0.5)\u00b2 MLP activation",
+    "XSA applied to all 11 layers",
+    "Full Hessian-based GPTQ with actorder and Cholesky error compensation",
+    "5-gram multi-order backoff with separate hash tables per order",
+    "Entropy-adaptive alpha for n-gram/model mixing",
+    "Score-first n-gram cache protocol"
+  ],
+  "artifact_size": "15,903,061 bytes"
+}

@@ -1,0 +1,156 @@
+{
+  "pr_number": 798,
+  "title": "Record: Order-Adaptive Entropy Gating + BackoffNgramMixer (val_bpb=0.5466)",
+  "author": "travispchen",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.5466,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in all 11 layers as part of the base model stack.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three MLP blocks with LeakyReLU(0.5)^2.",
+        "parameters": {
+          "mlp_blocks": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention setting with no grouping.",
+        "parameters": {
+          "kv_heads": 8,
+          "query_heads": 8
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adamw_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 3e-05,
+          "epochs": 1,
+          "chunk_tokens": 1000000,
+          "freeze_blocks": 2,
+          "polyak_decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "sparsity": 0.03,
+          "type": "magnitude"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Backoff n-gram mixer with entropy-adaptive alpha mixing across orders 2-7.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-adaptive entropy gating using per-order entropy centers for n-gram mixing.",
+        "parameters": {
+          "entropy_centers": {
+            "7": 3.0,
+            "6": 3.2,
+            "5": 3.5,
+            "4": 3.8,
+            "3": 4.2,
+            "2": 4.5
+          }
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Drift-free test-time training with logistic context mixer.",
+        "parameters": {
+          "eta": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Order-adaptive entropy gating with per-n-gram-order entropy centers",
+    "BackoffNgramMixer combining n-gram predictions with neural predictions",
+    "Drift-free score-first test-time training",
+    "Entropy-adaptive alpha mixing across n-gram orders"
+  ],
+  "artifact_size": "~15.99 MB"
+}

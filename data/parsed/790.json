@@ -1,0 +1,141 @@
+{
+  "pr_number": 790,
+  "title": "Record: Residual Input Mixing + mixed int6 GPTQ + grouped TTT + MLP 3.5x",
+  "author": "danialht",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1172,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6 GPTQ",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "residual mixing",
+        "description": "Each transformer block receives a learned mix of the current stream, earlier block outputs, and the original x0, creating denser residual connections and reusing longer-range intermediate features.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "mlp_multiplier": 3.5,
+          "mha": "8/8",
+          "bigramhash": 8192,
+          "xsa": "all layers"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3.5x",
+        "description": "Expanded MLP width to 3.5x the model dimension.",
+        "parameters": {
+          "multiplier": 3.5,
+          "hidden_size": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a BigramHash component in the architecture.",
+        "parameters": {
+          "dimensions": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is enabled in all layers.",
+        "parameters": {
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "grouped_params": true,
+          "groups": [
+            "matrices",
+            "control weights"
+          ],
+          "standard_clipping": true,
+          "per_chunk_warmup_removed": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first AdamW TTT",
+        "parameters": {
+          "chunk": 131072,
+          "unfrozen": "last 2 blocks plus control params",
+          "grouped_optimizer": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "mixed int6 GPTQ with early QAT"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPTQ calibration time is counted within the 600s training budget, requiring a slight reduction in training wall-clock time to stay under the limit.",
+        "parameters": {
+          "time_limit_seconds": 600
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Fixed the prior bug so GPTQ calibration time counts toward the 600s training budget.",
+    "Reduced training wall-clock time slightly to remain under the time limit.",
+    "Switched TTT from a flat optimizer to grouped AdamW with separate matrix and control-weight parameter groups.",
+    "Strengthened matrix/head adaptation in TTT while restoring standard clipping and removing per-chunk warmup.",
+    "Introduced denser residual input mixing so each block sees a learned mix of current stream, earlier block outputs, and x0.",
+    "Used mixed int6 per-row GPTQ with early QAT and EMA.",
+    "Expanded the MLP to 3.5x width."
+  ],
+  "artifact_size": "15.5 MB"
+}

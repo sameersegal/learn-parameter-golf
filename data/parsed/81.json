@@ -1,0 +1,117 @@
+{
+  "pr_number": 81,
+  "title": "Record: SwiGLU + MLP 3x + Int6 + LoRA TTT, val_bpb=1.1670 (8xH100)",
+  "author": "polarizedfortnite-cpu",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.167,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP expansion from 2x to 3x to add nonlinear capacity.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaced relu^2 with SwiGLU activation.",
+        "parameters": {
+          "mlp_hidden_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT int6",
+        "bits": 6,
+        "scope": "all weights except tied embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth",
+        "description": "Added one extra transformer layer over the baseline.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrices": "Muon",
+          "embeddings_scalars": "Adam",
+          "matrix_lr": 0.04,
+          "embed_lr": 0.05
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Combined MLP 3x expansion with SwiGLU activation in a compact Transformer.",
+    "Applied int6 quantization with zstd compression to fit a larger model under the artifact cap.",
+    "Used quantization-aware training with STE during the final quarter of training.",
+    "Introduced LoRA-based test-time training during evaluation to improve validation bpb.",
+    "Added an extra transformer layer and used grouped-query attention with 4 KV heads."
+  ],
+  "artifact_size": "15.83MB"
+}
