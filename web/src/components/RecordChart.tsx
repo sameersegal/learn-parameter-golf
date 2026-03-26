@@ -17,23 +17,43 @@ export default function RecordChart({
 }: {
   submissions: Submission[];
 }) {
-  // Build the record progression: track the running minimum BPB
+  // Sort by PR number (chronological)
   const sorted = [...submissions]
-    .filter((s) => s.val_bpb != null)
+    .filter((s) => s.val_bpb != null && s.val_bpb > 0)
     .sort((a, b) => a.pr_number - b.pr_number);
 
-  let runningMin = Infinity;
-  const data: { pr: number; bpb: number; record: number; author: string; isNew: boolean }[] = [];
+  // Build record step line from is_record submissions only
+  const records = sorted
+    .filter((s) => s.is_record)
+    .sort((a, b) => a.pr_number - b.pr_number);
+
+  // Build chart data: all submissions get a bpb point,
+  // record line steps down at each is_record submission
+  let currentRecord: number | null = null;
+  const data: {
+    pr: number;
+    bpb: number;
+    record: number | null;
+    author: string;
+    isRecord: boolean;
+  }[] = [];
+
+  // Pre-index record BPB by PR number for quick lookup
+  const recordByPr = new Map<number, number>();
+  for (const r of records) {
+    recordByPr.set(r.pr_number, r.val_bpb!);
+  }
 
   for (const s of sorted) {
-    const isNewRecord = s.val_bpb! < runningMin;
-    if (isNewRecord) runningMin = s.val_bpb!;
+    if (recordByPr.has(s.pr_number)) {
+      currentRecord = recordByPr.get(s.pr_number)!;
+    }
     data.push({
       pr: s.pr_number,
       bpb: s.val_bpb!,
-      record: runningMin,
+      record: currentRecord,
       author: s.author,
-      isNew: isNewRecord,
+      isRecord: s.is_record,
     });
   }
 
@@ -72,7 +92,7 @@ export default function RecordChart({
             }}
             formatter={(value, name) => [
               typeof value === "number" ? value.toFixed(4) : String(value),
-              name === "record" ? "Record" : "Submission",
+              name === "record" ? "Record BPB" : "Submission BPB",
             ]}
             labelFormatter={(label) => `PR #${label}`}
           />
@@ -90,13 +110,14 @@ export default function RecordChart({
             dot={false}
             strokeWidth={2}
             name="record"
+            connectNulls
           />
         </LineChart>
       </ResponsiveContainer>
-      <div className="flex gap-4 text-xs text-[var(--muted)] mt-2">
+      <div className="flex flex-wrap gap-3 text-xs text-[var(--muted)] mt-2">
         <div className="flex items-center gap-1">
           <div className="w-4 h-0.5 bg-[#facc15]" />
-          Record BPB
+          Record BPB (is_record)
         </div>
         <div className="flex items-center gap-1">
           <div className="w-4 h-0.5 bg-[#60a5fa] opacity-40" />

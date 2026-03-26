@@ -15,9 +15,11 @@ export function getRecords(): Submission[] {
 }
 
 export function getBestBpb(): number | null {
-  const valid = submissions.filter((s) => s.val_bpb != null);
-  if (valid.length === 0) return null;
-  return Math.min(...valid.map((s) => s.val_bpb!));
+  const records = submissions.filter(
+    (s) => s.is_record && s.val_bpb != null && s.val_bpb > 0,
+  );
+  if (records.length === 0) return null;
+  return Math.min(...records.map((s) => s.val_bpb!));
 }
 
 export function getUniqueAuthors(): number {
