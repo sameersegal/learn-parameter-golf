@@ -1,0 +1,207 @@
+{
+  "pr_number": 499,
+  "title": "The Frugendorff: Recursive Weight Sharing + MLP 4x (1.1478 BPB, 15.19MB)",
+  "author": "newjordan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1478,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence / recursive weight sharing",
+        "description": "6 unique transformer blocks are each applied twice in sequence, yielding 12 effective layers from shared parameters.",
+        "parameters": {
+          "unique_blocks": 6,
+          "loops_per_block": 2,
+          "effective_depth": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded feed-forward network to 4x width (hidden size 2560) using freed parameter budget.",
+        "parameters": {
+          "mlp_multiplier": 4,
+          "hidden_size": 2560
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary position embeddings on a subset of dimensions with NTK-aware scaling.",
+        "parameters": {
+          "rope_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram feature module with shared embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are shared.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on the last 2 unique blocks.",
+        "parameters": {
+          "last_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "QR-initialized orthogonal loop position embeddings",
+        "description": "Orthogonal loop position embeddings initialized with QR decomposition."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "scope": "matrices",
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings and scalars",
+          "embedding_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": "every 50 steps when scale < 0.2"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training data replay for the last 100 batches over 2 epochs.",
+        "parameters": {
+          "epochs": 2,
+          "batches": 100
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Self-distillation using an EMA teacher for 50 steps.",
+        "parameters": {
+          "teacher": "EMA",
+          "steps": 50,
+          "temperature": 2.0,
+          "alpha": 0.7
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Recursive weight sharing / fractal looping of 6 unique transformer blocks to create 12 effective layers",
+    "Reinvesting parameter savings into a 4x MLP expansion",
+    "Orthogonal loop position embeddings to distinguish repeated passes through shared blocks",
+    "U-Net skip connections within each loop iteration",
+    "Combination of SmearGate, BigramHash, shared value embeddings, and XSA in a compact transformer",
+    "Late QAT, training replay, self-distillation, SWA, and EMA used together under the artifact budget"
+  ],
+  "artifact_size": "15.19MB"
+}

@@ -1,0 +1,12 @@
+{
+  "number": 546,
+  "title": "Int5/Int6+Zstd+MLP3x: mean val_bpb=1.1752 (10L, seq4096, sliding window)",
+  "author": "shajalahamedcse",
+  "body": "## Int5/Int6 Mixed Quantization + Zstd + 3x MLP Expansion\r\n\r\n**Mean val_bpb: 1.1752** (3 seeds, std=0.0017)\r\n\r\n| Seed | val_bpb | Artifact |\r\n|------|---------|----------|\r\n| 1337 | 1.1773 | 15,708,798 B |\r\n| 42   | 1.1732 | 15,700,116 B |\r\n| 7    | 1.1750 | 15,711,843 B |\r\n| **mean** | **1.1752** | |\r\n| **std** | **0.0017** | |\r\n\r\n## Key techniques\r\n\r\n1. **Int5 quantization for MLP matrices** \u2014 5-bit packing frees ~1.5MB, enabling 3x MLP expansion\r\n2. **Int6 quantization for attention matrices** \u2014 balances precision and size\r\n3. **Zstd compression** \u2014 better ratio than zlib on quantized integer arrays\r\n4. **MLP expansion 3x** (hidden=1536 vs baseline 1024) \u2014 funded by int5 savings\r\n5. **Seq4096 training + sliding window eval** (stride=64) \u2014 full context scoring\r\n\r\n## Hardware\r\n\r\nModal 8\u00d7H100 SXM, `torchrun --standalone --nproc_per_node=8`, 600s cap\r\n\r\n",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-23T16:02:01Z",
+  "updated_at": "2026-03-23T16:05:29Z",
+  "submission_readme": "# Seq4096 Training + 10L + Sliding Window Eval\n\n## Result\n\n| Seed | val_bpb | Artifact |\n|------|---------|----------|\n| 1337 | 1.1900 | 15,115,793 B |\n| 42   | 1.1908 | 15,128,724 B |\n| 7    | 1.1888 | 15,154,068 B |\n| **mean** | **1.1899** | |\n| **std**  | **0.0008** | |\n\n## Key change\n\nTrain on **4096-token sequences** instead of 1024. The model sees longer\ndependencies during training, improving predictions. All other settings\nfollow the sliding window SOTA baseline (10 layers, eval_stride=64,\nFP16 embeddings, Muon + weight decay, Overtone init).\n\n## Hyperparameters\n\n```\nnum_layers     = 10\ntrain_seq_len  = 4096\neval_stride    = 64\nwarmdown_iters = 3600\nmatrix_lr      = 0.04  (default)\nmuon_momentum  = 0.95  (default)\n```\n\n## Hardware\n\nModal 8\u00d7H100 SXM, `torchrun --standalone --nproc_per_node=8`\nTraining capped at 600 seconds (`MAX_WALLCLOCK_SECONDS=600`).\n"
+}

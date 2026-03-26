@@ -1,0 +1,184 @@
+{
+  "pr_number": 508,
+  "title": "GPTQ + Early QAT + Legal TTT \u2014 3-seed mean val_bpb 1.1215",
+  "author": "newjordan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1215,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with GPTQ export",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary positional embeddings on only part of the dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the MLP/activation path.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a bigram hashing component with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion with relu\u00b2.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4,
+          "heads": 8
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "epochs_per_chunk": 3,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 8,
+          "learning_rate": 0.002,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "over_actual_training_window": true,
+          "chunks": 200
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "embedding freeze",
+        "parameters": {
+          "frozen_components": [
+            "tok_emb",
+            "bigram",
+            "ve_shared"
+          ]
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "GPTQ quantization with Hessian-aware error compensation for int6 per-row quantization",
+    "Early QAT with matched clipping to the GPTQ export quantizer",
+    "Legal score-first TTT with EMA scoring and cosine LR fix",
+    "Embedding freezing during TTT",
+    "Improved quantization tax from 0.0082 to 0.0058 BPB"
+  ],
+  "artifact_size": "15.56 MB"
+}

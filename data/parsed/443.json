@@ -1,0 +1,172 @@
+{
+  "pr_number": 443,
+  "title": "Bigram-Aware Context Modeling with Mixed-Precision Quantization (val_bpb: 1.1431)",
+  "author": "CREVIOS",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1431,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Learned hashed embedding for consecutive token pairs to inject explicit bigram context.",
+        "parameters": {
+          "bucket_count": 10240,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension sigmoid gate blending current token embeddings with previous token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion to increase capacity within the artifact budget.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections between matching depths.",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "residual mixing",
+        "description": "Learned mixing between running hidden state and original post-embedding representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6, embeddings FP16, control tensors FP32"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 24,
+          "start_fraction": 0.4,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal init",
+        "description": "Orthogonal initialization with gain 1.0 and muP output scaling."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_frac": 0.03
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "BigramHash embedding to inject explicit token-pair context",
+    "SmearGate for learned per-dimension blending of adjacent token embeddings",
+    "Mixed-precision quantization with int5 for MLP weights and int6 for attention weights",
+    "Using int5 savings to fund an additional transformer layer under the 16MB cap",
+    "U-Net style skip connections and residual mixing in a transformer",
+    "SWA over the last portion of training to improve quantization robustness and compression",
+    "Sliding-window evaluation with stride 64 to score tokens with much longer context"
+  ],
+  "artifact_size": "15.97 MB"
+}

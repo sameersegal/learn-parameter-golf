@@ -1,0 +1,132 @@
+{
+  "pr_number": 822,
+  "title": "Add baseline and depth recurrence submissions (1xH100 20min runs)",
+  "author": "henrycashe26",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2604,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 QAT",
+        "bits": null,
+        "scope": "MLP in int5, attention in int6"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embeddings used instead of standard token embeddings.",
+        "parameters": {
+          "buckets": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Token blending mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_orthogonalization": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training on a single H100 GPU for 20 minutes instead of the standard 8xH100 for 10 minutes.",
+        "parameters": {
+          "gpu_count": 1,
+          "duration_minutes": 20
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "4 unique transformer layers shared across 3 loop iterations.",
+        "parameters": {
+          "layers": 4,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "learned level signals",
+        "description": "Learned level signals used with depth recurrence.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Reproduction of the #1 leaderboard baseline on a single H100 with reduced compute",
+    "Mixed int5/int6 quantization-aware training with BigramHash embeddings, SmearGate, and SWA",
+    "Depth recurrence model with 4 shared transformer layers across 3 loops",
+    "LoRA rank-32 per loop and learned level signals for depth recurrence",
+    "Reported artifact sizes and compute-constrained training results for two submissions"
+  ],
+  "artifact_size": "15.8MB"
+}

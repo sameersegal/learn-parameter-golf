@@ -1,0 +1,158 @@
+{
+  "pr_number": 481,
+  "title": "Record: Cosine TTT scheduling with per-layer lr \u2014 mean val_bpb=1.0970 (3 seeds)",
+  "author": "mrdavtan",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.097,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row all weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary positional embeddings on only part of the dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scaling modification.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism in the community stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider/deeper MLP stack using relu-squared activations.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections inspired by U-Net are used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "TTT": true,
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "epochs": 30,
+          "cosine_decay": true,
+          "per_layer_lr": true,
+          "freeze_blocks": 0,
+          "batch_seqs_per_gpu": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "epochs": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Cosine learning-rate decay for TTT over 30 epochs instead of a flat schedule",
+    "Per-layer TTT learning-rate groups based on measured quantization damage",
+    "Analysis showing MLP output projections have much higher quantization error than input projections",
+    "Demonstration that TTT improves beyond merely repairing quantization damage",
+    "Extensive negative-result exploration of alternative compression and architectural ideas"
+  ],
+  "artifact_size": "15.4-15.8 MB"
+}

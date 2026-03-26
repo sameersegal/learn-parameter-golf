@@ -1,0 +1,204 @@
+{
+  "pr_number": 417,
+  "title": "Record: 11L XSA4 + Tight SWA + FA3 + Two-Phase TTT (3-seed mean val_bpb=1.1227)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1227,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT / mixed int5-int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "3x MLP with SmearGate nonlinearity.",
+        "parameters": {
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature for token pair modeling.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings partially.",
+        "parameters": {
+          "train_fraction": 16,
+          "total_fraction": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5 QAT",
+        "bits": 6,
+        "scope": "int5 MLP layers, int6 attention"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "two-phase TTT",
+        "parameters": {
+          "phase_1": {
+            "method": "norm-only recalibration",
+            "epochs": 50,
+            "optimizer": "Adam",
+            "learning_rate": 0.01,
+            "trainable_params": "~22K"
+          },
+          "phase_2": {
+            "method": "selective-freeze block adaptation",
+            "epochs": 10,
+            "optimizer": "SGD",
+            "learning_rate": 0.005,
+            "trainable_params": "~7.6M"
+          }
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "phase": "TTT phase 1",
+          "learning_rate": 0.01
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "phase": "TTT phase 2",
+          "learning_rate": 0.005
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FA3 Hopper attention for faster training throughput.",
+        "parameters": {
+          "step_time_ms": 84.65
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with 4% warmdown/quantization phase.",
+        "parameters": {
+          "warmdown_fraction": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tight SWA preserving averaged weights in the first 8 blocks during phase 2 TTT.",
+        "parameters": {
+          "preserved_blocks": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Magnitude pruning.",
+        "parameters": {
+          "pruning_rate": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Two-phase test-time training with norm-only recalibration followed by selective-freeze block adaptation",
+    "FA3 Hopper attention to increase training throughput",
+    "Tight SWA with preserved first 8 blocks during adaptation",
+    "Late QAT with mixed int5 MLP and int6 attention",
+    "XSA attention in the last 4 layers",
+    "BigramHash and partial RoPE architecture modifications"
+  ],
+  "artifact_size": "15,758,953 bytes"
+}

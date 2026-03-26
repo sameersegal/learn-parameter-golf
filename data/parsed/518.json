@@ -1,0 +1,204 @@
+{
+  "pr_number": 518,
+  "title": "Record: 11L XSA4 + LeakyReLU(0.5)\u00b2 + Cosine TTT 50ep (val_bpb=1.0622)",
+  "author": "sofiabod",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.0622,
+  "architecture": "Transformer",
+  "quantization": "Int6 + GPTQ-lite + zstd-22",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self-attention variant applied to the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened to 3x",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": {
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature/module used in the model",
+        "parameters": {
+          "hash_size": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "OrthoInit",
+        "description": "Orthogonal initialization used for some layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 module applied to layers 9 and 10",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections added in a U-Net style",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)\u00b2",
+        "description": "LeakyReLU squared activation replacing ReLU\u00b2 to preserve negative gradient flow",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "epochs": 50,
+          "formula": "lr *= 0.5 * (1 + cos(pi * progress))"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 50,
+          "learning_rate": 0.0005,
+          "weight_decay": 0.0,
+          "all_parameters_unfrozen": true,
+          "per_layer_lr": {
+            "mlp.proj": 3.0,
+            "mlp.fc": 0.5
+          },
+          "grad_clip": 1.0,
+          "ddp_gradient_sync": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "tight"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU(0.5)\u00b2 activation replacing ReLU\u00b2",
+    "50-epoch cosine test-time training with per-layer learning-rate groups",
+    "Improved validation BPB to 1.0622, beating prior best validated score",
+    "Combination of full #414 frontier stack with the new activation and TTT recipe"
+  ],
+  "artifact_size": null
+}

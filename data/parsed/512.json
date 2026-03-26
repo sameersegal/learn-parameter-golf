@@ -1,0 +1,196 @@
+{
+  "pr_number": 512,
+  "title": "Record: PROTEUS v7 \u2014 11L INT6 + LoRA TTT (mean val_bpb=0.9512, 3 seeds)",
+  "author": "MatoTeziTanka",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 0.9512,
+  "architecture": "Transformer",
+  "quantization": "INT6 uniform quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weight matrices"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Added SmearGate as part of the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash features in the model.",
+        "parameters": {
+          "dimensions": 128,
+          "hash_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x expansion MLP with relu\u00b2 activation.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses RoPE with NTK-aware evaluation scaling.",
+        "parameters": {
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 11,
+          "last_fraction": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "batch_size": 64,
+          "epochs": 3,
+          "chunk_size": 256,
+          "min_doc_len": 512,
+          "scope": "Q + V projections + LM head",
+          "per_document": true,
+          "multi_epoch": true,
+          "backward_looking": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for model components."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Depth-scaled residual connections with attenuation 1/sqrt(layer_idx + 1) for stability.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fresh model copy used for TTT evaluation to avoid torch.compile graph caching.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "INT6 uniform quantization for all weight matrices with low quantization gap",
+    "Depth-scaled residual connections for 11-layer stability",
+    "Backward-looking LoRA test-time training with per-document adaptation",
+    "Fresh model copy during TTT evaluation to avoid torch.compile graph caching",
+    "Multi-epoch TTT with scoring on the final pass",
+    "Skipping TTT for short documents under 512 tokens"
+  ],
+  "artifact_size": "~15.4 MB"
+}

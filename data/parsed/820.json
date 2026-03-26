@@ -1,0 +1,108 @@
+{
+  "pr_number": 820,
+  "title": "[non-record] Masked Diffusion Language Model (val_var_bpb=1.625)",
+  "author": "mtybadger",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.6252,
+  "architecture": "Bidirectional Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "bidirectional transformer",
+        "description": "Replaces the autoregressive causal next-token model with a masked diffusion language model using bidirectional denoising and iterative sampling.",
+        "parameters": {
+          "layers": 9,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "mlp_mult": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses GQA-style grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "adaLN timestep conditioning",
+        "description": "Adds timestep-conditioned denoiser conditioning via adaLN-style conditioning.",
+        "parameters": {
+          "cond_dim": 128
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 256,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "dropout",
+        "parameters": {
+          "rate": 0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "variational bound evaluation with discrete absorbing-mask process",
+        "parameters": {
+          "var_eval_steps": 32
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Masked diffusion language modeling objective with continuous-time SUBS denoising loss and iterative DDPM-style sampling cache.",
+        "parameters": {
+          "sampler": "ddpm_cache",
+          "sampling_schedule": "linear",
+          "sampling_steps": 256
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Replaces the autoregressive GPT baseline with a masked diffusion language model.",
+    "Uses a bidirectional masked denoising objective instead of causal next-token prediction.",
+    "Introduces timestep-conditioned adaLN denoiser conditioning.",
+    "Reports a variational BPB metric based on a discrete absorbing-mask upper bound.",
+    "Fits the submission under the 16MB limit using mixed int6/int8 quantization plus zstd-22 compression."
+  ],
+  "artifact_size": "15,379,114 bytes"
+}

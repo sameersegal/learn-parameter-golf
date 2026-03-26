@@ -1,0 +1,250 @@
+{
+  "pr_number": 498,
+  "title": "The Frugendorff: Recursive Weight Sharing + MLP 4x (1.1478 BPB, 15.19MB)",
+  "author": "newjordan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1478,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence / weight sharing",
+        "description": "6 unique transformer blocks are looped twice each to create 12 effective layers while storing only 6 blocks of parameters.",
+        "parameters": {
+          "unique_blocks": 6,
+          "loops": 2,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP4x",
+        "description": "Expanded MLP hidden size to 4x the model dimension to improve quality.",
+        "parameters": {
+          "multiplier": 4,
+          "hidden_size": 2560
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 10,
+          "kv_heads": 5,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimension with NTK-aware scaling.",
+        "parameters": {
+          "rope_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is applied in the last 2 unique layers.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Auxiliary hashed bigram feature module.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embedding",
+        "description": "Uses a shared value embedding to reduce parameters.",
+        "parameters": {
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections are used within each loop iteration.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal loop positions",
+        "description": "Loop position embeddings are QR-initialized to differentiate repeated passes through shared blocks."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "scope": "matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.035,
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.025,
+          "scope": "scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "condition": "scale < 0.2"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "applied_after": "distillation"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late training replay over the last 100 training batches for 2 epochs at 10% learning rate.",
+        "parameters": {
+          "batches": 100,
+          "epochs": 2,
+          "lr_fraction": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Self-distillation using an EMA teacher during training.",
+        "parameters": {
+          "teacher": "EMA",
+          "steps": 50,
+          "temperature": 2.0,
+          "alpha": 0.7
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Recursive/fractal weight sharing to achieve 12 effective layers using only 6 stored transformer blocks",
+    "Reinvesting saved parameter budget into MLP 4x expansion",
+    "Orthogonal loop position embeddings to distinguish repeated passes through shared blocks",
+    "Combination of U-Net skips, SmearGate, BigramHash, shared value embedding, and XSA in a compact transformer",
+    "Full training pipeline including Muon, SWA, late QAT, training replay, self-distillation, and EMA"
+  ],
+  "artifact_size": "15.19MB"
+}

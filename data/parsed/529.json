@@ -1,0 +1,182 @@
+{
+  "pr_number": 529,
+  "title": "Record: GPTQ + Legal TTT (3-seed mean val_bpb=1.1195)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1195,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT + GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate with OrthoInit",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature with shared VE128 in later layers",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x relu\u00b2",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0001
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs_per_chunk": 3,
+          "chunk_size": 131072,
+          "stride": 32,
+          "learning_rate": 0.0001,
+          "weight_decay": 0.0
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used with SmearGate"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 131072,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Early QAT with threshold 0.5 using fake int6 STE and percentile clipping before GPTQ",
+        "parameters": {
+          "threshold": 0.5,
+          "clip_percentile": 0.9995
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Manual gradient all_reduce without DDP wrapper",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "GPTQ quantization with Hessian-aware error compensation, column reordering, and 256-sample calibration",
+    "Early QAT with threshold 0.5 and longer adaptation to quantization noise",
+    "EMA tuned to 0.997",
+    "Legal score-first TTT where each token is scored before any gradient update using it",
+    "Manual gradient all_reduce without a DDP wrapper"
+  ],
+  "artifact_size": "15.96 MB"
+}

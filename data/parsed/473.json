@@ -1,0 +1,209 @@
+{
+  "pr_number": 473,
+  "title": "Record: Legal Score-First TTT + Parallel Muon \u2014 val_bpb 1.1214 (3-seed mean)",
+  "author": "abaybektursun",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1214,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA to the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings",
+        "parameters": {
+          "dimensions": 16,
+          "base": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a larger BigramHash vocabulary",
+        "parameters": {
+          "vocab_size": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE",
+        "description": "Enables VE on selected layers",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with relu\u00b2 activation",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "warmdown_iters": 3500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "used_for": "TTT adaptation",
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "gradient_clip": 1.0,
+          "batch_size": 32
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "optimizer": "SGD + momentum",
+          "freeze_blocks": 0,
+          "gradient_clip": 1.0,
+          "batch_size": 32
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Parameter Banking with contiguous 3D banks replacing 66 nn.Linear weights and Parallel Muon communication strategy using reduce-scatter, local NS, and all-gather",
+        "parameters": {
+          "banks": 4,
+          "replaced_linear_layers": 66
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Legal backward-looking score-first TTT framework",
+    "Parallel Muon optimizer with Parameter Banking",
+    "Improved BigramHash vocabulary size from 2048 to 3072",
+    "Reduced TTT freeze depth from 2 to 0",
+    "3-seed mean record submission with val_bpb 1.1214"
+  ],
+  "artifact_size": "~16.0 MB"
+}

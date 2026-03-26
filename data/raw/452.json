@@ -1,0 +1,12 @@
+{
+  "number": 452,
+  "title": "10L XSA + EMA + Partial RoPE + LN Scale (val_bpb: 1.1366)",
+  "author": "ofirkris",
+  "body": "## Summary\n- 10-layer GPT with XSA on last 4 layers, EMA (0.997), Partial RoPE (16/64), LN Scale\n- Int5 MLP / Int6 attention, FP16 embeds, 3.2% pruning, zstd-22\n- SmearGate + BigramHash(10240), orthogonal init, Muon optimizer\n\n## Results\n| Seed | val_bpb | Artifact | Steps |\n|------|---------|----------|-------|\n| 42 | 1.1365 | 15,759,319 | 6491 |\n| 1337 | 1.1366 | 15,820,386 | 6520 |\n\n- 8xH100 SXM, 600s, ~92ms/step\n- PyTorch 2.7.0 + FlashAttention 2.8.3\n- No TTT, no test-time adaptation\n- Sliding window eval stride=64",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-22T18:53:42Z",
+  "updated_at": "2026-03-22T20:32:42Z",
+  "submission_readme": "# XSA + EMA + Partial RoPE + LN Scale + TTT\n\n**val_bpb: 1.1365** (seed 42, 8xH100 SXM, 600s)\n\n## Architecture\n- 10 transformer layers, 512d, 8 heads / 4 KV heads (GQA), 3x MLP (1536 hidden)\n- Exclusive Self-Attention (XSA) on last 4 layers\n- EMA (decay=0.997)\n- Partial RoPE (16/64 dims)\n- LN Scale (1/sqrt(layer_idx+1))\n- SmearGate + BigramHash(10240, dim=128)\n- U-Net skip connections, orthogonal init, logit softcap=30\n\n## Training\n- Muon optimizer (WD=0.04, momentum 0.99) + AdamW for embeddings/scalars\n- Batch tokens: 786,432, seq len: 2048\n- Warmdown: 3000 iters\n- 6491 steps in 600s (92.4ms/step)\n\n## Quantization\n- Int5 MLP / Int6 attention per-row quantization\n- FP16 embedding passthrough\n- 3.2% magnitude pruning\n- zstd level 22 compression\n- Artifact: 15,759,319 bytes\n\n## Evaluation\n- Sliding window (stride=64, seq_len=2048)\n- TTT: 3 epochs SGD post-quantization\n\n## Environment\n- PyTorch 2.7.0 + FlashAttention 2.8.3\n- 8xH100 SXM 80GB\n"
+}

@@ -1,0 +1,152 @@
+{
+  "pr_number": 410,
+  "title": "Record: 11L XSA4 + Tight SWA + FA3 + Two-Phase TTT (val_bpb=1.1216)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1216,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT / mixed int5-int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "attention; int5 for MLP layers"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers of an 11-layer Transformer.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "MLP gating mechanism used in 3x MLP blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP blocks.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE partially across dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature for token pair coverage.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": "tight"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "two-phase TTT",
+        "parameters": {
+          "phase_1": {
+            "method": "norm-only recalibration",
+            "epochs": 100,
+            "optimizer": "Adam",
+            "learning_rate": 0.01,
+            "trainable_params": "LayerNorm weights, scales, final_norm"
+          },
+          "phase_2": {
+            "method": "selective-freeze block adaptation",
+            "epochs": 15,
+            "optimizer": "SGD",
+            "learning_rate": 0.003,
+            "trainable_params": "last 2 transformer blocks, norms, scales, lm_head"
+          }
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used for model weights."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "ln_scale": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Two-phase test-time training combining norm-only recalibration and selective-freeze block adaptation",
+    "Recalibration of activation distributions damaged by int6 quantization",
+    "Selective adaptation of the last two transformer blocks while preserving SWA-averaged early layers",
+    "Tight SWA combined with late QAT and pruning",
+    "Increased BigramHash bucket count and reduced evaluation stride"
+  ],
+  "artifact_size": "15,762,005 bytes"
+}

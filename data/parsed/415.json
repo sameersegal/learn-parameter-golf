@@ -1,0 +1,180 @@
+{
+  "pr_number": 415,
+  "title": "Record: 11L XSA4 + Tight SWA + FA3 + Two-Phase TTT (val_bpb=1.1216)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1216,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT / mixed int6-int5",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 5,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the MLP blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing embedding/feature mechanism for bigram coverage.",
+        "parameters": {
+          "buckets": 12288
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE partially across the model.",
+        "parameters": {
+          "train_length": 16,
+          "eval_length": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP relu\u00b2 blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "tight": true,
+          "every_steps": 50,
+          "first_8_blocks_averaged": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "two-phase TTT",
+        "parameters": {
+          "phase_1": {
+            "method": "norm-only recalibration",
+            "epochs": 100,
+            "optimizer": "Adam",
+            "learning_rate": 0.01,
+            "unfrozen_params": "~22K"
+          },
+          "phase_2": {
+            "method": "selective-freeze block adaptation",
+            "epochs": 25,
+            "optimizer": "SGD",
+            "learning_rate": 0.005,
+            "unfrozen_params": "~7.6M"
+          }
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "ln_scale": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "late_qat": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FA3 Hopper attention used to speed up training and enable more steps within the time budget.",
+        "parameters": {
+          "step_time_ms": 84.65,
+          "steps": 6939
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "FA3 Hopper attention for faster training",
+    "Two-phase test-time training with norm-only recalibration followed by selective-freeze block adaptation",
+    "Recalibration of activation distributions damaged by int6 quantization",
+    "Selective freezing to preserve SWA-averaged early blocks while adapting later blocks",
+    "Tight SWA combined with late QAT and pruning"
+  ],
+  "artifact_size": "15,704,756 bytes"
+}

@@ -1,0 +1,152 @@
+{
+  "pr_number": 533,
+  "title": "GPTQ + Short TTT \u2014 val_bpb 1.1207 (seed 1337)",
+  "author": "newjordan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1207,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers as part of the custom transformer architecture.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism used in the MLP blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary positional embeddings partially with a 16/64 setting.",
+        "parameters": {
+          "numerator": 16,
+          "denominator": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times MLP expansion with relu\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.002
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "SGD TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "freeze_blocks": 2,
+          "max_train_chunks": 50,
+          "ema_decay": 0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal weight initialization used in the base architecture."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Short TTT with SGD, no EMA, and only 50 training chunks to avoid late-chunk degradation",
+    "Proper zstd-22 compression to reduce artifact size",
+    "Disabled int8_sensitive to stay within the 16MB artifact limit",
+    "Maintained the same GPTQ pipeline and base architecture while slightly improving val_bpb"
+  ],
+  "artifact_size": "15.60 MB"
+}

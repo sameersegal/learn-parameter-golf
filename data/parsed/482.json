@@ -1,0 +1,152 @@
+{
+  "pr_number": 482,
+  "title": "Record: 10L CountInitBigram + XSA + PartialRoPE (val_bpb=1.1522)",
+  "author": "harsha-gouru",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1522,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6/int4 with zstd-22",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramLogitHead",
+        "description": "Count-initialized exact bigram logit lookup table used as a strong Markov prior before training; applied before logit softcap.",
+        "parameters": {
+          "size": "1024x1024"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "bigram logit table"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.4,
+          "every": 50,
+          "checkpoints": 22
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2800,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Int4 nibble packing/unpacking for signed values, storing two int4 values per byte to reduce bigram table size.",
+        "parameters": {
+          "packing": "two values per byte"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Count-initialized exact bigram logit head using corpus bigram transition probabilities as a strong Markov prior",
+    "Int4 nibble packing for the bigram logit table to halve storage cost",
+    "XSA on the last 4 layers",
+    "Partial RoPE on 16 of 64 dimensions",
+    "Layer-wise LN scaling by 1/sqrt(layer+1)"
+  ],
+  "artifact_size": "15.38 MB"
+}
