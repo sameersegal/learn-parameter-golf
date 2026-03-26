@@ -5,6 +5,7 @@ import Leaderboard from "@/components/Leaderboard";
 import RecordChart from "@/components/RecordChart";
 import TechFreqChart from "@/components/TechFreqChart";
 import LearningPath from "@/components/LearningPath";
+import CurrentRecord from "@/components/CurrentRecord";
 
 export default function Home() {
   const top10 = [...submissions]
@@ -30,6 +31,8 @@ export default function Home() {
       </p>
 
       <StatsCards />
+
+      <CurrentRecord />
 
       {/* Learning Path — the core value */}
       <div className="mb-10">
