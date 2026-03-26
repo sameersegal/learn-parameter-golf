@@ -1,0 +1,149 @@
+{
+  "pr_number": 840,
+  "title": "Record: 0.2873 BPB \u2014 Fine-Grained N-gram Cache (65K chunks)",
+  "author": "quietsmile",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.2873,
+  "architecture": "11L 512d GQA 8/4 Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8/4 head configuration",
+        "parameters": {
+          "heads": "8/4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3.0x",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA-4",
+        "description": "Uses XSA-4 architectural component",
+        "parameters": {
+          "variant": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with squared usage",
+        "parameters": {
+          "slope": 0.9,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash component for n-gram-related modeling",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "fine-grained n-gram cache chunked evaluation",
+        "parameters": {
+          "chunk_tokens": 65536,
+          "backoff_order": "2-9",
+          "hash_buckets": 4000000,
+          "score_first": true,
+          "cache_update_after_chunk": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive alpha for n-gram backoff cache, varying by model confidence and n-gram order",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-order multipliers for n-gram cache, suppressing low orders and boosting high orders",
+        "parameters": {
+          "low_orders_multiplier": 0.3,
+          "high_orders_multiplier": 2.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Perplexity-sorted shard ordering during training",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Reducing NGRAM_EVAL_CHUNK_TOKENS from 1,000,000 to 65,536 for much more frequent n-gram cache updates",
+    "Demonstrating that cache update frequency is the dominant factor in n-gram BPB performance",
+    "Score-first evaluation where the cache is updated only after each chunk is fully scored",
+    "Fine-grained backward-looking n-gram cache evaluation without TTT or additional compute"
+  ],
+  "artifact_size": "~13.4 MB"
+}

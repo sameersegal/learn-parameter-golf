@@ -1,0 +1,115 @@
+{
+  "pr_number": 184,
+  "title": "Record: Pre-Enrichment + Encoder Recurrence (val_bpb=1.1855)",
+  "author": "Idan3011",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1855,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "pre-enrichment block",
+        "description": "Two linear projections with GELU applied to embeddings before the transformer blocks to enrich representations.",
+        "parameters": {
+          "layers": 2,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Encoder blocks are reused for a second pass with RMS norm stabilization between passes, increasing effective depth without adding parameters.",
+        "parameters": {
+          "passes": 2,
+          "effective_layers": 15,
+          "physical_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "decoupled": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone embedding init",
+        "description": "Non-standard embedding initialization used for the token embeddings."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2500,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.02,
+          "decoupled": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "GELU pre-enrichment block before the transformer residual stream",
+    "2x encoder recurrence with RMS norm stabilization between passes",
+    "Demonstrated that encoder recurrence outperformed additional training steps under the same time budget",
+    "Sliding window evaluation with stride 64",
+    "Overtone embedding initialization"
+  ],
+  "artifact_size": "15.75MB"
+}

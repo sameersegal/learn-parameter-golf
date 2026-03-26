@@ -1,0 +1,73 @@
+{
+  "pr_number": 113,
+  "title": "Record: FP16 Embed + Sliding Window Eval + Warmdown Tuning (pending eval)",
+  "author": "JoeProAI",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.187,
+  "architecture": "Transformer",
+  "quantization": "int8 with fp16 embedding passthrough",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all weights except fp16 tok_emb.weight passthrough"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Keeps embedding and output head tied; embedding tensor is preserved in fp16 during quantization because it is especially sensitive.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "context_length": 960
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3600
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Learning-rate tuning with MATRIX_LR=0.06 to improve convergence under the wallclock cap.",
+        "parameters": {
+          "matrix_lr": 0.06
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "FP16 embedding passthrough during int8 quantization to reduce post-quantization BPB degradation",
+    "Sliding window evaluation with stride 64 to score validation tokens with much longer context",
+    "Warmdown and learning-rate tuning for better convergence within the 10-minute wallclock limit",
+    "Combined submission integrating multiple previously proven improvements"
+  ],
+  "artifact_size": null
+}

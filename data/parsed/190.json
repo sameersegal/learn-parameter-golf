@@ -1,0 +1,133 @@
+{
+  "pr_number": 190,
+  "title": "The Stinky Frost Recipe \u2014 1.1725 BPB",
+  "author": "newjordan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1725,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all weight matrices except embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Token embeddings are kept in FP16 and tied, preserving token distinguishability under int6 quantization.",
+        "parameters": {
+          "fp16": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending each token embedding with the previous token embedding.",
+        "parameters": {
+          "parameters": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based embedding table for consecutive token pairs to inject bigram context before the first transformer layer.",
+        "parameters": {
+          "buckets": 4096,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer key/value heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Custom MLP hidden size of 1344 to maximize capacity while fitting within the artifact size limit.",
+        "parameters": {
+          "mlp_hidden": 1344
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for all large linear layers, with zero-init output projections."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Int6 quantization with early QAT starting at 25% of training",
+    "FP16 tied embeddings to preserve token distinguishability under quantization",
+    "Custom MLP hidden size of 1344 to fit within the 16MB artifact limit",
+    "SmearGate learned embedding blending with previous-token context",
+    "BigramHash embedding for direct bigram context before the first transformer layer",
+    "Orthogonal initialization for large linear layers",
+    "Muon optimizer with decoupled weight decay",
+    "Sliding window evaluation with stride 64"
+  ],
+  "artifact_size": "15.58MB"
+}

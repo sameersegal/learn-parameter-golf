@@ -1,0 +1,12 @@
+{
+  "number": 844,
+  "title": "Submission: 12L SwiGLU + Batched PerDoc Q/K/V/Proj-LoRA 30-Pass",
+  "author": "preyam2002",
+  "body": "## Summary\n- 12-layer SwiGLU (3.75x=1280, ~36.2M params) with NorMuon + Polar Express Muon(5-step) + FA3 Hopper\n- Full GPTQ quantization (Hessian-aware Cholesky, actorder, 256-seq calibration, int8/int6/int5 mixed)\n- Batched per-document Q/K/V/Proj LoRA TTT: 30 all-batched passes, rank-8 attn + rank-16 LM-head, per-module LR scaling (Q 0.5x, K 0.3x, V 1.5x, Proj 0.2x, LM-head 2x, bias 3x)\n- 25-temperature diversity scoring (T\u00b10.52), progressive PonderTTT (25%/40%/50%/0%), baddbmm fused LoRA\n- Sliding window final pass (stride=48, shuffled, 15s reserve)\n- Soft-Round QAT, 5% pruning, EMA 0.997 + exp-SWA\n\n## Techniques\n- No global TTT \u2014 all eval time allocated to per-document LoRA adaptation\n- Per-batch LR cycling (5 candidates pass 0, 3 candidates passes 1-7)\n- Chunk diversity across passes: 256/512/1024/2048/4096\n- Front-loaded time allocation: pass 0 gets 3.0x, passes 1-7 get 1.5x\n\n## Test plan\n- [ ] Verify artifact + code fits within 16MB constraint\n- [ ] Run on 8xH100 SXM with 600s train + 600s eval budget\n- [ ] Validate BPB score\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-26T12:11:29Z",
+  "updated_at": "2026-03-26T12:38:18Z",
+  "submission_readme": null
+}

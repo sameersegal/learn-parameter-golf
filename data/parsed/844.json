@@ -1,0 +1,161 @@
+{
+  "pr_number": 844,
+  "title": "Submission: 12L SwiGLU + Batched PerDoc Q/K/V/Proj-LoRA 30-Pass",
+  "author": "preyam2002",
+  "status": "open",
+  "is_record": null,
+  "val_bpb": null,
+  "architecture": "12-layer SwiGLU Transformer",
+  "quantization": "mixed int8/int6/int5 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "12-layer SwiGLU model with widened hidden size (3.75x=1280).",
+        "parameters": {
+          "layers": 12,
+          "hidden_multiplier": 3.75,
+          "hidden_size": 1280
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "NorMuon": true,
+          "Polar Express Muon": "5-step",
+          "FA3 Hopper": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "passes": 30,
+          "rank_attn": 8,
+          "rank_lm_head": 16,
+          "modules": [
+            "Q",
+            "K",
+            "V",
+            "Proj",
+            "LM-head",
+            "bias"
+          ],
+          "lr_scaling": {
+            "Q": 0.5,
+            "K": 0.3,
+            "V": 1.5,
+            "Proj": 0.2,
+            "LM-head": 2.0,
+            "bias": 3.0
+          },
+          "batched": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 48,
+          "shuffled": true,
+          "reserve_seconds": 15
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "sparsity": 0.05
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "exp-SWA"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Progressive PonderTTT with front-loaded time allocation and per-batch LR cycling.",
+        "parameters": {
+          "pass0_fraction": 0.25,
+          "passes_1_to_7_fraction": 0.4,
+          "pass8_plus_fraction": 0.5,
+          "pass0_time_multiplier": 3.0,
+          "passes_1_to_7_time_multiplier": 1.5,
+          "lr_candidates_pass0": 5,
+          "lr_candidates_passes_1_to_7": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Chunk diversity across passes using multiple sequence chunk sizes.",
+        "parameters": {
+          "chunk_sizes": [
+            256,
+            512,
+            1024,
+            2048,
+            4096
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Soft-Round QAT.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "12-layer SwiGLU model with widened hidden size",
+    "NorMuon and Polar Express Muon optimization setup",
+    "Full GPTQ quantization with Hessian-aware Cholesky, actorder, and mixed int8/int6/int5 precision",
+    "Batched per-document LoRA test-time training on Q/K/V/Proj and LM-head",
+    "Per-module learning-rate scaling for LoRA adaptation",
+    "Progressive PonderTTT with front-loaded time allocation",
+    "Sliding-window final pass with shuffled stride-based evaluation",
+    "Soft-Round QAT, 5% pruning, and EMA plus exp-SWA"
+  ],
+  "artifact_size": null
+}

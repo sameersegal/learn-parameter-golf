@@ -1,0 +1,111 @@
+{
+  "pr_number": 53,
+  "title": "1.1888 BPB via SP-4096 compression + stride-64 sliding window",
+  "author": "kshitizz36",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1888,
+  "architecture": "Encoder-decoder Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied to reduce parameters and fit within the artifact budget.",
+        "parameters": {
+          "tie_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "reduced depth",
+        "description": "Reduced model depth to fit the larger vocabulary and embedding table within the 16MB limit.",
+        "parameters": {
+          "layers": 8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Used an SP-4096 tokenizer / dataset variant to improve compression ratio and reduce tokens per byte.",
+        "parameters": {
+          "vocab_size": 4096
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Disabled periodic validation during training to maximize training steps within the wallclock budget.",
+        "parameters": {
+          "val_loss_every": 0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "SP-4096 tokenizer with improved compression ratio",
+    "Stride-64 sliding window evaluation",
+    "Multiplicative stacking of tokenizer compression and evaluation-context improvements via the BPB formula",
+    "8-layer 512-dim GQA encoder-decoder with skip connections",
+    "Post-quant int8+zlib roundtrip evaluation"
+  ],
+  "artifact_size": "15.68MB"
+}

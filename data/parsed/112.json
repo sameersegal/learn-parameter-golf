@@ -1,0 +1,202 @@
+{
+  "pr_number": 112,
+  "title": "Depth Recurrence 5x3 d672 SwiGLU",
+  "author": "eb1386",
+  "status": "closed",
+  "is_record": null,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "5 unique transformer blocks are reused 3x for 15 effective layers, increasing effective depth via parameter sharing.",
+        "parameters": {
+          "unique_blocks": 5,
+          "reuse_factor": 3,
+          "effective_layers": 15
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Uses SwiGLU MLP instead of the baseline relu-squared MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA to the last 4 layers with a learned sigmoid gate controlling subtraction strength.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Blends each token embedding with the previous token embedding through a learned per-dimension gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a learned embedding table to inject bigram context.",
+        "parameters": {
+          "vocab_size": 4096,
+          "embedding_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary embeddings to only part of each head dimension, leaving the rest position-free.",
+        "parameters": {
+          "rotary_dimensions": 16,
+          "head_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "schedule": "cosine",
+          "description": "Cosine decay of layer norm scaling across depth."
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all large weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "final ~4% of training"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum": 0.92,
+          "warmup_steps": 1500,
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "short_step_budget": 4700
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization on all weight matrices with 1/sqrt(2L) scaling on output projections."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Depth recurrence with 5 unique transformer blocks reused 3 times for 15 effective layers",
+    "SwiGLU MLP replacing the baseline relu-squared architecture",
+    "Learned sigmoid-gated XSA applied to the last 4 layers",
+    "Cosine layer norm scaling schedule instead of inverse-sqrt decay",
+    "SmearGate and BigramHash for injecting bigram context",
+    "Partial RoPE using only 16 of 64 head dimensions",
+    "Late QAT for int6 quantization with straight-through estimation",
+    "EMA final weight averaging"
+  ],
+  "artifact_size": "under 16MB"
+}

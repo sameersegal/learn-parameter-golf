@@ -1,0 +1,90 @@
+{
+  "pr_number": 61,
+  "title": "warmdown-quantization val_bpb = 1.2154",
+  "author": "saml212",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.2154,
+  "architecture": "Transformer",
+  "quantization": "int8 post-training quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Keeps tok_emb.weight tied and stores it in fp16 during int8 export to reduce quantization damage.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses NTK-RoPE extrapolation with an optimal evaluation length shorter than maximum context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "context_length": 1408
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1408
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 20000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses FP16 tied embeddings during int8 export and reduces MLP hidden size to 992 to offset the added memory cost.",
+        "parameters": {
+          "mlp_hidden": 992
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Always-decaying LR schedule with WARMDOWN_ITERS=20000 to reduce post-training quantization penalty.",
+    "Keeping tied embeddings in fp16 during int8 export to preserve accuracy.",
+    "Using NTK-RoPE extrapolation at eval length 1408 as the best setting for well-trained models.",
+    "Finding an optimizer-warmdown interaction where MUON_BACKEND_STEPS=5 outperforms 7 under aggressive warmdown."
+  ],
+  "artifact_size": "15.91MB"
+}

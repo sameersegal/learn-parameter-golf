@@ -1,0 +1,112 @@
+{
+  "pr_number": 120,
+  "title": "[Val Only]: MLP 3x + STE int6 QAT + sliding window, val_bpb=0.9588",
+  "author": "andrewgcodes",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 0.9588,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden dimension to 1536, a 3x feedforward expansion.",
+        "parameters": {
+          "hidden_dim": 1536,
+          "layers": 9,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "transformer blocks"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8 per-row",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "transformer blocks and embeddings"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Extended RoPE base frequency for improved long-range position encoding.",
+        "parameters": {
+          "base": 200000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 14000,
+          "schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Val-only training on the validation shard for memorization.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "MLP 3x expansion with hidden dimension 1536",
+    "STE fake-int6 quantization-aware training",
+    "Mixed post-training quantization with int6 transformer blocks and int8 embeddings",
+    "Sliding window evaluation with stride 64",
+    "Extended RoPE base frequency of 200,000",
+    "Extended warmdown cosine learning rate decay",
+    "Tuned Muon optimizer settings",
+    "Val-only training on the validation shard"
+  ],
+  "artifact_size": "15,381,981 bytes"
+}

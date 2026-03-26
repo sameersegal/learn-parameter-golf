@@ -1,0 +1,220 @@
+{
+  "pr_number": 838,
+  "title": "Non-Record: 11L Parallel Muon + LN Scale + LeakyReLU\u00b2 MLP3x + Legal TTT \u2014 val_bpb 1.1215 (3-seed mean)",
+  "author": "aryanbhosale",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1215,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "momentum_schedule_end": 0.99,
+          "momentum_schedule_steps": 1500,
+          "newton_schulz_steps": 5,
+          "parameter_banking": true,
+          "async_reduce_scatter_all_gather": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x expansion MLP with LeakyReLU(0.5)^2 activation",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "Depth-dependent normalization scaling by 1/sqrt(layer_idx+1)",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature module",
+        "parameters": {
+          "dimensions": 1536,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the head dimensions",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention used in the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Caches V from layer 0 and blends via learned lambda",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gating on attention outputs",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections inspired by U-Net",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all weights with FP16 embedding passthrough"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx+1)"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Parallel Muon with parameter banking and batched Newton-Schulz updates",
+    "Depth-dependent LN Scale normalization",
+    "LeakyReLU(0.5)^2 MLP with 3x expansion",
+    "Legal score-first test-time training under inference_mode",
+    "EMA plus SWA model averaging",
+    "GPTQ-lite int6 quantization with per-row 5-percentile clip search",
+    "Flash Attention 3 and torch.compile(fullgraph=True) training stack"
+  ],
+  "artifact_size": "~15.85 MB"
+}

@@ -1,0 +1,129 @@
+{
+  "pr_number": 86,
+  "title": "Update: 11L MLP3x + WD=0.04 + zstd-22 (val_bpb 1.1502)",
+  "author": "aruniyer",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1502,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Widened MLP expansion to 3x for more capacity per layer.",
+        "parameters": {
+          "mlp_mult": 3,
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings with FP16 export for the embedding/head.",
+        "parameters": {
+          "vocab_size": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with 4 KV heads.",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings in attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT int6",
+        "bits": 6,
+        "scope": "all block weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adam_weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 1500
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer transformer with 3x MLP expansion",
+    "Int6 quantization-aware training with STE fake quantization",
+    "Decoupled weight decay of 0.04 on both Muon and AdamW",
+    "FP16 tied embedding export to preserve embedding/head quality",
+    "zstd-22 compression to fit the larger model under the 16MB limit",
+    "Sliding window evaluation with stride 64 for improved val_bpb",
+    "Higher Muon momentum with warmup from 0.92 to 0.99"
+  ],
+  "artifact_size": "15.4MB"
+}

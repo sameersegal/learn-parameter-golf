@@ -1,0 +1,108 @@
+{
+  "pr_number": 146,
+  "title": "Non-record: Warmdown-Tuned Training (val_bpb=1.2987) on 1xRTX 5090",
+  "author": "swapp1990",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.2987,
+  "architecture": "GPT",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings in the GPT model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "layer looping",
+        "description": "Explores looping a smaller set of unique layers to form a wider/deeper effective model.",
+        "parameters": {
+          "unique_layers": 6,
+          "model_dim": 608,
+          "looped_layers": 9
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "muon_momentum_warmup_steps": 50,
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.04,
+          "tied_embed_lr": 0.05
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Register token experiments were tested in multiple variants and found not to improve overall BPB.",
+        "parameters": {
+          "variants_tested": 3
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Identified warmdown_iters=3000 as the best learning-rate warmdown setting.",
+    "Showed that warmdown provides disproportionate BPB improvement per training step.",
+    "Tested register token approaches and ruled them out as ineffective at this scale.",
+    "Observed that longer warmdown revived a dead middle layer (layer 3).",
+    "Explored layer looping and a wider model as a follow-up direction.",
+    "Fit the submission under the 16MB artifact limit with int8+zlib roundtrip."
+  ],
+  "artifact_size": "15.8MB"
+}

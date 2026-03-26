@@ -1,0 +1,110 @@
+{
+  "pr_number": 51,
+  "title": "[WIP] Depth-recurrent QAT: 3x4 loops, 768d, 15.6MB artifact",
+  "author": "hacksurvivor",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 2.0799,
+  "architecture": "Depth-recurrent Transformer",
+  "quantization": "STE QAT int8",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 shared transformer blocks looped 4x to create 12 effective layers from 3 stored blocks.",
+        "parameters": {
+          "stored_blocks": 3,
+          "loops": 4,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses fp16 tied embedding export for the embedding/output head.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-loop LoRA",
+        "description": "Rank-4 LoRA adapters on Q/V projections for loop specialization across virtual layers.",
+        "parameters": {
+          "rank": 4,
+          "targets": [
+            "Q",
+            "V"
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "LAWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "LoRA params"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 400
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth recurrence with 3 shared blocks looped 4 times to increase effective depth under a parameter budget",
+    "Wider 768-dimensional model enabled by freed parameter budget",
+    "Per-loop rank-4 LoRA adapters on Q and V projections for specialization",
+    "Quantization-aware training with STE fake-quantization in CastedLinear to reduce post-quantization degradation",
+    "LAWA weight averaging during warmdown for quality improvement",
+    "fp16 tied embedding export to preserve output head quality"
+  ],
+  "artifact_size": "15.6 MB"
+}

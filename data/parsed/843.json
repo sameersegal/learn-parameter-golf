@@ -1,0 +1,117 @@
+{
+  "pr_number": 843,
+  "title": "Record: Order-12 N-gram Backoff + 256K Chunks \u2014 0.2834 BPB",
+  "author": "quietsmile",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.2834,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA-4 as part of the model architecture.",
+        "parameters": {
+          "variant": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Includes a BigramHash component with 4096 buckets.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses an expanded MLP with 3.0x width.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "LZMA",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "n-gram backoff cache",
+        "parameters": {
+          "order": 12,
+          "chunk_tokens": 256000,
+          "alpha_max": 0.7,
+          "hash_primes_added": 6
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive n-gram mixing with per-order multipliers and score-first cache updates after each chunk.",
+        "parameters": {
+          "score_first": true,
+          "cache_update_timing": "after scoring each chunk",
+          "low_order_multiplier": 0.3,
+          "high_order_multiplier": 2.0
+        }
+      }
+    }
+  ],
+  "compression": "LZMA",
+  "novel_contributions": [
+    "Extended eval-time n-gram backoff from order 9 to order 12",
+    "Added 6 additional hash primes for the n-gram cache",
+    "Reduced eval chunk size from 1M to 256K tokens for faster cache refresh",
+    "Increased alpha_max from 0.60 to 0.70 for stronger high-entropy n-gram mixing",
+    "Purely eval-time changes with no training modifications",
+    "Score-first compliant cache updates only after scoring each chunk"
+  ],
+  "artifact_size": "~13.4 MB"
+}

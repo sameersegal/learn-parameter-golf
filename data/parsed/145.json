@@ -1,0 +1,69 @@
+{
+  "pr_number": 145,
+  "title": "Non-record: QAT ablation \u2014 int8 QAT overhead exceeds quantization gap recovery",
+  "author": "mrdavtan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.2052,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 1200
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied input/output embeddings as part of the baseline 9L\u00d7512d architecture.",
+        "parameters": {
+          "layers": 9,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-through estimator fake-quantization inserted into linear layers during training to match export-time int8 quantization exactly.",
+        "parameters": {
+          "qat_start_step": 6000,
+          "qat_fraction": 0.3
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Clean ablation of per-row int8 quantization-aware training on the baseline 9L\u00d7512d model.",
+    "Exact percentile-matching QAT implementation using the same clipping percentile and per-row scale as export quantization.",
+    "Measured that torch.quantile-based QAT adds about 20% per-step overhead, reducing total training steps under the 10-minute budget.",
+    "Identified that int8 QAT did not recover enough quantization gap to offset the lost training progress.",
+    "Observed a torch.compile graph priming pitfall where pre-compiling both QAT and non-QAT paths slowed the non-QAT forward pass."
+  ],
+  "artifact_size": "15,868,103 bytes"
+}

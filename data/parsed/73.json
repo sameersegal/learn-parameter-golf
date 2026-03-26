@@ -1,0 +1,95 @@
+{
+  "pr_number": 73,
+  "title": "Non-record: SwiGLU + warmdown fix + quarter batch (1x5090, 1.3281 bpb)",
+  "author": "NishantDahal",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.3281,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP activation",
+        "description": "Replaced ReLU\u00b2 with SwiGLU gating in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.2,
+          "fix": "time-fraction based warmdown instead of iteration-based warmdown_iters=1200"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP hidden size",
+        "description": "Reduced MLP hidden dimension to fit artifact budget.",
+        "parameters": {
+          "hidden_size": 640
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reduced batch size to quarter batch (131K tokens) to increase optimizer steps within fixed wall-clock time.",
+        "parameters": {
+          "train_batch_tokens": 131072
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Used gradient accumulation to increase effective batch size without increasing per-step memory.",
+        "parameters": {
+          "grad_accum_steps": 2
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "layer recurrence",
+        "description": "Reused layers to create depth recurrence, effectively doubling depth by reusing weights.",
+        "parameters": {
+          "repeats": 2
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Identified and fixed a warmdown schedule bug in stock train_gpt.py where iteration-based warmdown caused LR decay from step 1 under the wall-clock cap.",
+    "Applied SwiGLU activation in place of ReLU\u00b2.",
+    "Used quarter batch size to obtain more optimizer steps within the same wall-clock budget.",
+    "Used gradient accumulation to improve effective batch size.",
+    "Explored reduced MLP hidden size to stay within the 16MB artifact cap.",
+    "Reported negative results for weight decay and layer recurrence."
+  ],
+  "artifact_size": "15.3MB"
+}

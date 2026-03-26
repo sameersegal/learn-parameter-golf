@@ -1,0 +1,82 @@
+{
+  "pr_number": 57,
+  "title": "Add mirror recurrence non-record submission",
+  "author": "cschubiner",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 2.23647175,
+  "architecture": "Transformer",
+  "quantization": "int8+zlib",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses 9 unique transformer blocks across 18 logical layers with mirrored encoder/decoder recurrence (forward 0..8, reverse 8..0).",
+        "parameters": {
+          "layers": 18,
+          "unique_layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares transformer block weights across multiple logical layers to keep parameter count nearly unchanged.",
+        "parameters": {
+          "unique_layers": 9,
+          "logical_layers": 18
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": {
+          "enabled": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all tensor state"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Serialization fix to exclude non-tensor schedule state from export so only tensor state is quantized and compressed.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Mirrored recurrent depth: encoder uses blocks 0..8 and decoder reuses them in reverse order 8..0.",
+    "Reuses 9 unique transformer blocks across 18 logical layers to increase depth without increasing parameter count much.",
+    "Serialization fix that exports only tensor state and excludes Python schedule lists from the artifact.",
+    "Keeps the int8+zlib submission comfortably under the 16 MB cap."
+  ],
+  "artifact_size": "8040848 bytes"
+}
