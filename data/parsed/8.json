@@ -1,0 +1,100 @@
+{
+  "pr_number": 8,
+  "title": "Add depth recurrence + SwiGLU submission (Apple M3 8GB)",
+  "author": "iranzithierry",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses 4 unique transformer blocks 3 times each to create 12 effective layers with shared weights.",
+        "parameters": {
+          "unique_layers": 4,
+          "recurrence_factor": 3,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Replaces the baseline relu\u00b2 MLP with a gated SiLU/SwiGLU feed-forward network for better parameter efficiency.",
+        "parameters": {
+          "hidden_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight sharing",
+        "description": "Shares transformer block weights across recurrent passes to save artifact space.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "attention_heads": 10,
+          "kv_heads": 4,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Preserves encoder-decoder skip connections from the baseline, storing skip tensors in the encoder half and consuming them in reverse order in the decoder half.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Wider model enabled by weight sharing, increasing model dimension to 640 and attention heads to 10.",
+        "parameters": {
+          "model_dim": 640,
+          "attention_heads": 10
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depth recurrence with 4 unique transformer blocks reused 3 times for 12 effective layers",
+    "SwiGLU MLP replacing relu\u00b2 for improved parameter efficiency",
+    "Per-recurrence learnable gate scalars for specialization",
+    "Wider model enabled by weight sharing (640 dim, 10 heads)",
+    "U-Net style skip connections preserved from the baseline",
+    "Gradient clipping added for stability with recurrent depth"
+  ],
+  "artifact_size": null
+}

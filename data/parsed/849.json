@@ -1,0 +1,278 @@
+{
+  "pr_number": 849,
+  "title": "Record: 11L Int5 + 6-Expert HedgeMixer + LeakyReLU(0.9)^2 + TTT (val_bpb=1.1105)",
+  "author": "dttdrv",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1105,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all blocks"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3.5x MLP with LeakyReLU(0.9)^2 activation",
+        "parameters": {
+          "hidden": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedAttention",
+        "description": "Per-head learned scalar gate in attention",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ValueResidual",
+        "description": "Per-block learned x0 injection / residual value path",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram feature embedding",
+        "parameters": {
+          "size": 8192,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ValueEmbedding",
+        "description": "Value embedding used on later layers",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scaling modification",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net encoder-decoder",
+        "description": "U-Net style encoder-decoder with learned skip weights",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "adamw_weight_decay": 0.04,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "momentum_schedule": "0.92->0.99",
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "Tight SWA",
+          "scale_threshold": 0.2,
+          "every_n_steps": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 4,
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "freeze_blocks": 2,
+          "byte_weighted": true,
+          "polyak_averaging": 0.998,
+          "adaptive_cosine_lr": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Used with muP initialization scheme"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "CROWN-Q",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "Late QAT soft-round STE",
+        "parameters": {
+          "quantization_bits": 5,
+          "scale_threshold": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "6-expert Hedge context mixer combining neural, unigram, bigram, trigram, 4-gram, and entropy experts",
+        "parameters": {
+          "experts": 6
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "6-expert HedgeMixer context mixer",
+    "LeakyReLU(0.9)^2 activation",
+    "GatedAttention with per-head learned scalar gates",
+    "ValueResidual and XSA across all 11 layers",
+    "Partial RoPE with 16/64 dimensions",
+    "BigramHash and ValueEmbedding features",
+    "Late QAT soft-round with CROWN-Q regularization",
+    "GPTQ int5 quantization with 3% pruning and zstd-22 compression",
+    "Score-first TTT with byte-weighted loss and Polyak averaging"
+  ],
+  "artifact_size": "15.95 MB"
+}

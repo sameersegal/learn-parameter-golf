@@ -1,0 +1,198 @@
+{
+  "pr_number": 851,
+  "title": "submission: Order-Adaptive N-gram Cache \u2014 0.2071 BPB",
+  "author": "RoyiRa",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.2071,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added hashed n-gram / bigram cache component with multi-order backoff and order-adaptive gating.",
+        "parameters": {
+          "orders": "2-9",
+          "buckets": 4000000,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA across all layers.",
+        "parameters": {
+          "layers": 11,
+          "window_size": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP with LeakyReLU-based nonlinearity.",
+        "parameters": {
+          "multiplier": 3.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Added VE128 in upper layers.",
+        "parameters": {
+          "layers": "9-10"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0001,
+          "epochs": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 4,
+          "learning_rate": 0.0001,
+          "freeze_blocks": 2,
+          "chunk_tokens": 131072
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "adaptive cosine decay",
+        "parameters": {
+          "adaptive_lr": true,
+          "adaptive_lr_max": 3.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "CROWN-Q penalty",
+        "parameters": {
+          "lambda": 0.01
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "pct": 0.05,
+          "type": "magnitude"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-adaptive entropy gating for n-gram cache with per-order thresholds and alpha multipliers.",
+        "parameters": {
+          "high_order": 9,
+          "low_order": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Full-chunk cache sharing across all GPU ranks to increase n-gram data per rank.",
+        "parameters": {
+          "ranks": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adaptive temperature sharpening applied per token to compensate for under-confidence after quantization.",
+        "parameters": {
+          "temperature": 0.85
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Online logit calibration using momentum-EMA of empirical frequency versus predicted probability.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "5-expert Hedge mixer combining neural, unigram, bigram, trigram, and entropy experts.",
+        "parameters": {
+          "eta": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Order-adaptive entropy gating for n-gram cache",
+    "Multi-order n-gram backoff cache with orders 2-9",
+    "Full-chunk cache sharing across 8 GPU ranks",
+    "Score-first test-time training with Polyak EMA",
+    "Adaptive temperature sharpening",
+    "Online logit calibration",
+    "5-expert Hedge mixer",
+    "CROWN-Q plus GPTQ int5 with pruning and zstd compression"
+  ],
+  "artifact_size": "~15.5 MB"
+}

@@ -1,0 +1,111 @@
+{
+  "pr_number": 38,
+  "title": "[wip] depth-recurrent QAT: 3x3 shared blocks + LoRA",
+  "author": "kxddry",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 2.962,
+  "architecture": "Transformer",
+  "quantization": "STE QAT int8",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 shared transformer blocks are looped 3 times to create 9 effective layers while reducing unique parameters.",
+        "parameters": {
+          "shared_blocks": 3,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Per-iteration low-rank adaptation deltas are applied to shared blocks.",
+        "parameters": {
+          "rank": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware RoPE scaling is used for extended evaluation context.",
+        "parameters": {
+          "eval_length": 2048
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "LAWA",
+        "parameters": {
+          "enabled": true,
+          "interval": 100
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Byte grouping separates int8 weights from fp16 scales before compression to improve artifact size.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth-recurrent transformer with 3 shared blocks looped 3 times",
+    "Per-iteration LoRA deltas for shared blocks",
+    "Quantization-aware training with STE fake-quantization in CastedLinear",
+    "Byte grouping compression separating int8 weights from fp16 scales",
+    "Model widening from 512 to 768 using freed parameter budget",
+    "LAWA checkpoint averaging",
+    "NTK-aware RoPE scaling for 2048-token evaluation"
+  ],
+  "artifact_size": "4.12MB"
+}

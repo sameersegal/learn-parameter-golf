@@ -1,0 +1,124 @@
+{
+  "pr_number": 856,
+  "title": "Progressive Depth + Hedge Mixer \u2014 val_bpb 1.1454",
+  "author": "iverbovoy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1454,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaced unique transformer blocks with shared blocks repeated across depth to create effective deeper computation with fewer unique parameters.",
+        "parameters": {
+          "blocks": 3,
+          "repeats": 4,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "cross-repeat skip",
+        "description": "Adds a weighted residual from the previous repeat to make the recurrent depth stateful.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "value embeddings",
+        "description": "Adds two extra embedding tables mixed into the residual stream at each effective layer with learned scales.",
+        "parameters": {
+          "tables": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "loop embedding",
+        "description": "Learns a per-layer vector added before each block as depth-wise positional encoding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads with 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256,
+          "window": 1024
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hedge Mixer online ensemble at eval time combining neural, unigram, bigram, trigram, and entropy experts via Hedge algorithm using only already-scored tokens.",
+        "parameters": {
+          "experts": 5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Progressive depth / depth recurrence with shared transformer blocks",
+    "Cross-Repeat Skip for stateful recurrent depth",
+    "Value embeddings mixed into the residual stream",
+    "Loop embedding as depth-wise positional encoding",
+    "Hedge Mixer online ensemble at evaluation time",
+    "Sliding-window evaluation with stride 256",
+    "Learning-rate and warmdown tuning"
+  ],
+  "artifact_size": "15.88MB"
+}

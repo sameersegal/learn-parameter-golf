@@ -1,0 +1,85 @@
+{
+  "pr_number": 855,
+  "title": "Non-Record: First Viable 3-Loop Recurrence \u2014 Birkhoff + Output-LN + Timestep Scaling (val_bpb=1.2659, 14 eff layers from 6 unique blocks)",
+  "author": "aazizyan",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.2659,
+  "architecture": "Transformer",
+  "quantization": "int8 post-quantization with float16 passthrough params",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses 1 prelude + 4 shared blocks repeated for 3 loops + 1 coda, yielding 14 effective layers from 6 unique blocks.",
+        "parameters": {
+          "prelude": 1,
+          "shared_blocks": 4,
+          "loops": 3,
+          "coda": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Output-LN",
+        "description": "Moves RMSNorm from MLP input to MLP output so shared weights can distinguish loop iterations by magnitude.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Birkhoff mixing",
+        "description": "Replaces learned residual mixing with a sigmoid-constrained convex combination to keep spectral norm <= 1.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "timestep scaling",
+        "description": "Per-iteration learned scale vectors applied across loops, capped to a fixed range.",
+        "parameters": {
+          "cap": 4.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights with float16 passthrough for timestep gammas"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.5)^2 activation used to preserve negative signal through quadratic activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "First viable 3-loop recurrence in the competition",
+    "Output-LN to prevent magnitude erasure across recurrent iterations",
+    "Birkhoff-constrained residual mixing to stabilize recurrence and limit spectral blowup",
+    "Capped timestep scaling with float16 passthrough to reduce quantization gap",
+    "Demonstration that these techniques can reduce catastrophic quantization amplification in recurrent depth models"
+  ],
+  "artifact_size": "10.7 MB"
+}

@@ -1,0 +1,165 @@
+{
+  "pr_number": 857,
+  "title": "Record: 15L Depth Recurrence + LeakyReLU\u00b2 + Cosine TTT (3-seed mean val_bpb=1.1093)",
+  "author": "aruniyer",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.1093,
+  "architecture": "Transformer",
+  "quantization": "int6 + zstd",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Ties layers 9-13 to share one physical block, creating 15 effective layers from 11 unique blocks.",
+        "parameters": {
+          "layers": 5,
+          "effective_layers": 15,
+          "unique_blocks": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2",
+        "description": "Uses squared LeakyReLU activation to preserve negative gradient flow through the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 20,
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "phase": "test-time training",
+          "epochs": 20
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention variant in the base architecture.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings.",
+        "parameters": {
+          "train": 16,
+          "total": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Additional gating mechanism in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component for token/feature processing.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN Scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "all"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "BI-guided depth recurrence using Block Influence scores to identify redundant layers",
+    "Layer tying of positions 9-13 to share one physical block while preserving per-layer scalars",
+    "Deduplication-aware quantization/export that stores tied weights once with a reconstruction map",
+    "Combination of LeakyReLU(0.5)^2 with cosine test-time training",
+    "15 effective layers from 11 unique blocks within the artifact budget"
+  ],
+  "artifact_size": "15.75 MB"
+}

@@ -1,0 +1,12 @@
+{
+  "number": 6,
+  "title": "Please delete this PR",
+  "author": "JF10R",
+  "body": "Opened by mistake by an automated agent. Please delete this PR and its branch. Apologies for the noise.",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-18T18:26:40Z",
+  "updated_at": "2026-03-18T18:34:32Z",
+  "submission_readme": "# QAT + GradClip Conservative\n\n## What changed from baseline\n\nThis submission modifies **only the training procedure** -- no architectural changes to the 9-layer, dim-512 transformer with ReLU^2 MLP.\n\nTwo changes:\n\n1. **Quantization-Aware Training (QAT)** via straight-through estimator (STE), activated during the last 30% of wallclock time (configurable via `QAT_START_FRAC`).\n2. **Gradient clipping** default changed from 0.0 (disabled) to 1.0.\n\n## Why QAT helps\n\nThe baseline loses ~0.0072 BPB when post-training quantization converts fp32 weights to int8. QAT uses a straight-through estimator to simulate int8 per-row quantization during training: the forward pass sees quantized weights, but gradients flow through as if quantization didn't happen. This teaches the model to place its weights in regions that survive int8 rounding, recovering most of the quantization gap.\n\nQAT is applied to:\n- All `CastedLinear` layers (attention Q/K/V projections, output projections, MLP layers)\n- The tied embedding weight when used as the lm_head projection\n\nQAT activates at 70% of wallclock time by default, giving the model time to converge to good weights before fine-tuning for quantization robustness.\n\n## Why gradient clipping helps\n\nGradient clipping at norm 1.0 prevents occasional large gradient spikes from destabilizing training, especially during the Muon optimizer's Newton-Schulz orthogonalization. This is a standard stabilization technique that costs almost nothing in compute.\n\n## Risk level\n\nThis is the **lowest-risk variant** -- no model architecture changes, no new hyperparameters that affect model capacity, and both techniques are well-established in the literature. The only risk is that QAT adds a small amount of noise during the last 30% of training, but the STE formulation ensures gradients remain unbiased.\n\n## Hyperparameters\n\n| Parameter | Default | Description |\n|-----------|---------|-------------|\n| `GRAD_CLIP_NORM` | 1.0 | Max gradient norm (0 = disabled) |\n| `QAT_START_FRAC` | 0.70 | Fraction of wallclock after which QAT activates |\n"
+}

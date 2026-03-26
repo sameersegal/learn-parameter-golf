@@ -1,0 +1,190 @@
+{
+  "pr_number": 860,
+  "title": "Learned Routing + Two-Pass N-gram Rescoring + Extended Orders (2-12)",
+  "author": "pappanick",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "learned routing head",
+        "description": "Linear(512, 12) routing head trained end-to-end to mix one neural expert with 11 n-gram experts.",
+        "parameters": {
+          "input_dim": 512,
+          "output_dim": 12,
+          "neural_experts": 1,
+          "ngram_orders": 11
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "two-pass rescoring",
+        "parameters": {
+          "rescore_chunks": 15,
+          "cold_cache_only": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "extended n-gram orders",
+        "description": "Uses n-gram experts for orders 2 through 12 instead of fewer orders.",
+        "parameters": {
+          "min_order": 2,
+          "max_order": 12,
+          "num_orders": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses larger hash tables to reduce collisions in the n-gram cache.",
+        "parameters": {
+          "bucket_count": 8388608
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings only to part of the dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention in all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE",
+        "description": "Variance expansion applied to selected late layers.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Uses U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU activation with squared application in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "type": "tight",
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "enabled": true,
+          "learning_rate": 0.0005,
+          "epochs": 4,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2,
+          "momentum": 0.9,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Frozen n-gram oracle used to train the learned routing head end-to-end.",
+        "parameters": {
+          "mixer_loss_weight": 0.1,
+          "neural_floor": 0.05
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Combines learned multi-expert routing with two-pass cold-cache rescoring",
+    "Extends n-gram expert orders from 2-7 to 2-12",
+    "Uses 8M bucket hash tables to reduce n-gram collisions",
+    "Applies two-pass rescoring to the first 15 chunks where the cache is near-empty",
+    "Trains a Linear(512, 12) routing head end-to-end against a frozen n-gram oracle",
+    "Uses per-order minimum count thresholds for sparse higher-order n-grams",
+    "Routes between one neural expert and eleven n-gram experts"
+  ],
+  "artifact_size": "~15.9 MB"
+}

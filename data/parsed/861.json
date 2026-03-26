@@ -1,0 +1,138 @@
+{
+  "pr_number": 861,
+  "title": "Non-record: 11L Int5 QAT + Score-First TTT \u2014 val_bpb 1.1326 (15.51 MB)",
+  "author": "JoeProAI",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.13256182,
+  "architecture": "11-layer U-Net GPT",
+  "quantization": "int5 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5 QAT",
+        "bits": 5,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention applied across all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding added to token embeddings.",
+        "parameters": {
+          "buckets": 4096,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "scalars"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0004,
+          "epochs": 1,
+          "params": "MLP-only (up_proj, down_proj, gate_proj, scale)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 6000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight pruning",
+        "parameters": {
+          "sparsity": 0.15,
+          "description": "Prune smallest weights before quantization for better compression."
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Full U-Net style model with skip connections and SwiGLU MLPs.",
+        "parameters": {
+          "encoder_layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "decoder_layers": [
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "dim": 512,
+          "heads": 8,
+          "mlp_hidden": 1536
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int5 QAT with per-row scaling and percentile clipping",
+    "Score-first legal test-time training",
+    "Reduced MLP hidden size to fit under 16 MB",
+    "15% pre-quantization weight pruning for improved compression",
+    "Bigram hash embedding augmentation",
+    "XSA on all 11 layers",
+    "Extended warmdown for better int5 clustering"
+  ],
+  "artifact_size": "15.51 MB"
+}

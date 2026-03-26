@@ -1,0 +1,182 @@
+{
+  "pr_number": 850,
+  "title": "Record: 0.3212 BPB \u2014 Complementary N-gram 65K + Int5 GPTQ + LoRA TTT",
+  "author": "callithyia",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.3212,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash 4096-bucket embedding used in the model architecture.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3.0x expansion and LeakyReLU(0.9) squared.",
+        "parameters": {
+          "expansion": 3.0,
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual Learning",
+        "description": "Value Residual Learning applied across layers 1-10.",
+        "parameters": {
+          "layers": [
+            1,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Gated Attention with bias 4.0 on all layers.",
+        "parameters": {
+          "bias": 4.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz": 5,
+          "per_group_banking": true,
+          "encoder_lr": 0.025,
+          "decoder_lr": 0.05
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "order-9 n-gram backoff cache",
+        "parameters": {
+          "orders": [
+            2,
+            9
+          ],
+          "chunk_size": 65536,
+          "cache_buckets": 4000000,
+          "entropy_adaptive_alpha_blending": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "qv_blocks": [
+            9,
+            10
+          ],
+          "learning_rate": 0.003,
+          "polyak_decay": 0.998,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "WSD",
+        "parameters": {
+          "stable_fraction": 0.75,
+          "decay": "cosine"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training that downweights bigram-predictable tokens during training.",
+        "parameters": {
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT with Soft-Round quantization-aware training triggered near the end of training.",
+        "parameters": {
+          "trigger_fraction": 0.85
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Complementary training combined with an order-9 n-gram cache",
+    "65K-token chunks for more frequent cache refreshes",
+    "Full Hessian GPTQ int5 with LZMA compression",
+    "LoRA test-time training with Polyak averaging and score-first backward-looking protocol",
+    "Per-order entropy centers and multipliers for n-gram alpha computation"
+  ],
+  "artifact_size": "~14.9 MB"
+}

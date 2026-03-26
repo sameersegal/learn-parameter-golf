@@ -1,0 +1,69 @@
+{
+  "pr_number": 42,
+  "title": "fp16 tied embedding + warmdown/LR tuning (val_bpb 1.2197)",
+  "author": "chonchiog",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.2197,
+  "architecture": "Transformer",
+  "quantization": "fp16 tied embedding passthrough with int8 quantization for the rest",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings / output head"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept the tied token embedding in fp16 because it also serves as the output head, reducing quantization loss.",
+        "parameters": {
+          "tie_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP hidden size",
+        "description": "Reduced MLP hidden dimension to fit under the 16MB artifact limit.",
+        "parameters": {
+          "mlp_hidden": 992
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3600
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Increased matrix learning rate to better match the short 10-minute training budget.",
+        "parameters": {
+          "matrix_lr": 0.06
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Kept the tied embedding in fp16 during export instead of int8 quantizing it.",
+    "Reduced quantization gap from about 0.007 BPB to about 0.0005 BPB.",
+    "Shrank MLP hidden size from 1024 to 992 to stay under the 16MB limit.",
+    "Tuned warmdown from 1200 to 3600 steps.",
+    "Increased matrix learning rate from 0.04 to 0.06.",
+    "Observed that disabling NCCL_IB_DISABLE improves throughput on IB/NVLink pods."
+  ],
+  "artifact_size": "15.90MB"
+}

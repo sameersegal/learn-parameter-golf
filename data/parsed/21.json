@@ -1,0 +1,115 @@
+{
+  "pr_number": 21,
+  "title": "Improved baseline: recurrent depth + LoRA + MTP",
+  "author": "monroestephenson",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "5 unique transformer layers are looped 2x to create 10 effective layers with weight sharing.",
+        "parameters": {
+          "unique_layers": 5,
+          "recurrence": 2,
+          "effective_layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query style attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU MLP",
+        "description": "Replaces the previous ReLU-squared MLP with a parameter-neutral SwiGLU variant.",
+        "parameters": {
+          "mlp_mult": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Adds per-loop rank-16 LoRA adapters on attention Q/K/V/O projections for loop-specific specialization.",
+        "parameters": {
+          "rank": 16,
+          "targets": [
+            "Q",
+            "K",
+            "V",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-recurrence learned scales",
+        "description": "Each effective layer gets a learned scale vector so shared blocks can distinguish recurrence passes.",
+        "parameters": {
+          "layers": 10,
+          "dimension": 704
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "start_step": null
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adds multi-token prediction auxiliary heads during training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth recurrence with 5 unique transformer layers looped twice to achieve 10 effective layers",
+    "Wider 704-dimensional model enabled by parameter savings from weight sharing",
+    "Per-loop LoRA adapters on attention projections",
+    "SwiGLU MLP replacement",
+    "Multi-token prediction auxiliary heads",
+    "EMA averaging with a fix to avoid serializing near-initial weights on short runs",
+    "Per-recurrence learned scale vectors for shared blocks"
+  ],
+  "artifact_size": "9.0 MB"
+}
