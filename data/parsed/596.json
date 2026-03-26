@@ -1,0 +1,195 @@
+{
+  "pr_number": 596,
+  "title": "Record: DeepQuant V10b \u2014 11L INT6 + 8ep LoRA TTT (val_bpb=0.6430)",
+  "author": "AriaAnima",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 0.643,
+  "architecture": "Transformer",
+  "quantization": "INT6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds hashed bigram context via BigramHash(2048) and SmearGate.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Parameter-efficient gating mechanism used with bigram context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the transformer blocks.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads with 8 attention heads (GQA).",
+        "parameters": {
+          "attention_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses U-Net skip connections between encoder/decoder layer pairs and depth-scaled residuals.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_whitening": true,
+          "adamw_for_scalars_embeddings": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "every_steps": 10
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 12,
+          "phase": "final warmdown"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank_qv": 8,
+          "rank_lm_head": 16,
+          "epochs": 8,
+          "learning_rate": 0.01,
+          "chunk_size": 256,
+          "batch_size": 64,
+          "min_doc_length": 512,
+          "max_doc_length": 50000,
+          "temperature": 0.98,
+          "bias_tuning": true,
+          "score_every_epoch": true,
+          "wall_clock_limit_s": 570
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "wallclock_based": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "min_lr_fraction": 0.1,
+          "within_ttt": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "magnitude_pruning_percent": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Zigzag GPU load balancing across 8 GPUs to reduce synchronization bottlenecks.",
+        "parameters": {
+          "gpus": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Outlier document filtering: documents over 50,000 tokens are scored with the base model without TTT.",
+        "parameters": {
+          "max_doc_length": 50000
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "8-epoch per-document LoRA test-time training",
+    "Score-every-epoch backward-looking TTT compliance",
+    "Cosine learning-rate decay within TTT",
+    "LM-head LoRA rank-16 adaptation",
+    "Per-block bias tuning during TTT",
+    "Post-TTT temperature rescaling",
+    "Zigzag GPU load balancing",
+    "Outlier document filtering for very long documents",
+    "Wall-clock-limited TTT with base-model fallback"
+  ],
+  "artifact_size": "15.73 MB"
+}

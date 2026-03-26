@@ -1,0 +1,247 @@
+{
+  "pr_number": 809,
+  "title": "Record: Chunk-Based N-gram Backoff + Score-First TTT (0.295 BPB)",
+  "author": "AayushBaniya2006",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.29519,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all weights / exported model"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention on the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending current and previous token embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram feature module with bucketed representation",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3.0x the model dimension",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 query heads and 4 KV heads",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.9)^2",
+        "description": "Leaky ReLU with negative slope 0.9 followed by squaring",
+        "parameters": {
+          "negative_slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for all 2D weight matrices"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "ns_steps": 5,
+          "banking": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.035,
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.025,
+          "scope": "scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "step_aware_warmup": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "chunk-based sequential evaluation",
+        "parameters": {
+          "chunk_tokens": 1000000
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "chunk_size": 2048,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive N-gram interpolation with per-order multipliers and score-first chunk-synchronized cache updates",
+        "parameters": {
+          "order": 9,
+          "alpha_min": 0.05,
+          "alpha_max": 0.6,
+          "min_count": 2,
+          "num_buckets": 4194304,
+          "chunk_tokens": 1000000
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Chunk-based order-9 N-gram backoff cache built incrementally from already-scored validation tokens",
+    "Score-first multi-GPU cache synchronization with all ranks updating after each chunk",
+    "Entropy-adaptive interpolation between model probabilities and N-gram probabilities",
+    "Per-order alpha multipliers that boost high-order matches and suppress low-order matches",
+    "Score-first TTT with LoRA rank 8 and hard enforcement of no hindsight selection",
+    "GPTQ int5 export to fit the artifact budget"
+  ],
+  "artifact_size": "13.4MB"
+}

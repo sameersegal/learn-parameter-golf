@@ -1,0 +1,12 @@
+{
+  "number": 805,
+  "title": "Int6 GPTQ-lite + LeakyReLU(0.5)^2 + EMA + 11L MLP3x",
+  "author": "zeytx",
+  "body": "## Summary\n\n- 11 transformer layers (vs 9 baseline) with 3x MLP expansion\n- LeakyReLU(0.5)^2 activation (~0.003 BPB improvement over ReLU^2)\n- Int6 per-row GPTQ-lite quantization with clip search + zstd-22 compression\n- Late QAT via STE (activates when LR scale < 0.15)\n- EMA weight averaging (decay 0.997)\n- GQA: 8 query heads, 4 KV heads\n\n## Results\n\n- **val_bpb: 1.1807** (pre-quantization, 8xH100 SXM, 9881 steps in 10 min)\n- Compressed model size: ~3.9 MB (well under 16MB limit)\n- 26.5M parameters\n\n## Run command\n\n```bash\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\nRequires `zstandard` package (`pip install zstandard`).",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-26T03:40:02Z",
+  "updated_at": "2026-03-26T03:40:03Z",
+  "submission_readme": "# Int6 GPTQ-lite + LeakyReLU(0.5)^2 + EMA + 11L MLP3x\n\n## Improvements over baseline\n\n| Change | Expected BPB Delta |\n|--------|-------------------|\n| 11 layers (vs 9) | -0.005 |\n| MLP 3x (vs 2x) | -0.005 |\n| LeakyReLU(0.5)^2 | -0.003 |\n| Int6 GPTQ-lite + zstd-22 | -0.005 |\n| Late QAT (STE, LR < 0.15) | -0.003 |\n| EMA (decay 0.997) | -0.005 |\n| Sliding window eval (stride 64) | -0.005 |\n\n## Run Command\n\n```bash\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\nSingle GPU test:\n```bash\ntorchrun --standalone --nproc_per_node=1 train_gpt.py\n```\n"
+}

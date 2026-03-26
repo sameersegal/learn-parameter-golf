@@ -1,0 +1,135 @@
+{
+  "pr_number": 593,
+  "title": "Record: Full GPTQ + LeakyReLU\u00b2 + Parallel Muon + BigramHash 3072 (val_bpb 1.1163, 3-seed mean)",
+  "author": "abaybektursun",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1163,
+  "architecture": "Transformer",
+  "quantization": "Full Hessian GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Expanded bigram hash table with narrower embeddings to fit the artifact budget while reducing collisions.",
+        "parameters": {
+          "buckets": 3072,
+          "dim": 80
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP variant using LeakyReLU squared activation.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA enabled in the last layers of the model.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "parameter_banking": true,
+          "async_reduce_scatter_all_gather": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": null,
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Full Hessian GPTQ with Hessian collection, actorder column reordering, and Cholesky error compensation.",
+        "parameters": {
+          "calibration_batches": 256
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Full Hessian GPTQ with actorder and Cholesky error compensation",
+    "Parallel Muon with parameter banking and communication overlap",
+    "BigramHash reallocation from 1536x128 to 3072x80 to reduce collisions under the artifact budget",
+    "LeakyReLU\u00b2 MLP variant",
+    "GPTQ memory fix by freeing the training model before Hessian collection"
+  ],
+  "artifact_size": "~15.90 MB"
+}

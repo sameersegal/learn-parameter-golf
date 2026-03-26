@@ -1,0 +1,215 @@
+{
+  "pr_number": 802,
+  "title": "10L + Multi-Order N-gram Backoff (0.9123 BPB)",
+  "author": "Bortlesboat",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9123,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT with zstd roundtrip",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed n-gram cache / bigram hash feature used in the model.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially.",
+        "parameters": {
+          "fraction": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN Scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU^2",
+        "description": "Uses LeakyReLU with slope 0.5 squared.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": 5,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "multi-order n-gram backoff",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "highest_matching_order_wins": true,
+          "score_first": true,
+          "min_count": 2
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "entropy-adaptive alpha",
+        "parameters": {
+          "formula": "alpha = 0.05 + 0.55 * sigmoid(2 * (H - 4.0))"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "targets": [
+            "lm_head",
+            "Q",
+            "V"
+          ]
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal initialization used for the model."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-first neural cache / hashed n-gram cache updated only after scoring each segment.",
+        "parameters": {
+          "cache_orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Multi-order n-gram backoff evaluation with highest-matching-order selection",
+    "Entropy-adaptive interpolation coefficient for cache/backoff scoring",
+    "Score-first cache update policy to avoid leakage",
+    "Hashed n-gram cache across orders 2 through 7",
+    "Mixed int5/int6 quantization with zstd roundtrip",
+    "Neural cache evaluation using cosine similarity over cached hidden states",
+    "Per-document LoRA test-time training on lm_head, Q, and V projections"
+  ],
+  "artifact_size": "15.63 MB"
+}

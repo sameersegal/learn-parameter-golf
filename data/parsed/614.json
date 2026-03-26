@@ -1,0 +1,168 @@
+{
+  "pr_number": 614,
+  "title": "Record: 0.6864 BPB \u2014 K-LoRA + Min-NLL + FlashAttention-3",
+  "author": "bigbag",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 0.6864,
+  "architecture": "Transformer",
+  "quantization": "late QAT int6 uniform",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate as an architectural component.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds BigramHash with 2048 buckets/features.",
+        "parameters": {
+          "dimensions": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses U-Net style skip connections in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 query heads and 4 key/value heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "compiled": true,
+          "newton_schulz": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "every_steps": 10
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank_qkv": 8,
+          "rank_lm_head": 16,
+          "learning_rate": 0.01,
+          "epochs": 6,
+          "batch_docs_per_gpu": 64,
+          "temperature": 0.98,
+          "deadline_seconds": 550,
+          "per_layer_lr_multipliers": {
+            "lm_head": 2.0,
+            "v": 1.5,
+            "q": 0.5,
+            "k": 0.3,
+            "bias": 3.0
+          }
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "per_step": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "min-NLL epoch selection",
+        "parameters": {
+          "select_best_epoch_per_document": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FlashAttention-3",
+        "description": "Uses flash attention for causal attention with a Rotary cache clone fix for CUDA graph compatibility.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "K-Projection LoRA",
+        "description": "Applies LoRA to K projections in addition to Q/V with a reduced learning-rate multiplier.",
+        "parameters": {
+          "k_lr_multiplier": 0.3
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "K-Projection LoRA applied to K projections with a 0.3x learning-rate multiplier",
+    "Min-NLL epoch selection across TTT epochs to avoid late-epoch overfitting",
+    "FlashAttention-3 causal attention integration",
+    "Rotary cache clone fix for CUDA graph compatibility"
+  ],
+  "artifact_size": "15.53 MB"
+}

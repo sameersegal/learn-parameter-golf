@@ -1,0 +1,170 @@
+{
+  "pr_number": 548,
+  "title": "Record: Loqui Auris \u2014 10L + LoRA TTT (mean val_bpb=1.0865, 2 seeds)",
+  "author": "LoquiAuris",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.0865,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned blend with previous token representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature with 4096 buckets projected into model dimension.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x feed-forward expansion in the MLP.",
+        "parameters": {
+          "layers": 10,
+          "d_model": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / LM head via linear projection using token embedding weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional encoding.",
+        "parameters": {
+          "persistent": false
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections between symmetric layer pairs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "targets": [
+            "Q",
+            "V",
+            "LM head"
+          ],
+          "epochs": 2
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown cosine schedule",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iterations": 3000
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "10-layer Transformer with SmearGate, BigramHash, and U-Net skip connections",
+    "EMA weight averaging with decay 0.997",
+    "Per-document LoRA test-time training on Q, V, and LM head",
+    "Batched TTT across 64 documents per GPU on 8 GPUs",
+    "Fix for torch.compile graph caching by resetting Dynamo and using a fresh uncompiled model for TTT",
+    "Int6 quantization of MLP and attention weights with zstd compression"
+  ],
+  "artifact_size": "15.81 MB"
+}

@@ -1,0 +1,199 @@
+{
+  "pr_number": 576,
+  "title": "Record: Train Larger, Quantize Harder - 33.6M params + int5 GPTQ / (val_bpb: 1.1164)",
+  "author": "cmcdnd",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1164,
+  "architecture": "Transformer",
+  "quantization": "int5 QAT + full Hessian GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5 QAT + GPTQ",
+        "bits": 5,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash embedding/component with 8192 buckets.",
+        "parameters": {
+          "size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in all layers.",
+        "parameters": {
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3.5x",
+        "description": "Uses widened MLP hidden dimension.",
+        "parameters": {
+          "hidden_dim": 1792,
+          "multiplier": 3.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU\u00b2",
+        "description": "Uses squared LeakyReLU activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "ratio": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections in a U-Net-like pattern.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate component.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "Uses layer norm scaling.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.0001,
+          "used_for": "embeddings/scalars and TTT"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0001,
+          "chunk_size": 131000,
+          "epochs": 3,
+          "temperature": 1.0,
+          "layers": "last 2 blocks"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Post-TTT temperature calibration to correct overconfidence and improve BPB.",
+        "parameters": {
+          "temperature": 0.98
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "2% pruning",
+        "parameters": {
+          "pruning_fraction": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Train larger with a 33.6M parameter model while fitting within the 16MB limit via int5 quantization.",
+    "Full Hessian GPTQ quantization with int5 per-row export.",
+    "Post-TTT temperature calibration at T=0.98 to correct score-first TTT overconfidence.",
+    "Combines late QAT, EMA, pruning, and GPTQ to improve compression and performance."
+  ],
+  "artifact_size": "15.6MB"
+}

@@ -1,0 +1,149 @@
+{
+  "pr_number": 692,
+  "title": "Record: CROWN-Q + Full GPTQ + SWA/EMA Blend \u2014 val_bpb 1.1186 (3-seed mean)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1186,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT + Full Cholesky GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature with size 3072",
+        "parameters": {
+          "dimensions": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "train_length": 16,
+          "eval_length": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all 11 layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP with LeakyReLU(0.5)^2",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "blend": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "blend": 0.5
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000,
+          "late_qat_threshold": 0.15
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "CROWN-Q penalty",
+        "parameters": {
+          "lambda": 0.01,
+          "warmdown_only": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Full Cholesky GPTQ calibration with act-order and 256-sample calibration from training data within training budget",
+        "parameters": {
+          "block_size": 128,
+          "calibration_samples": 256
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "CROWN-Q curvature-weighted quantization variance penalty during warmdown",
+    "Full Cholesky GPTQ with act-order within the training budget",
+    "SWA/EMA 50/50 blend for final weights",
+    "Pure inference sliding-window evaluation with no test-time training",
+    "Architecture using XSA, BigramHash, GQA, and partial RoPE"
+  ],
+  "artifact_size": "15,945,134 bytes"
+}

@@ -1,0 +1,192 @@
+{
+  "pr_number": 566,
+  "title": "deeprec v1",
+  "author": "DerekWWang",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights / per-row quantization"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses 4 shared transformer blocks looped 8 times to create 32 effective layers with weight sharing.",
+        "parameters": {
+          "num_unique_blocks": 4,
+          "num_loop_iters": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Adds per-iteration rank-2 LoRA adapters on the attention output projection to specialize each loop pass.",
+        "parameters": {
+          "rank": 2,
+          "iterations": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Symmetric skip connections between early and late iterations (encoder-decoder style) with learnable scalar gates.",
+        "parameters": {
+          "skip_pairs": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "layer scale",
+        "description": "Per-iteration learnable scalars gate block outputs before residual addition for stability in deep recurrence.",
+        "parameters": {
+          "num_scales": 8,
+          "init": 0.125
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x the model dimension.",
+        "parameters": {
+          "multiplier": 3.0,
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a bigram hash embedding component.",
+        "parameters": {
+          "vocab_size": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Retains the SmearGate mechanism from the previous submission.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 2500,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50,
+          "start_frac": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization is preserved from the previous submission."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup",
+        "parameters": {
+          "warmup_steps": 2000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Gradient checkpointing applied to each block call within the recurrence loop to reduce memory usage.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "4 shared transformer blocks looped 8 times to create 32 effective layers",
+    "Per-iteration rank-2 LoRA adapters on attention output projections",
+    "U-Net style skip connections across recurrence iterations",
+    "Per-iteration layer scale gating for stability in deep recurrence",
+    "Gradient checkpointing through the recurrent block loop",
+    "Adjusted training hyperparameters for deeper effective network"
+  ],
+  "artifact_size": null
+}

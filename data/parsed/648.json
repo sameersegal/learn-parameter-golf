@@ -1,0 +1,115 @@
+{
+  "pr_number": 648,
+  "title": "Depth Recurrence (3+3 x 2 loops) + HW Optimizations",
+  "author": "maorinka",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1428,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaces 10 unique transformer layers with 6 unique layers (3 encoder + 3 decoder) looped twice to create 12 effective layers while sharing parameters.",
+        "parameters": {
+          "unique_layers": 6,
+          "encoder_layers": 3,
+          "decoder_layers": 3,
+          "num_loops": 2,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied encoder and decoder blocks are reused across loops with per-loop conditioning so repeated passes can behave differently.",
+        "parameters": {
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "per_loop_scale_bias": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "learning rate scaling",
+        "parameters": {
+          "scale": "1/sqrt(num_loops)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "gpu_resident": true,
+          "dtype": "float32"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Async data prefetch using a background thread and separate CUDA stream to overlap data loading with compute.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Pinned memory for faster host-to-device transfers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "NCCL tuning for H100 NVLink topology.",
+        "parameters": {
+          "NCCL_NVLS_ENABLE": 1,
+          "NCCL_NET_GDR_LEVEL": 5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPU-resident SWA accumulation to avoid device-to-host synchronization per checkpoint.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Called torch.cuda.empty_cache() after warmup to reduce memory fragmentation.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depth recurrence with 6 unique layers looped twice to produce 12 effective layers",
+    "Per-loop conditioning via learned scale and bias for tied blocks",
+    "U-Net-style skip connections preserved across effective layers with LIFO behavior",
+    "Learning-rate scaling by 1/sqrt(num_loops) for tied-weight recurrence",
+    "Async data prefetch and pinned-memory training pipeline optimizations",
+    "NCCL tuning for H100 NVLink",
+    "GPU-resident SWA accumulation",
+    "Cache cleanup after warmup to reduce fragmentation"
+  ],
+  "artifact_size": "~10MB"
+}

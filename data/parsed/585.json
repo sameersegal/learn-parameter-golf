@@ -1,0 +1,211 @@
+{
+  "pr_number": 585,
+  "title": "Record: int5 GPTQ + 33.6M model (3-seed mean val_bpb=1.1179)",
+  "author": "EthanYangTW",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1179,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash with size 8192 as part of the model architecture.",
+        "parameters": {
+          "size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses full attention with 8 attention heads and 8 KV heads (MHA 8/8).",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3.5x (reported as 1792).",
+        "parameters": {
+          "multiplier": 3.5,
+          "hidden_dim": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings.",
+        "parameters": {
+          "ratio": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate as part of the model design.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared VE128 in layers 9 and 10.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "layerwise LN scale",
+        "description": "Uses LN scale of 1/sqrt(layer+1).",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0001,
+          "weight_decay": 0.0,
+          "epochs_per_chunk": "2-3",
+          "chunk_tokens": 131072
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 131072,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Early QAT with int5 clipping and GPTQ Hessian-aware error compensation; legal score-first test-time training where tokens are scored before any gradient update.",
+        "parameters": {
+          "qat_threshold": 0.5,
+          "calibration_samples": 256,
+          "prune_pct": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "int5 quantization with GPTQ error compensation to fit a 33.6M parameter model under 16MB",
+    "Legal score-first TTT where every token is scored before any gradient update",
+    "Early QAT tuned to int5 clipping range",
+    "Use of a larger 33.6M model enabled by improved compression efficiency",
+    "Combination of GPTQ, pruning, and zstd compression to achieve all artifacts under 16MB"
+  ],
+  "artifact_size": "15.53 MB, 15.36 MB, 15.28 MB"
+}

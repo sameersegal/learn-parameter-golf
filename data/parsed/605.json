@@ -1,0 +1,182 @@
+{
+  "pr_number": 605,
+  "title": "Record: 0.7227 BPB \u2014 10L LoRA TTT 6ep + FlashAttention-3",
+  "author": "bigbag",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 0.7227,
+  "architecture": "Transformer",
+  "quantization": "int6 uniform quantization + zstd-22",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP with ReLU-squared activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash features for token interactions.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Introduces encoder/decoder-style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Shares input embedding and output projection weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights with FP16 passthrough for embeddings and control tensors"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz": true,
+          "compiled": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "fused": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "every_steps": 10
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 11
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank_qv": 8,
+          "rank_lm_head": 16,
+          "learning_rate": 0.01,
+          "epochs": 6,
+          "batch_docs_per_gpu": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown + cosine decay",
+        "parameters": {
+          "warmdown_steps": 6000,
+          "per_step_cosine_decay": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "max_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT during warmdown.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention-3 integration for faster causal attention on H100.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Rotary cache .clone() fix to resolve CUDA graph conflict with FlashAttention-3.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "FlashAttention-3 integration for faster attention on H100",
+    "Rotary cache .clone() fix for CUDA graph compatibility with FlashAttention-3",
+    "LoRA-based test-time training with per-document adaptation",
+    "Per-layer learning rates for LoRA and bias parameters during TTT",
+    "Score-every-epoch backward-looking evaluation compliant with Issue #402",
+    "Late QAT combined with int6 quantization and zstd compression"
+  ],
+  "artifact_size": "15.45 MB"
+}

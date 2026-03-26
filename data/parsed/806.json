@@ -1,0 +1,136 @@
+{
+  "pr_number": 806,
+  "title": "Record: Backoff N-gram Cache + LeakyReLU(0.9)\u00b2 (val_bpb=0.6678)",
+  "author": "ibarrajo",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.6678,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Added SmearGate to the Transformer architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a BigramHash component with a vocabulary size of 2048.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the Transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses tied embeddings / weight tying.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "multi-order backoff n-gram cache",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "entropy_adaptive_alpha": true,
+          "score_first": true,
+          "min_count": 2
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "distributed cache pre-fill",
+        "parameters": {
+          "multi_gpu": true,
+          "rank": 7,
+          "prefill_tokens": 54000000,
+          "prefill_time_seconds": 68
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.9)^2 activation replacing relu^2.",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive alpha mixing between model softmax and n-gram cache probabilities.",
+        "parameters": {
+          "alpha_formula": "0.05 + 0.55 * sigmoid(2.0 * (H - 4.0))"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Multi-order backoff n-gram eval cache with orders 2-7",
+    "Entropy-adaptive alpha mixing between neural predictions and n-gram cache probabilities",
+    "Distributed cache pre-fill for multi-GPU coherence",
+    "LeakyReLU(0.9)^2 activation replacing relu^2",
+    "Score-first legality: scoring every token under inference_mode before cache update",
+    "Removal of illegal pre-eval test-time training"
+  ],
+  "artifact_size": "8.6MB"
+}

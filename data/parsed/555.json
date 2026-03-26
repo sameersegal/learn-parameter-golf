@@ -1,0 +1,128 @@
+{
+  "pr_number": 555,
+  "title": "Add 11L Shared Sparse Sidecar + EMA + AdamW TTT (1.0916 mean)",
+  "author": "ymrohit",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.09161722,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the donor trunk.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash in the donor trunk.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the donor trunk.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "shared sparse sidecar",
+        "description": "A late-stage auxiliary sidecar reused across multiple late layers, with learned site embeddings and residual scales, implemented as gate -> value -> depthwise conv -> proj.",
+        "parameters": {
+          "start_layer": 8,
+          "hidden_dim": 48
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "AdamW TTT",
+        "parameters": {
+          "epochs": 10
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Cloud-legal trimming to fit under the 16,000,000-byte cap by reducing sidecar width, bigram width, and wallclock budget.",
+        "parameters": {
+          "sparse_hidden_dim": {
+            "from": 64,
+            "to": 48
+          },
+          "bigram_dim": {
+            "from": 128,
+            "to": 96
+          },
+          "max_wallclock_seconds": {
+            "from": 600,
+            "to": 596
+          }
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Shared sparse sidecar architecture injected only in late layers",
+    "Shared sidecar weights reused across multiple insertion sites",
+    "Learned site embeddings and learned residual scales for site-specific conditioning",
+    "Late local-refinement path implemented as gate -> value -> depthwise conv -> proj",
+    "Cloud-legal deployment of the sidecar under the 16MB artifact cap",
+    "3-seed cloud reproduction with mean val_bpb 1.09161722"
+  ],
+  "artifact_size": "15,973,374 bytes"
+}

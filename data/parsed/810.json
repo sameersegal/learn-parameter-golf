@@ -1,0 +1,202 @@
+{
+  "pr_number": 810,
+  "title": "Record: EMA-GPU + Multi-Order N-gram Backoff + PE Confidence (val_bpb=0.9393)",
+  "author": "Idan3011",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.9393,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention on the last 4 layers to remove self-value bias via orthogonal projection.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gate blending each token with the previous token's embedding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-table embedding for token bigrams projected into model dimension.",
+        "parameters": {
+          "dimensions": "2048x128"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP with 3x hidden expansion.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections with learnable skip weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GELU pre-enrichment",
+        "description": "Wider nonlinear pre-enrichment block before transformer layers: 512\u2192768\u2192512 with GELU.",
+        "parameters": {
+          "input_dim": 512,
+          "hidden_dim": 768,
+          "output_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "multi_order_backoff": "2-11",
+          "entropy_adaptive_alpha": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "multi-order n-gram backoff",
+        "parameters": {
+          "orders": "2-11",
+          "score_first": true,
+          "backward_looking": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT-like n-gram cache",
+        "parameters": {
+          "cache_updated_after_scoring": true,
+          "per_gpu_independent_cache": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "overtone init",
+        "description": "Initialization method credited to the modded-nanogpt baseline."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "EMA state kept on GPU during training and moved to CPU only at serialization time to speed up training.",
+        "parameters": {
+          "reported_speedup": "37%"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Pre-enrichment confidence modulation uses the magnitude of the pre-enrichment transformation as a confidence signal to modulate n-gram trust.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "EMA state kept on GPU during training to avoid per-step GPU-to-CPU synchronization",
+    "Multi-order n-gram backoff with entropy-adaptive alpha during evaluation",
+    "Pre-enrichment confidence modulation to adjust n-gram trust",
+    "GELU pre-enrichment block (512\u2192768\u2192512)",
+    "XSA on the last 4 layers"
+  ],
+  "artifact_size": "14.94 MB"
+}

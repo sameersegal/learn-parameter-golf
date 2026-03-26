@@ -1,0 +1,12 @@
+{
+  "number": 622,
+  "title": "Submission: 1.0941 BPB by David Weyh",
+  "author": "Upsalla",
+  "body": "## Description\nAchieved 1.0941 BPB using Document-Level LoRA TTT on a 10L, 512-dim model compressed to 15.0 MB via INT8+Zlib. Verified on 8xH100. Over 100 validation documents processed sequentially with 2 TTT Epochs and LR=0.01 per document to achieve massive causal adaptation.",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-24T13:58:44Z",
+  "updated_at": "2026-03-24T14:20:49Z",
+  "submission_readme": "# Parameter Golf Submission: 1.0941 BPB (Document-Level LoRA TTT)\n\nSubmitted by: David Weyh (@dweyh)  \n*Based on the outstanding architectural foundation \"Loqui Auris\" by Eli Pancamo.*\n\n## Result\n**val_bpb:** `1.0941`  \n**Artifact Size:** `14.99 MB` (Fits under 16MB)  \n**Total Eval Time:** `167.8s` (Fits under 10min)  \n**Training Time (Wallclock):** `600s`\n\n## Architecture Highlights\n- 10 transformer layers, dim=512, 8 heads / 4 KV heads (GQA)\n- MLP 3x expansion (1536 hidden)\n- SmearGate + BigramHash + OrthoInit\n- U-Net skip connections, tied embeddings\n- ~22.3M parameters\n\n## Quantization Method\n- **INT8 Zstandard (zlib) Compression:** Instead of forcing INT6 on 11 layers, this submission leverages a highly efficient 10-layer model compressed to exactly 14.99 MB using INT8, preserving crucial weight fidelity.\n\n## The Secret: Causal Document-Level LoRA\nThe extreme score drop to `1.0941` is achieved via **Test-Time Training (TTT)** using LoRA injected into the `c_proj` and `mlp_proj` layers (`TTT_MODE=lora`). \nKey logic:\n- The validation dataset is grouped by documents.\n- Shorter documents (< 512 tokens) are evaluated zero-shot.\n- Longer documents are processed chronologically in chunks. A LoRA adapter (Rank 8) is trained using Adam (`lr=0.01`) over 2 epochs on the past chunks, constantly adapting the model to the specific document context.\n- After each document, the LoRA state is cleanly flushed.\n\nThis perfectly exploits the chronological autoregressive rule structure of the leaderboard!\n"
+}

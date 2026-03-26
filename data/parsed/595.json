@@ -1,0 +1,180 @@
+{
+  "pr_number": 595,
+  "title": "Record: Loqui Auris \u2014 10L + SWA + Standard TTT (val_bpb=1.1100)",
+  "author": "LoquiAuris",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.11,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned blend with previous token representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing feature with 4096 buckets projected to model dimension.",
+        "parameters": {
+          "buckets": 4096,
+          "projection_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Feed-forward network expanded to 3x hidden size.",
+        "parameters": {
+          "layers": 10,
+          "d_model": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input embeddings are tied to output logits via linear projection with shared weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints_averaged": 29,
+          "checkpoint_interval_steps": 50,
+          "start_frac": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5, attention int6, embeddings/norms/gates FP16/FP32 passthrough"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "epochs": 10,
+          "weight_decay": 0,
+          "gradient_clipping": 1.0
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iterations": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_weight_decay": 0.04,
+          "adamw_weight_decay": 0.01
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Standard AdamW test-time training applied to the quantized-then-dequantized model weights",
+    "10-layer Transformer with SmearGate, BigramHash, and U-Net skip connections",
+    "SWA over 29 checkpoints before quantization",
+    "Mixed int5/int6 quantization with FP16/FP32 passthrough for selected tensors"
+  ],
+  "artifact_size": "15.69 MB"
+}

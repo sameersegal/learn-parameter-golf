@@ -1,0 +1,146 @@
+{
+  "pr_number": 803,
+  "title": "Record: 0.4416 BPB -- Complementary Training + Backoff N-gram Mixer",
+  "author": "pentxayc",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.4416,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA-4 attention variant in an 11-layer transformer.",
+        "parameters": {
+          "variant": 4,
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VRL",
+        "description": "Value Residual Learning applied to the transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.5)^2",
+        "description": "Uses squared LeakyReLU activation with negative slope 0.5.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Polyak averaging",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "learning_rate": 0.0005,
+          "epochs_per_chunk": 4,
+          "freeze_blocks": 9,
+          "polyak_ema": 0.998
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training that downweights tokens predictable by bigram statistics so the neural model specializes on harder tokens.",
+        "parameters": {
+          "complement_alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Backoff n-gram mixer with orders 2-10 and greedy cascade using the highest matching order.",
+        "parameters": {
+          "ngram_order_min": 2,
+          "ngram_order_max": 10,
+          "buckets": 4194304
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive alpha blending between neural and n-gram probabilities.",
+        "parameters": {
+          "alpha_base": 0.2,
+          "alpha_range": 0.55,
+          "alpha_center": 3.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Complementary training using bigram-based loss reweighting to specialize the neural model on tokens n-gram caches cannot predict.",
+    "Higher eval-time n-gram mixing weight enabled by deliberately weakening the model where n-grams are strong.",
+    "BackoffNgramMixer with orders 2-10 and greedy highest-order matching.",
+    "Entropy-adaptive alpha blending based on model uncertainty.",
+    "Combination of AdamW test-time training with Polyak EMA and frozen early blocks."
+  ],
+  "artifact_size": "15,875,857 bytes"
+}

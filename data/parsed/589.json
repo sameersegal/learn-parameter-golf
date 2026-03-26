@@ -1,0 +1,163 @@
+{
+  "pr_number": 589,
+  "title": "Record: Late Soft-Round QAT + Score-First Backward-Looking TTT \u2014 val_bpb 1.1178",
+  "author": "RoyiRa",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1178,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT with late soft-round surrogate",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP stack using LeakyReLU(0.5)^2 activation.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash component used in the model stack.",
+        "parameters": {
+          "size": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency": 50,
+          "description": "tight SWA every 50 steps"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "optimizer": "SGD",
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "grad_clip": 1.0,
+          "frozen_blocks": null
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002,
+          "cosine_decay": true,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "learning_rate": 0.002,
+          "applied_to": "TTT across chunks"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late soft-round QAT using a temperature-controlled sigmoid-interpolated surrogate in the backward pass while keeping hard quantized forward pass.",
+        "parameters": {
+          "tau": 0.1,
+          "warmdown_scale_threshold": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Late Soft-Round QAT",
+    "Score-First Backward-Looking TTT",
+    "Temperature-controlled soft-round surrogate for bin-aware gradients near quantization boundaries",
+    "Backward-looking chunk-wise test-time training where each chunk is scored before being trained on"
+  ],
+  "artifact_size": "~15.75 MB"
+}

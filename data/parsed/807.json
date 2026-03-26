@@ -1,0 +1,144 @@
+{
+  "pr_number": 807,
+  "title": "Non-record: Sequential Momentum TTT (val_bpb=1.0116, 3-seed mean, 4xA10G)",
+  "author": "connectwithprakash",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.0116,
+  "architecture": "10-layer GQA Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA4",
+        "description": "Attention/sequence architecture modification used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism added to the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component used to enrich token interactions.",
+        "parameters": {
+          "dimensions": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3x.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "momentum": 0.3,
+          "sequential": true,
+          "cross_document": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "asymmetric LoRA initialization",
+        "description": "A is initialized with kaiming plus EMA, while B is initialized from EMA only."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "full evaluation",
+        "parameters": {
+          "seeds": [
+            1337,
+            42,
+            2025
+          ]
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.03
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Learned activation mixing using relu^2 and leaky_relu(0.5)^2 blend.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Sequential Momentum TTT with cross-document LoRA EMA during test-time training",
+    "Warm-starting LoRA adapters across document batches using an EMA of prior batch weights",
+    "Asymmetric LoRA initialization where A uses kaiming plus EMA and B uses EMA only",
+    "Mixed int5/int6 quantization combined with LZMA compression to fit under the artifact limit"
+  ],
+  "artifact_size": "10.85 MB"
+}

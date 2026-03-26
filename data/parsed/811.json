@@ -1,0 +1,134 @@
+{
+  "pr_number": 811,
+  "title": "Record: Complementary Training + Backoff N-gram Mixer \u2014 0.4377 BPB",
+  "author": "quietsmile",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.4377,
+  "architecture": "Transformer",
+  "quantization": "int6 mixed quantization",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP with LeakyReLU(0.5)^2.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads with 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 128
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "epochs": 4,
+          "freeze_blocks": 2,
+          "temperature": 0.98
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training with bigram-weighted loss reweighting to focus learning on harder tokens.",
+        "parameters": {
+          "complement_alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "BackoffNgramMixer with orders 2-10 and entropy-adaptive alpha mixing.",
+        "parameters": {
+          "ngram_order": 10,
+          "alpha_base": 0.2,
+          "alpha_range": 0.55,
+          "alpha_center": 3.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Complementary training with bigram-weighted loss reweighting",
+    "BackoffNgramMixer with entropy-adaptive alpha mixing",
+    "Legal score-first AdamW test-time training",
+    "Stride=128 evaluation optimization"
+  ],
+  "artifact_size": "~15.9MB"
+}

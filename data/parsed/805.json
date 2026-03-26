@@ -1,0 +1,115 @@
+{
+  "pr_number": 805,
+  "title": "Int6 GPTQ-lite + LeakyReLU(0.5)^2 + EMA + 11L MLP3x",
+  "author": "zeytx",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1807,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer depth",
+        "description": "Increased model depth from 9 to 11 transformer layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded the MLP hidden size to 3x the base width instead of 2x.",
+        "parameters": {
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped-query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.5)^2 activation function replacing ReLU^2.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "late QAT activation based on LR scale threshold",
+        "parameters": {
+          "lr_scale_threshold": 0.15
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11 transformer layers instead of the 9-layer baseline",
+    "3x MLP expansion",
+    "LeakyReLU(0.5)^2 activation",
+    "Int6 per-row GPTQ-lite quantization with clip search",
+    "Late QAT via STE triggered when LR scale drops below 0.15",
+    "EMA weight averaging with decay 0.997",
+    "Grouped-query attention with 8 query heads and 4 KV heads",
+    "Sliding window evaluation with stride 64"
+  ],
+  "artifact_size": "~3.9 MB"
+}

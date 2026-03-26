@@ -1,0 +1,201 @@
+{
+  "pr_number": 684,
+  "title": "Record: 11L Sidecar48 + Enhanced Attention + Async Data Pipeline + AdamW TTT (20 epochs, cosine LR, 3-seed mean val_bpb=1.0573)",
+  "author": "DeepReinforce",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.0574,
+  "architecture": "11-layer Transformer",
+  "quantization": "int6 mixed quantization",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Attention shift mixing",
+        "description": "Learned k_shift_mix and v_shift_mix blend each position's keys/values with the previous position's keys/values.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "K gain",
+        "description": "Learned per-KV-head k_gain scales key norms independently of queries.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Local value residual",
+        "description": "Learned per-head local_v_mix adds a direct value shortcut to the attention output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Adaptive rotary embedding dimension selection using 3/4 of head_dim when head_dim > 32.",
+        "parameters": {
+          "dimensions": null
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embedding used for token representation.",
+        "parameters": {
+          "vocab": 2048,
+          "dimensions": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate with U-Net skip connections in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer uses a 3x MLP expansion.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Model uses 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SharedSparseSidecar",
+        "description": "SharedSparseSidecar module with 48 hidden units at layers 8-10.",
+        "parameters": {
+          "hidden": 48,
+          "layers": [
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "orthogonal init",
+        "description": "Orthogonal weight initialization."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "epochs": 20
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay with linear warmup",
+        "parameters": {
+          "start_lr": 0.0005,
+          "end_lr": 2e-05,
+          "warmup": "1 epoch"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 20
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Asynchronous memory-mapped data pipeline with coprime-stride shard sampling, background thread batching, CUDA stream prefetch, and adaptive shard mixing width.",
+        "parameters": {
+          "mix_width_start": 8,
+          "mix_width_end": 32
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Learned attention shift mixing for keys and values",
+    "Learned per-KV-head key gain",
+    "Learned per-head local value residual",
+    "Adaptive rotary embedding dimension selection",
+    "Fully asynchronous memory-mapped data pipeline",
+    "Background thread and CUDA stream prefetching",
+    "Adaptive shard mixing schedule from 8 to 32 shards",
+    "Denser sliding-window evaluation with stride 32",
+    "Int6 mixed quantization and zstd-22 compression"
+  ],
+  "artifact_size": "< 16 MB"
+}

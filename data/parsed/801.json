@@ -1,0 +1,145 @@
+{
+  "pr_number": 801,
+  "title": "Non-Record: Training on the Apple Neural Engine",
+  "author": "garindean",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 3.2636,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Uses SwiGLU feed-forward blocks instead of relu^2.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Embedding weights are tied to the classifier/output weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings with base 10000.",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DeepNet residual scaling",
+        "description": "Applies DeepNet-style residual scaling with alpha = 1/sqrt(2*N_layers).",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.1,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.95,
+          "eps": 1e-08,
+          "clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 256,
+        "eval_length": 256
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup + cosine decay",
+        "parameters": {
+          "warmup_steps": 500,
+          "final_lr_fraction": 0.1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training and selected backward computations are accelerated on Apple's Neural Engine, with CPU handling unsupported operations, weight gradients, and optimizer updates.",
+        "parameters": {
+          "hardware": "Apple M4 Pro Neural Engine + CPU"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Loss is multiplied by 256 before backpropagation and divided out before weight updates to mitigate FP16 underflow.",
+        "parameters": {
+          "loss_scale": 256.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Uses the Apple Neural Engine as the primary accelerator for transformer forward passes and some backward computations.",
+    "Implements a dynamic weight pipeline using IOSurface shared memory to avoid recompiling ANE graphs after weight updates.",
+    "Splits training across ANE and CPU, with ANE handling matmuls and dx while CPU handles masking, normalization, gradients, and optimization.",
+    "Applies loss scaling to address FP16-only compute underflow on the ANE.",
+    "Provides a compressed int8+zlib artifact that can be evaluated without ANE hardware."
+  ],
+  "artifact_size": "8,830,989 bytes"
+}
