@@ -82,7 +82,7 @@ def sliding_window_eval(model, tokens, seq_len=1024, stride=64):
     {
       type: "text",
       title: "Stride Selection: Why 64 Dominates",
-      content: `Across Parameter Golf submissions, **stride=64 is used by ~88% of competitive entries**. Here's why:
+      content: `Across Parameter Golf submissions, **stride=64 is the dominant choice** — used by 333 out of ~430 entries that specify a stride (~77%). The next most common are stride=256 (26 entries) and stride=32 (25 entries). Here's why stride=64 dominates:
 
 ### The Trade-off
 
@@ -166,17 +166,29 @@ PPM adds compute at evaluation time and requires careful tuning of confidence th
 
 1. **Always use sliding window with stride=64** — this is table stakes. Not using it leaves easy BPB on the table.
 
-2. **Match eval context to training context** — if you train on 1024 tokens, evaluate on 1024. Mismatches hurt.
+2. **Match eval context to training context** — if you train on 1024 tokens, evaluate on 1024. Mismatches hurt. Many top submissions now use 2048-token context for both.
 
 3. **Consider N-gram mixing** — it's free (zero artifact cost) and provides a small but consistent improvement. Start with 93/7 neural/bigram split and temperature=0.93.
 
 4. **Don't over-optimize stride** — going from stride=64 to stride=32 doubles your eval compute for diminishing returns (~0.001-0.002 BPB).
 
-5. **PPM is niche** — only worth exploring if you have very long documents and spare eval compute.
+5. **N-gram backoff is the current frontier** — the top submissions (sub-0.3 BPB) all use entropy-adaptive N-gram backoff caches, blending neural and N-gram predictions. This goes far beyond simple bigram mixing.
+
+### Sensitivity Notes
+
+- **Temperature**: Values between 0.9 and 0.95 work well. Below 0.85, the model becomes overconfident and miss-predicts rare tokens catastrophically. Above 1.0, entropy increases and BPB worsens.
+- **N-gram mix ratio**: The 93/7 neural/bigram split is a starting point. Top submissions use entropy-adaptive mixing where the ratio varies per token based on the model's confidence.
+- **Stride**: The gap between stride=64 and stride=32 is typically <0.002 BPB. The gap between stride=64 and stride=256 is ~0.01-0.02 BPB — more significant.
+
+### Interactions with Other Techniques
+
+- **Test-time training**: The score-first TTT protocol uses the same sliding window. Stride determines how many tokens are scored per step before the model adapts.
+- **N-gram backoff caches**: The biggest recent evolution in evaluation. Order-9 to order-12 N-gram caches built incrementally from scored tokens blend with neural predictions using entropy-adaptive interpolation. This is behind the jump from ~1.1 BPB to sub-0.3 BPB in top submissions.
+- **Compression**: N-gram caches are computed at eval time from the data itself — they add zero bytes to the artifact.
 
 ### The Meta-Insight
 
-The top two scoring submissions (BPB 1.1175 and 1.1181) both use simple stride=64 sliding window evaluation. No N-gram mixing, no PPM, no exotic tricks. The lesson: **evaluation strategy has a floor and ceiling**. Get the floor right (stride=64), and spend your optimization budget on architecture, quantization, and training instead.`,
+The competition has evolved dramatically. Early top submissions (PR #505 at 1.118 BPB, PR #535 at 1.120 BPB) used simple stride=64 sliding window without N-gram tricks. Current top submissions (PR #843 at 0.283 BPB, PR #809 at 0.295 BPB) combine stride=64 with N-gram backoff and TTT. The lesson: **stride=64 remains the foundation**, but the ceiling for evaluation strategy has risen enormously with N-gram techniques. Getting the floor right (stride=64) is necessary but no longer sufficient for competitive scores.`,
     },
   ],
 };
