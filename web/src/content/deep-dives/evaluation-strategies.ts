@@ -12,15 +12,22 @@ export const evaluationStrategies: DeepDive = {
       title: "Why Evaluation Strategy Matters",
       content: `In Parameter Golf, your score is **val_bpb** (validation bits-per-byte). How you *evaluate* the model — not just how you train it — directly affects this number. A smarter evaluation strategy can shave hundredths off your BPB without changing a single model weight.
 
-The core challenge: language models are trained on fixed-length sequences, but evaluation documents are much longer. How you slide your context window across the document determines which tokens get good context and which don't.
+The core challenge: language models are trained on fixed-length sequences (typically 1024 or 2048 tokens), but evaluation documents are much longer. How you slide your context window across the document determines which tokens get good context and which don't.
 
-### The Naive Approach
+### The Naive Approach: No Overlap (stride = seq_len)
 
-The simplest evaluation: chop the document into non-overlapping chunks of \`seq_len\` tokens and evaluate each independently. The first token of each chunk has zero context — it's essentially guessing. This wastes capacity and inflates BPB.
+The simplest evaluation: chop the document into non-overlapping chunks of \`seq_len\` tokens, score every token in each chunk, and average the results. This doesn't mean tokens have "no context" — autoregressive models always condition on prior tokens *within* the window. But the amount of context varies dramatically across the window. Token 0 has zero context — it's guessing blind. Token 512 has 512 tokens of context. Token 1023 has 1023 tokens — a great prediction. But since all 1024 tokens get scored and averaged together, the poorly-contextualized early tokens drag the average BPB up.
 
-### The Insight
+### The Insight: Only Score Well-Contextualized Tokens
 
-Overlapping windows let every token (except the very first) benefit from a full context of prior tokens. You only *score* the tokens in the non-overlapping "stride" portion, but the model *sees* the full window. This is strictly better than non-overlapping evaluation.`,
+Overlapping windows fix this by letting you **choose which predictions count**. With stride=64, you advance the window by 64 tokens each step and only score the last 64 tokens — the ones that had ~960 tokens of prior context. The model is the same. The predictions for well-contextualized tokens are the same. You're just **throwing away the scores from tokens that lacked sufficient context** and only counting predictions where the model had nearly a full window of prior text.`,
+    },
+    {
+      type: "animation",
+      title: "Interactive: Context Gradient Within a Window",
+      animationId: "context-gradient-demo",
+      content:
+        "Each token in a window is colored by how much prior context it has — red (little context, poor prediction) to green (full context, good prediction). Use the stride slider to control which tokens get scored. Notice how reducing stride discards the red, poorly-contextualized tokens and only counts the green ones, improving average BPB.",
     },
     {
       type: "animation",
@@ -88,7 +95,7 @@ def sliding_window_eval(model, tokens, seq_len=1024, stride=64):
 
 | Stride | Overlap | Compute Cost | Quality |
 | --- | --- | --- | --- |
-| seq_len (1024) | 0% | 1x (baseline) | Worst — many tokens lack context |
+| seq_len (1024) | 0% | 1x (baseline) | Worst — scores tokens with 0 to 1023 context |
 | 256 | 75% | ~4x | Good |
 | 64 | 94% | ~16x | Excellent — near-optimal context |
 | 32 | 97% | ~32x | Marginal gain over 64 |
@@ -102,7 +109,9 @@ PR #511 used **stride=32** with a 2048-token context window. The longer context 
 
 ### Key Insight
 
-Stride doesn't change your model — it changes how thoroughly you evaluate it. A smaller stride always gives equal or better BPB, bounded by compute budget. Think of it as paying compute at eval time to extract maximum performance from your trained weights.`,
+Stride doesn't change your model — it changes **which predictions you count**. With no overlap (stride=seq_len), you're forced to score tokens that had very little context — predictions the model was never going to get right. With stride=64, you only score tokens where the model had ~960 tokens of context, throwing away the bad-context scores.
+
+A smaller stride always gives equal or better BPB, bounded by compute budget. Think of it as paying compute at eval time to extract maximum measured performance from your trained weights — the model makes the same predictions either way, you're just choosing to only measure the ones where it had enough information to do well.`,
     },
     {
       type: "text",

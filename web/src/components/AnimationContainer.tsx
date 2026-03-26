@@ -11,6 +11,10 @@ const animationRegistry: Record<
     () => import("./animations/QuantizationDemo"),
     { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
   ),
+  "context-gradient-demo": dynamic(
+    () => import("./animations/ContextGradientDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
   "sliding-window-demo": dynamic(
     () => import("./animations/SlidingWindowDemo"),
     { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
