@@ -54,10 +54,10 @@ export default function Leaderboard({
           <tr className="border-b border-[var(--border)] text-[var(--muted)]">
             <th className="text-center p-2 w-10">Record</th>
             <th
-              className="text-left p-2 cursor-pointer hover:text-white w-16"
-              onClick={() => toggleSort("pr_number")}
+              className="text-right p-2 cursor-pointer hover:text-white"
+              onClick={() => toggleSort("val_bpb")}
             >
-              PR#{arrow("pr_number")}
+              val_bpb{arrow("val_bpb")}
             </th>
             <th className="text-left p-2">Title</th>
             <th
@@ -67,10 +67,10 @@ export default function Leaderboard({
               Author{arrow("author")}
             </th>
             <th
-              className="text-right p-2 cursor-pointer hover:text-white"
-              onClick={() => toggleSort("val_bpb")}
+              className="text-left p-2 cursor-pointer hover:text-white w-16"
+              onClick={() => toggleSort("pr_number")}
             >
-              val_bpb{arrow("val_bpb")}
+              PR#{arrow("pr_number")}
             </th>
           </tr>
         </thead>
@@ -87,14 +87,8 @@ export default function Leaderboard({
                   </span>
                 )}
               </td>
-              <td className="p-2">
-                <a
-                  href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  #{s.pr_number}
-                </a>
+              <td className="p-2 text-right font-mono">
+                {s.val_bpb?.toFixed(4) ?? "N/A"}
               </td>
               <td className="p-2">
                 <Link
@@ -105,8 +99,14 @@ export default function Leaderboard({
                 </Link>
               </td>
               <td className="p-2 text-[var(--muted)]">{s.author}</td>
-              <td className="p-2 text-right font-mono">
-                {s.val_bpb?.toFixed(4) ?? "N/A"}
+              <td className="p-2">
+                <a
+                  href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  #{s.pr_number}
+                </a>
               </td>
             </tr>
           ))}
