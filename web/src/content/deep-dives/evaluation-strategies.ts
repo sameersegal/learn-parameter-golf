@@ -16,28 +16,18 @@ The core challenge: language models are trained on fixed-length sequences (typic
 
 ### The Naive Approach: No Overlap (stride = seq_len)
 
-The simplest evaluation: chop the document into non-overlapping chunks of \`seq_len\` tokens, score every token in each chunk, and average the results. This doesn't mean tokens have "no context" — autoregressive models always condition on prior tokens *within* the window. But the amount of context varies dramatically across the window:
-
-\`\`\`
-Window: [token_0, token_1, token_2, ..., token_1023]
-         ↑                                    ↑
-         0 prior tokens                       1023 prior tokens
-         (guessing blind)                     (best prediction)
-\`\`\`
-
-Token 0 in each chunk has zero context — it's essentially guessing. Token 512 has 512 tokens of context. Token 1023 has 1023 tokens — a great prediction. But since all 1024 tokens get scored and averaged together, the poorly-contextualized early tokens drag the average BPB up.
+The simplest evaluation: chop the document into non-overlapping chunks of \`seq_len\` tokens, score every token in each chunk, and average the results. This doesn't mean tokens have "no context" — autoregressive models always condition on prior tokens *within* the window. But the amount of context varies dramatically across the window. Token 0 has zero context — it's guessing blind. Token 512 has 512 tokens of context. Token 1023 has 1023 tokens — a great prediction. But since all 1024 tokens get scored and averaged together, the poorly-contextualized early tokens drag the average BPB up.
 
 ### The Insight: Only Score Well-Contextualized Tokens
 
-Overlapping windows fix this by letting you **choose which predictions count**. With stride=64, you advance the window by 64 tokens each step and only score the last 64 tokens — the ones that had ~960 tokens of prior context:
-
-\`\`\`
-Window: [960 context tokens (not scored)] [64 tokens (scored)]
-                                           ↑
-                                           Every scored token has ~960 tokens of context
-\`\`\`
-
-The model is the same. The predictions for well-contextualized tokens are the same. You're just **throwing away the scores from tokens that lacked sufficient context** and only counting predictions where the model had nearly a full window of prior text. This is strictly better than non-overlapping evaluation.`,
+Overlapping windows fix this by letting you **choose which predictions count**. With stride=64, you advance the window by 64 tokens each step and only score the last 64 tokens — the ones that had ~960 tokens of prior context. The model is the same. The predictions for well-contextualized tokens are the same. You're just **throwing away the scores from tokens that lacked sufficient context** and only counting predictions where the model had nearly a full window of prior text.`,
+    },
+    {
+      type: "animation",
+      title: "Interactive: Context Gradient Within a Window",
+      animationId: "context-gradient-demo",
+      content:
+        "Each token in a window is colored by how much prior context it has — red (little context, poor prediction) to green (full context, good prediction). Use the stride slider to control which tokens get scored. Notice how reducing stride discards the red, poorly-contextualized tokens and only counts the green ones, improving average BPB.",
     },
     {
       type: "animation",
