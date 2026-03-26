@@ -1,0 +1,100 @@
+{
+  "pr_number": 874,
+  "title": "Non-record: Random Linear Maps + Learned Adapters (val_bpb=1.607, 1.92MB artifact)",
+  "author": "fielding",
+  "status": "open",
+  "val_bpb": 1.607,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RandomLinearWithAdapter",
+        "description": "Uses fixed-seed random base weights for linear layers, with learned low-rank adapters added on top; base weights are regenerated at load time and not stored in the artifact.",
+        "parameters": {
+          "rank": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with relu-squared activation.",
+        "parameters": {
+          "mlp_multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window_size": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adamw": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 64
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Random base linear projections regenerated from a fixed seed so they do not count toward artifact size",
+    "Learned low-rank adapters on top of random linear maps",
+    "Demonstration that a mostly-random-weight Transformer can still achieve competitive language modeling performance",
+    "Depth sweep showing a 4-5 layer sweet spot under a fixed training-time budget",
+    "Rank sweep showing smaller adapters can outperform larger ones under a fixed compute budget",
+    "Sliding-window evaluation improves reported BPB over standard float evaluation in the long run"
+  ],
+  "artifact_size": "1.92MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

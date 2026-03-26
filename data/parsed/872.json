@@ -1,0 +1,167 @@
+{
+  "pr_number": 872,
+  "title": "E2E TTT: End-to-End Test-Time Training with Meta-Learning (1.0467 BPB)",
+  "author": "gowtham0992",
+  "status": "closed",
+  "val_bpb": 1.0467,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "inner_loop": "gradient descent on MLP weights",
+          "meta_learning": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MAML-style meta-learning with outer-loop backpropagation through inner gradient steps using create_graph=True to optimize initial weights for test-time adaptation",
+        "parameters": {
+          "final_training_fraction": 0.2
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "cache": [
+            "5-gram backoff",
+            "kNN-LM"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU squared",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 used in later layers",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Value Residual Learning",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.03,
+          "timing": "post-quant"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 128
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "End-to-end test-time training with MAML-style meta-learning and backpropagation through inner adaptation steps",
+    "Hidden-state kNN-LM cache over final-layer hidden states for semantic repetition beyond exact n-grams",
+    "Online 5-gram cache with adaptive, pre-committed confidence-based mixing",
+    "GPTQ calibration performed within the training budget"
+  ],
+  "artifact_size": "13.12 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

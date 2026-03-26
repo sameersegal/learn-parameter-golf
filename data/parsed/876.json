@@ -1,0 +1,141 @@
+{
+  "pr_number": 876,
+  "title": "10L + Two-Pass Order-11 N-gram Backoff (0.5863 BPB)",
+  "author": "Bortlesboat",
+  "status": "open",
+  "val_bpb": 0.5863,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Value residual connections in the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": 5,
+        "scope": "MLP and attention"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "pass_1": "score-first",
+          "pass_2": "frozen cache rescore"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Two-pass order-11 n-gram backoff with hashed cache and entropy gating during evaluation.",
+        "parameters": {
+          "orders": [
+            2,
+            11
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-adaptive entropy gating that trusts higher-order n-gram matches more when model uncertainty is lower.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Two-pass evaluation with a frozen-cache rescore of already-evaluated tokens",
+    "Order-11 hashed n-gram backoff cache with order-adaptive entropy gating",
+    "Score-first sliding window evaluation that updates cache only after scoring",
+    "Mixed int5 MLP / int6 attention quantization with zstd compression",
+    "EMA-averaged training with Muon optimizer and GQA/XSA-based transformer architecture"
+  ],
+  "artifact_size": "15.4-15.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

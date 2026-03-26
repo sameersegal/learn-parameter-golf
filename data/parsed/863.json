@@ -1,0 +1,191 @@
+{
+  "pr_number": 863,
+  "title": "v10 moonshot: ternary MLP quant + scaled model + hedge mixer + enhanced n-gram",
+  "author": "sunnypatneedi",
+  "status": "closed",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "ternary/int4/int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hedge Mixer",
+        "description": "Multiplicative-weights online mixing of model components/experts.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram feature augmentation.",
+        "parameters": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hashed trigram feature augmentation.",
+        "parameters": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used in the MLP stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Residual value pathway across layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation used as a drop-in replacement for ReLU^2.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary",
+        "bits": 2,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "epochs": 20,
+          "batch_seqs": 32,
+          "surprise_topk": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.001,
+          "chunk": 256
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Hedge Mixer multiplicative-weights online mixing",
+    "Add-delta n-gram smoothing",
+    "Scaled moonshot model with model_dim=640",
+    "Adaptive quantization with ternary MLP, int4 attention, and int6 embeddings",
+    "CPU-only random search over hyperparameter configurations",
+    "Analytical artifact size estimator",
+    "Dual test-time training modes: LoRA TTT and in-place TTT",
+    "Full GPTQ quantization with Hessian-aware calibration",
+    "LeakyReLU(0.5)^2 activation",
+    "Eval-only XSA"
+  ],
+  "artifact_size": "12-14MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

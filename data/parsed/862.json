@@ -1,0 +1,116 @@
+{
+  "pr_number": 862,
+  "title": "RECORD: Denseformer+VRL+XSA on last 4 layers+Gradient Clipping (pending 8xH100 eval)",
+  "author": "grim-hitman0XX",
+  "status": "open",
+  "val_bpb": 1.3036,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DenseFormer",
+        "description": "Depth-weighted average over current and all past layer representations, including embedding output.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared instead of ReLU squared in the MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Caches the value tensor from layer 0 and blends it into later layers' value tensors with learned softmax-normalized scalars.",
+        "parameters": {
+          "layers": "1-8"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-self attention applied to the last 4 layers to project out the self-value component from attention output.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "warmup_from": 0.85,
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 1200
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "DenseFormer depth-weighted averaging across all previous layer representations",
+    "LeakyReLU(0.5) squared activation replacing ReLU squared",
+    "Value Residual Learning blending layer-0 values into later layers",
+    "Cross-self attention on the last 4 layers",
+    "Global gradient clipping at 0.3",
+    "int8 plus zlib artifact compression"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

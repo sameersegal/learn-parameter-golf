@@ -1,0 +1,119 @@
+{
+  "pr_number": 870,
+  "title": "Record: BROADSIDE \u2014 Full-Rescore N-gram Cache (val_bpb 0.0935)",
+  "author": "simon-marcus",
+  "status": "open",
+  "val_bpb": 0.0935,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention in the transformer backbone.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "kv_heads": 4,
+          "query_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parallel": true,
+          "adamw": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "pass1_store_probs": true,
+          "pass2_rescore_all_tokens": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Two-pass n-gram rescoring with a full cache built vectorially from all validation tokens, then rescoring every token using pure numpy.",
+        "parameters": {
+          "ngram_orders": "2-12",
+          "cache_build": "np.bincount",
+          "rescore_scope": "all_tokens"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Full-rescore two-pass n-gram cache that rescored all tokens instead of only a subset of chunks",
+    "Vectorized complete cache construction using np.bincount",
+    "Pure numpy pass-2 rescoring of every token with stored per-token probabilities and entropies",
+    "Entropy-adaptive alpha blending with per-order multipliers",
+    "Sliding-window pass 1 that stores model probabilities for later rescoring"
+  ],
+  "artifact_size": "15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

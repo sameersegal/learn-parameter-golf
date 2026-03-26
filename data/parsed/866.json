@@ -1,0 +1,157 @@
+{
+  "pr_number": 866,
+  "title": "Claude/peaceful mclean",
+  "author": "sunnypatneedi",
+  "status": "closed",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "epochs": 20,
+          "batch_seqs": 32,
+          "surprise_topk": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.001,
+          "chunk_size": 256
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation replacing relu^2 to preserve gradients through negative activations",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied during evaluation to remove self-position contribution",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4,
+          "layers": 11,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate used in the MLP stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embeddings",
+        "parameters": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Trigram hash embeddings",
+        "parameters": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Residual value pathway across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Two independent test-time training methods: In-Place TTT and per-document LoRA TTT",
+    "Full GPTQ Hessian-aware quantization with Cholesky error compensation",
+    "LeakyReLU(0.5)^2 activation",
+    "Eval-only XSA on all 11 layers",
+    "Architecture stack combining GQA, SmearGate, BigramHash, TrigramHash, Value Residual, GradQuant, Partial RoPE, LN Scale, EMA, OrthoInit, and zstd compression"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
