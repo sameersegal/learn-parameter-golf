@@ -1,0 +1,112 @@
+You are an expert evaluator assessing the quality of structured data extraction from machine learning competition submissions.
+
+Given the original PR submission text and the extracted JSON output, score the extraction quality on 7 dimensions using a 1-5 scale.
+
+## Original PR Submission
+
+### PR Body
+$body
+
+### Submission README
+$readme
+
+## Extracted JSON Output
+$parsed_json
+
+## Context
+
+**Time period**: This PR is from the **$time_period** period of the competition.
+
+### Known Data Quality Issues (from vocabulary audit)
+
+$audit_context
+
+---
+
+## Scoring Dimensions
+
+Rate each dimension from 1 (poor) to 5 (excellent):
+
+### 1. val_bpb Accuracy
+- 5: Extracted value exactly matches a bpb number in the source text
+- 4: Extracted value is close but has minor rounding differences
+- 3: A bpb value exists in the source but the wrong one was extracted
+- 2: A bpb value exists in the source but was missed (null in output)
+- 1: Completely wrong value extracted, or value fabricated when none exists
+- If no bpb is mentioned and output is null, score 5
+
+### 2. Technique Completeness
+- 5: All techniques mentioned in the source are captured
+- 4: One minor technique missed
+- 3: 2-3 techniques missed
+- 2: Several important techniques missed
+- 1: Most techniques missed
+
+### 3. Technique Precision
+- 5: All extracted techniques are genuinely present in the source
+- 4: One questionable entry
+- 3: 2-3 hallucinated or misinterpreted techniques
+- 2: Several hallucinated techniques
+- 1: Most techniques are not in the source
+
+### 4. Method Naming Consistency
+- 5: All method names use canonical, consistent naming (e.g., "OrthoInit" not "Orthogonal initialization", "EMA" not "exponential moving average")
+- 4: One inconsistent name
+- 3: Several ad-hoc or verbose names that should be standardized
+- 2: Pervasive inconsistency
+- 1: Names are mostly free-form descriptions, not standardized
+- Refer to the KNOWN METHOD NAME VARIANTS in the audit context above for canonical forms
+
+### 5. Architecture Appropriateness
+- 5: Architecture field is a clean base type (e.g., "Transformer", "Mamba", "LSTM")
+- 4: Mostly clean but includes one extra detail
+- 3: Contains moderate verbosity (e.g., "12L/768d Transformer")
+- 2: Very verbose, includes full config
+- 1: Architecture field is a technique dump, not an architecture name
+- If architecture is null and none is mentioned, score 5
+
+### 6. Category Correctness
+- 5: All techniques are in the correct category
+- 4: One minor miscategorization
+- 3: 2-3 techniques in wrong categories
+- 2: Several miscategorizations
+- 1: Systematic miscategorization
+- Watch for: techniques dumped into "other" when they belong in an existing category (see OVERUSE OF 'other' in audit context), and cross-category overlaps
+
+### 7. Vocabulary Currency
+- 5: All technique names reflect current competition terminology — newer methods are recognized and correctly named
+- 4: One emerging technique missed or given a non-standard name
+- 3: Several newer techniques (e.g., Gated Attention, Value Residual, Parallel Muon, GPTQ-lite, Tight SWA) are missed, miscategorized, or given ad-hoc names
+- 2: Most newer techniques are poorly handled
+- 1: The extraction appears stuck on early-competition vocabulary, failing to capture technique evolution
+- Refer to EMERGING TECHNIQUES in the audit context above
+- For early-period PRs that don't use newer techniques, score 5
+
+---
+
+## Response Format
+
+Respond with ONLY a JSON object in this exact format:
+
+{
+  "scores": {
+    "val_bpb_accuracy": <1-5>,
+    "technique_completeness": <1-5>,
+    "technique_precision": <1-5>,
+    "method_naming_consistency": <1-5>,
+    "architecture_appropriateness": <1-5>,
+    "category_correctness": <1-5>,
+    "vocabulary_currency": <1-5>
+  },
+  "overall_score": <float, average of all 7 scores>,
+  "issues": [
+    {
+      "dimension": "<dimension name>",
+      "severity": "<high|medium|low>",
+      "description": "<specific issue found>"
+    }
+  ],
+  "missed_techniques": ["<technique mentioned in source but not extracted>"],
+  "hallucinated_techniques": ["<technique extracted but not in source>"],
+  "notes": "<any other observations about extraction quality>"
+}
