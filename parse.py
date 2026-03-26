@@ -20,15 +20,60 @@ log = logging.getLogger(__name__)
 
 RAW_DIR = Path("data/raw")
 PARSED_DIR = Path("data/parsed")
-PROMPT_PATH = Path("prompts/parse_submission.txt")
+PROMPTS_DIR = Path("prompts")
+PROMPT_PATH = PROMPTS_DIR / "parse_submission.txt"
+MANIFEST_PATH = PROMPTS_DIR / "manifest.json"
 MODEL = "gpt-5.4-mini"
 
 
-def load_prompt_template():
-    return Template(PROMPT_PATH.read_text(encoding="utf-8"))
+def load_manifest():
+    """Load prompt version manifest, or return None if it doesn't exist."""
+    if MANIFEST_PATH.exists():
+        return json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+    return None
 
 
-def parse_pr(client, template, pr_data):
+def get_prompt_version_and_template(requested_version=None):
+    """Load the prompt template for a given version.
+
+    Returns (version_string, Template) tuple.
+    Falls back to the root prompt file if no manifest exists.
+    """
+    manifest = load_manifest()
+
+    if manifest is None:
+        # No versioning set up — use legacy path
+        log.info("No prompt manifest found, using %s", PROMPT_PATH)
+        return "v1", Template(PROMPT_PATH.read_text(encoding="utf-8"))
+
+    version = requested_version or manifest["latest"]
+    if version not in manifest["versions"]:
+        available = ", ".join(manifest["versions"].keys())
+        log.error("Prompt version '%s' not found. Available: %s", version, available)
+        sys.exit(1)
+
+    version_path = PROMPTS_DIR / version / "parse_submission.txt"
+    if not version_path.exists():
+        log.error("Prompt file not found: %s", version_path)
+        sys.exit(1)
+
+    log.info("Using prompt version: %s (%s)", version, version_path)
+    return version, Template(version_path.read_text(encoding="utf-8"))
+
+
+def get_existing_prompt_version(pr_number):
+    """Read the prompt_version from an existing parsed file, or None."""
+    parsed_path = PARSED_DIR / f"{pr_number}.json"
+    if not parsed_path.exists():
+        return None
+    try:
+        data = json.loads(parsed_path.read_text(encoding="utf-8"))
+        return data.get("prompt_version")
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def parse_pr(client, template, pr_data, prompt_version):
     """Parse a single PR using the OpenAI Responses API."""
     pr_number = pr_data["number"]
     has_readme = bool(pr_data.get("submission_readme"))
@@ -66,10 +111,11 @@ def parse_pr(client, template, pr_data):
         text = "\n".join(lines)
 
     parsed = json.loads(text)
+    parsed["prompt_version"] = prompt_version
     n_techniques = len(parsed.get("training_techniques", []))
     log.info(
-        "PR #%d OK  %.1fs  bpb=%s  techniques=%d  readme=%s",
-        pr_number, elapsed, parsed.get("val_bpb"), n_techniques, has_readme,
+        "PR #%d OK  %.1fs  bpb=%s  techniques=%d  readme=%s  prompt=%s",
+        pr_number, elapsed, parsed.get("val_bpb"), n_techniques, has_readme, prompt_version,
     )
     return parsed
 
@@ -78,6 +124,14 @@ def main():
     parser = argparse.ArgumentParser(description="Parse raw PRs into structured data")
     parser.add_argument(
         "--force", action="store_true", help="Re-parse all PRs, even if already parsed"
+    )
+    parser.add_argument(
+        "--reprompt", action="store_true",
+        help="Re-parse PRs whose prompt_version differs from the target version"
+    )
+    parser.add_argument(
+        "--prompt-version", type=str, default=None,
+        help="Use a specific prompt version (default: latest from manifest)"
     )
     parser.add_argument(
         "--verbose", "-v", action="store_true", help="Enable debug logging"
@@ -92,17 +146,29 @@ def main():
         return
 
     PARSED_DIR.mkdir(parents=True, exist_ok=True)
-    template = load_prompt_template()
+    prompt_version, template = get_prompt_version_and_template(args.prompt_version)
     client = OpenAI()
 
     raw_files = sorted(RAW_DIR.glob("*.json"), key=lambda f: int(f.stem))
     existing = {int(f.stem) for f in PARSED_DIR.glob("*.json")}
-    to_parse = [f for f in raw_files if args.force or int(f.stem) not in existing]
 
+    if args.force:
+        to_parse = list(raw_files)
+    elif args.reprompt:
+        # Re-parse files whose prompt_version differs from the target
+        to_parse = []
+        for f in raw_files:
+            pr_num = int(f.stem)
+            existing_version = get_existing_prompt_version(pr_num)
+            if existing_version != prompt_version:
+                to_parse.append(f)
+    else:
+        to_parse = [f for f in raw_files if int(f.stem) not in existing]
+
+    mode = " (--force)" if args.force else " (--reprompt)" if args.reprompt else ""
     log.info(
-        "Found %d raw PRs, %d already parsed, %d to parse%s",
-        len(raw_files), len(existing), len(to_parse),
-        " (--force)" if args.force else "",
+        "Found %d raw PRs, %d already parsed, %d to parse%s [prompt: %s]",
+        len(raw_files), len(existing), len(to_parse), mode, prompt_version,
     )
 
     parsed_count = 0
@@ -115,7 +181,7 @@ def main():
         log.info("[%d/%d] Parsing PR #%d: %s", i, len(to_parse), pr_number, pr_data["title"][:70])
 
         try:
-            parsed = parse_pr(client, template, pr_data)
+            parsed = parse_pr(client, template, pr_data, prompt_version)
             out_path = PARSED_DIR / f"{pr_number}.json"
             out_path.write_text(json.dumps(parsed, indent=2), encoding="utf-8")
             parsed_count += 1

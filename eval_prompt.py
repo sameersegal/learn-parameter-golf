@@ -361,7 +361,8 @@ def generate_markdown(scorecards, aggregates):
         j = card.get("judgment", {})
         scores = j.get("scores", {})
         overall = j.get("overall_score", "?")
-        lines.append(f"### PR #{pr} [{period}] (overall: {overall})\n")
+        pv = card.get("prompt_version", "v1")
+        lines.append(f"### PR #{pr} [{period}] [prompt: {pv}] (overall: {overall})\n")
         for d in DIMENSIONS:
             lines.append(f"- {d.replace('_', ' ').title()}: {scores.get(d, '?')}/5")
         issues = j.get("issues", [])
@@ -438,6 +439,7 @@ def main():
             scorecards.append({
                 "pr_number": pr_number,
                 "period": period,
+                "prompt_version": pair["parsed"].get("prompt_version", "v1"),
                 "title": pair["parsed"].get("title", ""),
                 "is_record": pair["parsed"].get("is_record", False),
                 "val_bpb": pair["parsed"].get("val_bpb"),
