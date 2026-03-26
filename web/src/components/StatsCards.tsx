@@ -8,7 +8,7 @@ export default function StatsCards() {
 
   const stats = [
     { label: "PRs Processed", value: submissions.length },
-    { label: "Best BPB Score", value: bestBpb?.toFixed(4) ?? "N/A" },
+    { label: "Best Record BPB", value: bestBpb?.toFixed(4) ?? "N/A" },
     { label: "Techniques", value: techniqueCount },
     { label: "Deep Dives", value: deepDiveCount },
   ];

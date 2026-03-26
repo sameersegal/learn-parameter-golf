@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { submissions } from "@/lib/data";
-import CategoryTag from "@/components/CategoryTag";
 import { TechniqueCategory } from "@/lib/types";
+import { CATEGORY_META } from "@/lib/constants";
 
 export default function CurrentRecord() {
   const record = submissions
@@ -11,28 +11,30 @@ export default function CurrentRecord() {
 
   if (!record) return null;
 
-  // Extract unique categories and technique names
-  const techniques = record.training_techniques.map((t) => {
-    const d = t.data as Record<string, unknown>;
-    return {
-      category: t.category,
-      name: String(d.method ?? d.component ?? t.category),
-    };
-  });
+  // Group techniques by category
+  const grouped = new Map<
+    TechniqueCategory,
+    string[]
+  >();
 
-  const uniqueCategories = [
-    ...new Set(techniques.map((t) => t.category)),
-  ] as TechniqueCategory[];
+  for (const t of record.training_techniques) {
+    const d = t.data as Record<string, unknown>;
+    const name = String(d.method ?? d.component ?? t.category);
+    if (!grouped.has(t.category)) {
+      grouped.set(t.category, []);
+    }
+    grouped.get(t.category)!.push(name);
+  }
 
   return (
     <div className="mb-8">
       <div
-        className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-5 relative overflow-hidden"
+        className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 sm:p-5 relative overflow-hidden"
         style={{ borderLeft: "3px solid var(--accent)" }}
       >
         {/* Header row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <span className="bg-[var(--accent)] text-black text-xs font-bold px-2 py-1 rounded">
               CURRENT RECORD
             </span>
@@ -46,7 +48,7 @@ export default function CurrentRecord() {
               by {record.author}
             </span>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right">
             <div className="text-xs text-[var(--muted)]">val_bpb</div>
             <div className="text-2xl font-mono font-bold text-[var(--accent)]">
               {record.val_bpb!.toFixed(4)}
@@ -55,7 +57,7 @@ export default function CurrentRecord() {
         </div>
 
         {/* Metrics row */}
-        <div className="flex flex-wrap gap-4 mb-4 text-sm">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mb-4 text-sm">
           {record.architecture && (
             <div>
               <span className="text-[var(--muted)]">Architecture: </span>
@@ -76,21 +78,32 @@ export default function CurrentRecord() {
           )}
         </div>
 
-        {/* Technique category pills */}
-        <div className="flex flex-wrap gap-2 mb-3">
-          {uniqueCategories.map((cat) => (
-            <CategoryTag key={cat} category={cat} />
-          ))}
-        </div>
-
-        {/* Technique names */}
-        <div className="text-sm text-[var(--muted)]">
-          {techniques.map((t, i) => (
-            <span key={i}>
-              {i > 0 && <span className="mx-1.5 opacity-40">&middot;</span>}
-              {t.name}
-            </span>
-          ))}
+        {/* Techniques grouped by category */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {[...grouped.entries()].map(([category, names]) => {
+            const meta = CATEGORY_META[category] || CATEGORY_META.other;
+            return (
+              <div
+                key={category}
+                className="flex items-start gap-2 rounded-md px-2.5 py-1.5 text-sm"
+                style={{ backgroundColor: meta.color + "10" }}
+              >
+                <span
+                  className="shrink-0 inline-block text-xs font-medium px-2 py-0.5 rounded-full mt-0.5"
+                  style={{
+                    backgroundColor: meta.color + "22",
+                    color: meta.color,
+                    border: `1px solid ${meta.color}44`,
+                  }}
+                >
+                  {meta.label}
+                </span>
+                <span className="text-[var(--muted)] text-xs leading-relaxed pt-0.5">
+                  {names.join(", ")}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
         {/* Link */}

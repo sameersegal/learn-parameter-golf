@@ -16,7 +16,7 @@ export default function Home() {
   return (
     <div>
       {/* Hero */}
-      <p className="text-lg text-[var(--muted)] mb-8">
+      <p className="text-base sm:text-lg text-[var(--muted)] mb-6 sm:mb-8">
         Learn how to fit a language model into 16MB. This site breaks down
         every technique used in OpenAI&apos;s{" "}
         <a

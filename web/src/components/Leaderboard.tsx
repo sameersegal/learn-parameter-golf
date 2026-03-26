@@ -48,70 +48,110 @@ export default function Leaderboard({
     sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "";
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--border)] text-[var(--muted)]">
-            <th className="text-center p-2 w-10">Record</th>
-            <th
-              className="text-right p-2 cursor-pointer hover:text-white"
-              onClick={() => toggleSort("val_bpb")}
-            >
-              val_bpb{arrow("val_bpb")}
-            </th>
-            <th className="text-left p-2">Title</th>
-            <th
-              className="text-left p-2 cursor-pointer hover:text-white"
-              onClick={() => toggleSort("author")}
-            >
-              Author{arrow("author")}
-            </th>
-            <th
-              className="text-left p-2 cursor-pointer hover:text-white w-16"
-              onClick={() => toggleSort("pr_number")}
-            >
-              PR#{arrow("pr_number")}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {sorted.map((s) => (
-            <tr
-              key={s.pr_number}
-              className="border-b border-[var(--border)] hover:bg-[var(--border)]/30 transition-colors"
-            >
-              <td className="p-2 text-center">
+    <>
+      {/* Mobile card layout */}
+      <div className="sm:hidden space-y-2">
+        {sorted.map((s, i) => (
+          <div
+            key={s.pr_number}
+            className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-[var(--muted)]">#{i + 1}</span>
                 {s.is_record && (
-                  <span className="text-[var(--accent)]" title="Record submission">
-                    ★
-                  </span>
+                  <span className="text-[var(--accent)] text-sm" title="Record">★</span>
                 )}
-              </td>
-              <td className="p-2 text-right font-mono">
-                {s.val_bpb?.toFixed(4) ?? "N/A"}
-              </td>
-              <td className="p-2">
-                <Link
-                  href={`/pr/${s.pr_number}`}
-                  className="no-underline text-[var(--foreground)] hover:text-white"
-                >
-                  {s.title}
-                </Link>
-              </td>
-              <td className="p-2 text-[var(--muted)]">{s.author}</td>
-              <td className="p-2">
-                <a
-                  href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  #{s.pr_number}
-                </a>
-              </td>
+                <span className="font-mono font-bold text-sm">
+                  {s.val_bpb?.toFixed(4) ?? "N/A"}
+                </span>
+              </div>
+              <a
+                href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs"
+              >
+                PR #{s.pr_number}
+              </a>
+            </div>
+            <Link
+              href={`/pr/${s.pr_number}`}
+              className="no-underline text-sm text-[var(--foreground)] hover:text-white line-clamp-1"
+            >
+              {s.title}
+            </Link>
+            <div className="text-xs text-[var(--muted)] mt-0.5">{s.author}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table layout */}
+      <div className="hidden sm:block overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-[var(--border)] text-[var(--muted)]">
+              <th className="text-center p-2 w-10">Record</th>
+              <th
+                className="text-right p-2 cursor-pointer hover:text-white"
+                onClick={() => toggleSort("val_bpb")}
+              >
+                val_bpb{arrow("val_bpb")}
+              </th>
+              <th className="text-left p-2">Title</th>
+              <th
+                className="text-left p-2 cursor-pointer hover:text-white"
+                onClick={() => toggleSort("author")}
+              >
+                Author{arrow("author")}
+              </th>
+              <th
+                className="text-left p-2 cursor-pointer hover:text-white w-16"
+                onClick={() => toggleSort("pr_number")}
+              >
+                PR#{arrow("pr_number")}
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {sorted.map((s) => (
+              <tr
+                key={s.pr_number}
+                className="border-b border-[var(--border)] hover:bg-[var(--border)]/30 transition-colors"
+              >
+                <td className="p-2 text-center">
+                  {s.is_record && (
+                    <span className="text-[var(--accent)]" title="Record submission">
+                      ★
+                    </span>
+                  )}
+                </td>
+                <td className="p-2 text-right font-mono">
+                  {s.val_bpb?.toFixed(4) ?? "N/A"}
+                </td>
+                <td className="p-2">
+                  <Link
+                    href={`/pr/${s.pr_number}`}
+                    className="no-underline text-[var(--foreground)] hover:text-white"
+                  >
+                    {s.title}
+                  </Link>
+                </td>
+                <td className="p-2 text-[var(--muted)]">{s.author}</td>
+                <td className="p-2">
+                  <a
+                    href={`https://github.com/openai/parameter-golf/pull/${s.pr_number}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    #{s.pr_number}
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }
