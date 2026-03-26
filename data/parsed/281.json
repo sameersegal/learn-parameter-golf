@@ -1,0 +1,178 @@
+{
+  "pr_number": 281,
+  "title": "Non-record: val_bpb=1.1374, FA2+SWA adaptation of Farnsworth",
+  "author": "charmquark1984",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1381,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x expansion MLP with ReLU^2 activation in an 11-layer transformer",
+        "parameters": {
+          "layers": 11,
+          "model_dim": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "mlp_hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP+attention; embeddings int8"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned sigmoid token blending gate",
+        "parameters": {
+          "params": "~512"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048-bucket hash embedding for token-pair features",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-scaled rotary position embeddings",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.042,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 7,
+          "every": 200,
+          "during": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "Orthogonal",
+        "description": "Orthogonal initialization with muP output scaling"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.042
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 2 / torch SDPA flash backend used instead of FA3 Hopper kernels",
+        "parameters": {
+          "version": "2.8.3"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Adaptation of FarnsworthEngine to FlashAttention 2 instead of FA3 Hopper kernels",
+    "Weight decay tuned as a control knob for compressed artifact size targeting",
+    "Benchmark showing cuDNN SDP is faster than Flash SDP on H100 but yields worse model quality",
+    "Systematic sweep identifying WD=0.042 as optimal for ~15.5MB artifact size and best BPB",
+    "Use of SWA during warmdown combined with TTT and sliding-window evaluation"
+  ],
+  "artifact_size": "15.59 MB"
+}

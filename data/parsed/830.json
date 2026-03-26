@@ -1,0 +1,94 @@
+{
+  "pr_number": 830,
+  "title": "Non-record: LeakyMixer: 11L leaky_relu(0.5)^2 + backoff n-gram mixer",
+  "author": "zlxi02",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.4096,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer depth",
+        "description": "Increased model depth from 9 to 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP activation",
+        "description": "Swapped relu^2 for leaky_relu(0.5)^2 in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "int8+zlib roundtrip eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "backoff_orders": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ],
+          "entropy_adaptive_alpha": true,
+          "implemented_in_c": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Swapped relu^2 for leaky_relu(0.5)^2",
+    "Increased model depth from 9 to 11 layers",
+    "Extended warmdown schedule to 3500 steps",
+    "Added a backoff n-gram mixer that runs at eval time",
+    "Built a token cache while scoring the validation set",
+    "Mixed neural logits with n-gram predictions using entropy-adaptive alpha",
+    "Implemented the n-gram mixer in C for speed"
+  ],
+  "artifact_size": "13.49 MB"
+}

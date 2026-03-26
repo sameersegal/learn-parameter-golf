@@ -1,0 +1,139 @@
+{
+  "pr_number": 275,
+  "title": "Non-record: Paid Prefix Research (val_bpb=1.0539, ruled out-of-scope)",
+  "author": "ibarrajo",
+  "status": "disqualified",
+  "is_record": false,
+  "val_bpb": 1.0539,
+  "architecture": "Transformer",
+  "quantization": "Int6",
+  "optimizer": "Muon + AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Transformer variant using SmearGate blocks as part of the model recipe.",
+        "parameters": {
+          "layers": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a bigram hash mechanism with a 2048-bucket vocabulary component.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP scaling."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "adamw_weight_decay": 0.04,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 6
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Paid prefix / direct token storage: stores LZMA-compressed validation target tokens as part of the artifact to improve BPB on uncovered positions.",
+        "parameters": {
+          "coverage": 0.1,
+          "prefix_size_mb": 4.24
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Paid prefix / direct token storage as a hybrid compression strategy",
+    "Empirical comparison of model capacity versus prefix coverage under the 16MB budget",
+    "Compression research comparing raw uint16, LZMA, pack10, and bigram-rank prefix encodings",
+    "Observation that prefix coverage can matter more than model quality in this regime",
+    "Proposal of bigram-rank + varint + LZMA encoding for higher prefix coverage"
+  ],
+  "artifact_size": "15.97MB"
+}

@@ -1,0 +1,142 @@
+{
+  "pr_number": 278,
+  "title": "Record: 8L Paid Prefix + Sparse Hard Blocks (1.0365)",
+  "author": "nicolasdickenmann",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.03647005,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adds SmearGate to the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a BigramHash component with hashed buckets for additional representation capacity.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x expanded MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Uses FP16 tied embedding passthrough.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "8 heads with 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP scaling."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Inline-built sparse hard-block cache used as a sparse paid-prefix blob during evaluation to prioritize highest-loss validation blocks under a byte budget.",
+        "parameters": {
+          "prefix_type": "sparse_blocks_v1",
+          "block_size": 256,
+          "selected_blocks": 20681,
+          "covered_tokens": 5294336,
+          "covered_fraction": 0.0854,
+          "prefix_bytes": 4240256
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Replaces the contiguous paid prefix with an inline-built sparse hard-block cache.",
+    "Selects validation blocks by sliding-window NLL and keeps the hardest blocks under a byte budget.",
+    "Builds the sparse paid-prefix blob during eval time and uses it in the same run.",
+    "Improves score-per-prefix-byte by spending artifact bytes on high-loss validation regions instead of the first N positions."
+  ],
+  "artifact_size": "16.53 MB"
+}

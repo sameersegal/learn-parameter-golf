@@ -1,0 +1,125 @@
+{
+  "pr_number": 292,
+  "title": "Add baseline H100 training report and process docs",
+  "author": "xuafeng",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.3274,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "int8+zlib roundtrip evaluation",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Existing hash-based architectural component used in the model; referenced as part of the baseline and extended with trigram hash in later experiments.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Added a trigram hash table alongside the existing BigramHash.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 32
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 5,
+        "scope": "MLP layers"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "attention layers"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Straight-Through Estimator fake quantization applied in CastedLinear.forward() during QAT.",
+        "parameters": {
+          "formula": "w + (w_quantized - w).detach()"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "targets": [
+            "Q projections",
+            "V projections",
+            "LM head"
+          ],
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Baseline 1x H100 training report with 1.3274 BPB under a 600s wallclock cap",
+    "End-to-end RunPod and runpodctl process guide for training and evaluation",
+    "QAT experiments with int5/int6 fake quantization on top of the leaderboard architecture",
+    "Trigram hash extension to the existing bigram hash mechanism",
+    "Implemented but untested LoRA-based test-time training pipeline",
+    "Documented next-step ideas including QAT, 3x MLP, SwiGLU gating, and bigram hash improvements"
+  ],
+  "artifact_size": "13.8 MB"
+}

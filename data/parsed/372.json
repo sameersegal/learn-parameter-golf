@@ -1,0 +1,168 @@
+{
+  "pr_number": 372,
+  "title": "11L + XSA4 + EMA(0.997) + seq2048 + Int5-MLP + MuonWD=0.04 + LateK-FP16 | val_bpb=1.1361",
+  "author": "HyperPotatoNeo",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1361,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT with fp16 embeddings and last-layer c_k",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "token embedding and last layer c_k"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to the last 4 transformer layers, subtracting each value vector from the attention output before projection.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension sigmoid gate blending each token embedding with the preceding token.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "2048-bucket hashed bigram embedding table for consecutive token pairs.",
+        "parameters": {
+          "vocab_size": 2048,
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with 4 key/value heads.",
+        "parameters": {
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "11-layer U-Net Transformer",
+        "description": "Transformer with 11 blocks arranged as 5 encoder and 6 decoder layers with skip connections.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "momentum_warmup_start": 0.85,
+          "momentum_warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2000,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Large weight matrices initialized orthogonally; output projections scaled by 1/sqrt(2*num_layers)."
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer U-Net Transformer with skip connections",
+    "Mixed int6 attention and int5 MLP quantization with STE QAT",
+    "Late-K FP16 for the final layer's key projection",
+    "Exclusive self-attention on the last 4 layers",
+    "EMA weight averaging with decay 0.997",
+    "Sequence length increased to 2048",
+    "SmearGate and BigramHash bigram-context embedding techniques",
+    "Muon optimizer tuned with weight decay 0.04"
+  ],
+  "artifact_size": "15.79MB"
+}

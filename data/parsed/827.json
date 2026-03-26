@@ -1,0 +1,144 @@
+{
+  "pr_number": 827,
+  "title": "Record: LeakyReLU\u00b2 + XSA4 + LN Scale + Partial RoPE \u2014 val_bpb 1.3999",
+  "author": "Programmerryoki",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 1.3999,
+  "architecture": "Transformer",
+  "quantization": "Int6 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to the last layers; subtracts self-value from attention output so tokens attend more to context.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position encoding applied only to part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing component used in the model.",
+        "parameters": {
+          "buckets": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate enabled in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net Skips",
+        "description": "U-Net style skip connections enabled.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP widened to 2\u00d7 with LeakyReLU(0.5)^2 activation.",
+        "parameters": {
+          "multiplier": 2
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LeakyReLU(0.5)^2 activation replacing relu(x)^2 to preserve negative gradient flow and reduce dead neurons.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPTQ-lite clip search over multiple clip percentiles per weight row to minimize reconstruction MSE.",
+        "parameters": {
+          "clip_percentiles": [
+            0.9999,
+            0.99995,
+            0.99999,
+            0.999995,
+            1.0
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU(0.5)^2 activation",
+    "Exclusive self-attention (XSA) in the last 4 layers",
+    "Layerwise LN scaling by 1/sqrt(layer+1)",
+    "Partial RoPE using 16 of 64 head dimensions",
+    "GPTQ-lite clip search for quantization",
+    "Int6 QAT with zstd-22 compression"
+  ],
+  "artifact_size": "~13.5 MB"
+}

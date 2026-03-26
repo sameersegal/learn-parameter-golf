@@ -1,0 +1,142 @@
+{
+  "pr_number": 834,
+  "title": "Record: 0.1663 BPB - N-gram-Aware Training + Frozen N-gram Oracle + Backoff TTT",
+  "author": "AnirudhRahul",
+  "status": "open",
+  "is_record": true,
+  "val_bpb": 0.1663,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Linear gate head",
+        "description": "Adds a learned multi-expert routing head (Linear 512->7) on top of the transformer to mix neural and n-gram experts.",
+        "parameters": {
+          "input_dim": 512,
+          "output_dim": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a backoff n-gram mixer with hashed count tables for n-gram experts.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "combined_with": "Adam",
+          "ema": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "chunk_tokens": 1048576
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 1,
+          "freeze_blocks": 1,
+          "learning_rate": 3e-05
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1048576
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "across_chunks": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Frozen n-gram oracle precomputed from training data and kept read-only during training to enable efficient gate learning.",
+        "parameters": {
+          "prefill_counted_in_wallclock": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Learned multi-expert gate trained directly on next-token likelihood using a mixed probability objective over neural and n-gram experts.",
+        "parameters": {
+          "experts": 7,
+          "mixer_loss_weight": 0.1,
+          "neural_floor": 0.05
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Learned multi-expert gate that replaces a hand-crafted entropy heuristic for routing between neural and n-gram experts",
+    "Frozen n-gram oracle precomputed from training data to make gate training efficient within the wallclock budget",
+    "Direct optimization of the gate using next-token likelihood over a mixture of experts",
+    "Backoff TTT with score-first causal evaluation using a fresh validation cache",
+    "GPU-native backoff n-gram mixer implementation"
+  ],
+  "artifact_size": "15.76 MB"
+}

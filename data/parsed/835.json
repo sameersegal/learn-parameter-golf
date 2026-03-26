@@ -1,0 +1,175 @@
+{
+  "pr_number": 835,
+  "title": "Progressive Depth Training \u2014 val_bpb 1.1980",
+  "author": "iverbovoy",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.198,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon + Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Replaced unique transformer blocks with shared blocks repeated multiple times to increase effective depth.",
+        "parameters": {
+          "blocks": 3,
+          "repeats": 4,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Cross-Repeat Skip",
+        "description": "Adds a weighted residual connection from each block's previous repeat output, making recurrence stateful.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "value embeddings",
+        "description": "Two extra embedding tables mixed into the residual stream at each effective layer with learned scales.",
+        "parameters": {
+          "tables": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "loop embedding",
+        "description": "Learned per-layer vector added before each block as depth-wise positional encoding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads with 8 attention heads total.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon + Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.012,
+          "scalar_lr": 0.012,
+          "tied_embed_lr": 0.015,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "collected_only_at_full_depth": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window": 1024,
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Progressive depth training schedule that increases recurrence depth during training from 2 repeats to 3 repeats to 4 repeats.",
+        "parameters": {
+          "phases": [
+            {
+              "repeats": 2,
+              "eff_depth": 6
+            },
+            {
+              "repeats": 3,
+              "eff_depth": 9
+            },
+            {
+              "repeats": 4,
+              "eff_depth": 12
+            }
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "DDP race condition fix for phase switching using all_reduce synchronization across ranks.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Progressive depth training schedule that increases recurrence depth during training",
+    "DDP phase-switch synchronization fix using all_reduce",
+    "Stateful depth recurrence with Cross-Repeat Skip",
+    "Use of XSA in the last 4 layers",
+    "Value embeddings mixed into the residual stream",
+    "Loop embedding as depth-wise positional encoding"
+  ],
+  "artifact_size": "12.83MB"
+}

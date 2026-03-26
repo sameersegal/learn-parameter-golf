@@ -1,0 +1,149 @@
+{
+  "pr_number": 362,
+  "title": "Record: 11L Int6+Zstd MLP3x SmearGate BigramHash OrthoInit MuonWD EMA (mean val_bpb=1.1497)",
+  "author": "mkenney2",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1497,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion with 1536 hidden dimension.",
+        "parameters": {
+          "mlp_multiplier": 3,
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending each token with its predecessor.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a 4096-bucket hash embedding for bigram context.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied, with FP16 embeddings to avoid quantization degradation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal weight initialization with projection scaling."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer Transformer with 3x MLP expansion",
+    "Int6 quantization combined with zstd-22 compression to fit a larger model under the artifact limit",
+    "SmearGate token-to-predecessor blending mechanism",
+    "BigramHash 4096-bucket hash embedding for bigram context",
+    "OrthoInit orthogonal initialization",
+    "Muon optimizer with weight decay 0.02",
+    "EMA with decay 0.997",
+    "FP16 tied embeddings",
+    "Sliding-window evaluation with stride 256",
+    "Extensive ablation of AttnRes, depth recurrence, sequence-length curriculum, and TTT"
+  ],
+  "artifact_size": "~14.8MB"
+}

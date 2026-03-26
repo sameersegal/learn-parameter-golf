@@ -1,0 +1,138 @@
+{
+  "pr_number": 373,
+  "title": "Record: SwiGLU + BigramHash + SWA, val_bpb=1.1634 (8xH100 verified)",
+  "author": "JoeProAI",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1634,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaced relu(x).square() FFN activation with SwiGLU.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Used BigramHash embeddings instead of standard token embeddings.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Kept token embedding weights tied to the output head.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Configured the transformer with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "layers": 10,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 50,
+          "start_fraction": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 960
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3600
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FP16 embedding passthrough during quantization to reduce post-quantization degradation.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "SwiGLU FFN activation discovered via automated search/GEPA",
+    "BigramHash embeddings with 4096 buckets and 128-dimensional embeddings",
+    "Stochastic Weight Averaging every 50 steps starting from 50% of training",
+    "FP16 embedding passthrough during quantization to reduce degradation",
+    "Sliding window evaluation with stride 64 for richer validation context",
+    "Warmdown and learning-rate tuning for the 10-minute wall-clock budget"
+  ],
+  "artifact_size": "14.1 MB"
+}

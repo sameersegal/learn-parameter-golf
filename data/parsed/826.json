@@ -1,0 +1,248 @@
+{
+  "pr_number": 826,
+  "title": "Record: Order-9 N-gram Backoff + Score-First TTT + GPTQ-Int5 (0.2951 BPB)",
+  "author": "himanshudongre",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 0.29509,
+  "architecture": "11-layer Transformer-like model with 512d, GQA 8/4, MLP 3.0x, BigramHash, SmearGate, XSA, Partial RoPE, LN Scale, U-Net skips, VE128",
+  "quantization": "GPTQ int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds hashed bigram features with projected embeddings.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending current and previous token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Learned skip connections between encoder and decoder halves.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "Value embeddings used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU(0.9)^2",
+        "description": "Uses LeakyReLU with slope 0.9 applied twice in the MLP.",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "banking": true,
+          "ns5_steps": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "applied_to": "embeddings",
+          "learning_rate": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "chunk_size": 2048,
+          "epochs_per_chunk": 3,
+          "polyak_decay": 0.998,
+          "temperature": 0.98
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "full model"
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order-9 n-gram backoff evaluation cache with entropy-adaptive interpolation and score-first backward-looking updates.",
+        "parameters": {
+          "orders": [
+            2,
+            9
+          ],
+          "buckets_per_order": 4194304,
+          "alpha_range": [
+            0.05,
+            0.6
+          ],
+          "entropy_center": 3.0,
+          "chunk_size": 1000000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Perplexity-ranked shard ordering curriculum for training.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Order-9 n-gram backoff evaluation cache with entropy-adaptive interpolation",
+    "Score-first test-time training with LoRA on Q, V, and LM head",
+    "GPTQ int5 full-Hessian quantization with LZMA compression",
+    "Perplexity-ranked shard ordering curriculum",
+    "LeakyReLU(0.9)^2 MLP variant with frontier_lean architecture stack"
+  ],
+  "artifact_size": "~13.4 MB"
+}

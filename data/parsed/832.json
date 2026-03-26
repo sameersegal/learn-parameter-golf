@@ -1,0 +1,195 @@
+{
+  "pr_number": 832,
+  "title": "Non-record: Byte-level transformer + JEPA auxiliary loss (val_bpb: 1.1903)",
+  "author": "jfprincz",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1903,
+  "architecture": "Transformer",
+  "quantization": "int6 + int8 mixed quantization",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Byte-level transformer",
+        "description": "Autoregressive transformer operating directly on raw UTF-8 bytes with vocab size 260 and no tokenizer/BPE.",
+        "parameters": {
+          "vocab_size": 260,
+          "layers": 13,
+          "dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "JEPA auxiliary loss",
+        "description": "Auxiliary chunk-level latent prediction module added to the autoregressive transformer to improve validation BPB.",
+        "parameters": {
+          "latent_dim": 256,
+          "proj_hidden": 256,
+          "chunk_size": 8,
+          "lambda_max": 0.001
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skips",
+        "description": "Skip connections in the transformer backbone.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied only to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last layers of the model.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Auxiliary bigram hashing component used in the stack.",
+        "parameters": {
+          "vocab_size": 4096,
+          "dim": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating mechanism included in the model stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / tied output weights implied by the configuration.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "iterations": 9000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used as part of the training stack."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SIGReg regularization using Epps-Pulley projections and knots to prevent latent collapse in the JEPA module.",
+        "parameters": {
+          "projections": 256,
+          "knots": 17,
+          "weight": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Byte-level autoregressive transformer with no tokenizer, operating directly on raw UTF-8 bytes",
+    "Lightweight JEPA auxiliary loss for chunk-level latent prediction",
+    "Reported consistent BPB improvement from JEPA across seeds and evaluation methods",
+    "Combination of JEPA with an existing sp1024-style technique stack",
+    "Use of SIGReg to prevent latent collapse in the auxiliary representation space"
+  ],
+  "artifact_size": "14.4 MB"
+}

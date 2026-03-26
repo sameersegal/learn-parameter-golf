@@ -1,0 +1,159 @@
+{
+  "pr_number": 212,
+  "title": "Non-record: Negative findings on codebook quantization, magnitude pruning, multi-token prediction, embedding factorization",
+  "author": "mrdavtan",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": 1.1329,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization with zstd-22",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size from 1024 to 1536 (3x MLP expansion).",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 20000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "grad_clip_norm": 1.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "sample_every": 50
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "max_steps": 500,
+          "freeze_blocks": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shared-block recurrent depth setup tested as an experimental technique.",
+        "parameters": {
+          "shared_blocks": 3,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Added SmearGate and BigramHash as an experimental architectural modification.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added BigramHash as an experimental architectural modification.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 per-row quantization with 3x MLP expansion to fit a larger model within the artifact budget.",
+    "Controlled ablations showing multi-token prediction did not help on this setup.",
+    "Negative findings on codebook quantization: K-means codebooks compressed worse than int6 despite lower reconstruction error.",
+    "Negative findings on magnitude pruning: small amounts of pruning increased compressed artifact size.",
+    "Negative findings on embedding SVD/factorization: rank-64 linear factorization was not viable for the token embedding matrix.",
+    "Documentation of failed depth recurrence / Huginn-style eval scaling at small scale.",
+    "Documentation of QAT under torch.compile issues and implementation bugs such as SWA bf16 accumulation and zstd/zlib mismatch."
+  ],
+  "artifact_size": "15.3 MB"
+}

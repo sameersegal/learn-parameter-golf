@@ -1,0 +1,105 @@
+{
+  "pr_number": 250,
+  "title": "Complexity MoE v4: Token-Routed I64 + PID + CUDA Scatter + Int6 (26.5M params)",
+  "author": "Complexity-ML",
+  "status": "closed",
+  "is_record": false,
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Token-Routed MoE",
+        "description": "4-expert SwiGLU mixture-of-experts with deterministic hybrid routing (modulo base plus learned override) and CUDA scatter/gather dispatch.",
+        "parameters": {
+          "experts": 4,
+          "routing": "token_id % 4 with learned override"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "PID dynamics",
+        "description": "Learnable equilibrium mu traverses all layers with clamping, acting like a PID-style controller over hidden state dynamics.",
+        "parameters": {
+          "layers": 11,
+          "mu_clamp": [
+            0.5,
+            1.5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaces the baseline relu\u00b2 MLP activation with SwiGLU experts.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoint_dtype": "fp32"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine warm restarts",
+        "parameters": {
+          "cycle_lengths": [
+            5000,
+            10000,
+            20000
+          ],
+          "peak_lr_decay": 0.7
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Token-routed mixture-of-experts with deterministic modulo routing and learned override",
+    "PID-style dynamics with a learnable mu state traversing all layers",
+    "CUDA scatter/gather expert dispatch for reduced wasted compute",
+    "Int6 quantization combined with zstd-22 compression",
+    "Stochastic weight averaging of fp32 checkpoints",
+    "Cosine warm restart learning rate schedule",
+    "Sliding-window evaluation with stride 64 and context length 2048"
+  ],
+  "artifact_size": "14.2MB"
+}

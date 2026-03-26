@@ -1,0 +1,167 @@
+{
+  "pr_number": 265,
+  "title": "Record: 11L + Efficient Partial XSA (val_bpb: 1.1307)",
+  "author": "unnir",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1307,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization with int8 embeddings",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied only to the deepest layers, with an efficient GQA-aware implementation that avoids value-vector duplication via reshape and broadcasting.",
+        "parameters": {
+          "layers": 3,
+          "total_layers": 11,
+          "head_count": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate as part of the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash component with bucketed representation.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware rotary positional embeddings that auto-scale at longer context lengths.",
+        "parameters": {
+          "train_seq_len": 1024,
+          "auto_scales_at": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with relu-squared activation.",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "warmup_start_momentum": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embedding_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_steps": 120,
+          "num_checkpoints": 13,
+          "scale_threshold": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3000,
+          "warmup_steps": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Efficient GQA-aware implementation of Exclusive Self Attention using reshape and broadcasting instead of repeat_interleave",
+    "Applying XSA only to the deepest 3 of 11 layers to reduce compute while targeting layers with higher self-attention bias",
+    "Combination of partial XSA with an 11-layer Transformer, GQA, SmearGate, BigramHash, and U-Net skip connections"
+  ],
+  "artifact_size": "15,892,986 bytes"
+}

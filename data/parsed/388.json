@@ -1,0 +1,228 @@
+{
+  "pr_number": 388,
+  "title": "Record: 11L + Tight SWA + VE128 + Partial RoPE + LN Scale + TTT (val_bpb: 1.1231)",
+  "author": "ElliotSlusky",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1231,
+  "architecture": "Transformer",
+  "quantization": "int6+int8 per-row quantization with zstd compression",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses RoPE on only part of the attention dimensions, leaving most attention dimensions position-free.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Shared Value Embeddings",
+        "description": "A learned embedding table shared across layers 9 and 10 and added to the value path with per-layer learned scales.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scaling factor of 1/sqrt(layer_idx+1).",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion with relu-squared activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with 4 KV heads across 8 attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds BigramHash features with 2048 buckets and 128-dimensional embeddings.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tied embeddings",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses encoder-decoder style skip connections with 5 encoder and 6 decoder layers.",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.042,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.042,
+        "momentum": null,
+        "other_params": {
+          "lr_embeddings": 0.035,
+          "lr_scalars": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_n_steps": 50,
+          "start_scale": 0.2,
+          "num_checkpoints": 16
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.008,
+          "epochs": 25,
+          "momentum": 0.9,
+          "batch_seqs": 32,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with projection scaling by 1/sqrt(2*num_layers)."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale_factor": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention weights int6 per-row; embeddings int8 per-row"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses cuDNN SDPA attention implementation for speed.",
+        "parameters": {
+          "speedup_vs_fa2": 1.18
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Tight SWA restricted to low-scale checkpoints and averaging only the most recent 16 checkpoints",
+    "Shared Value Embeddings with a single table shared across layers 9 and 10",
+    "Partial RoPE applied to only 16 of 64 attention dimensions",
+    "LayerNorm scaling by 1/sqrt(layer_idx+1)",
+    "Test-Time Training with full-weight SGD on validation data after quantization",
+    "Int6+zstd quantization with int8 embeddings",
+    "cuDNN SDPA attention for faster grouped-query attention"
+  ],
+  "artifact_size": "15.43 MB"
+}

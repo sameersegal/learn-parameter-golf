@@ -1,0 +1,172 @@
+{
+  "pr_number": 376,
+  "title": "Record: 11L Next-Gen Stack + Custom Kernels, val_bpb=1.1399",
+  "author": "anthony-maio",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1399,
+  "architecture": "Transformer",
+  "quantization": "int5 mixed precision + Late QAT STE",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x expansion MLP with ReLU\u00b2 activation",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to only part of the head dimension with NTK-aware scaling",
+        "parameters": {
+          "rope_dims": 16,
+          "total_dims": 64,
+          "base": 50000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned sigmoid token blending gate",
+        "parameters": {
+          "parameters": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash embedding for token-pair features",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start": 0.92,
+          "warmup_end": 0.99,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoint_average": 7,
+          "scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP scaling"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmup_start": 0.92,
+          "warmup_end": 0.99
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "mixed precision weights"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer transformer with a competitive stack achieving 1.1399 val_bpb",
+    "Exclusive Self Attention on the last 4 layers",
+    "Partial RoPE with NTK-aware base scaling",
+    "SmearGate learned token blending",
+    "BigramHash token-pair feature embedding",
+    "Int5 mixed precision with late QAT STE",
+    "GPTQ-lite clip search during compression",
+    "Muon optimizer with custom warmup schedule",
+    "Tight SWA checkpoint averaging",
+    "Custom Triton/CUDA kernel pipeline for future speedups"
+  ],
+  "artifact_size": "15.79MB"
+}

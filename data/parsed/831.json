@@ -1,0 +1,151 @@
+{
+  "pr_number": 831,
+  "title": "Research: Why Novel Architectures Fail at 16MB \u2014 Throughput-Quantization Co-optimization",
+  "author": "sseanliu",
+  "status": "open",
+  "is_record": false,
+  "val_bpb": 1.1284,
+  "architecture": "Transformer",
+  "quantization": "int6 per-row quantization",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "batched_banks": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-window/self-attention variant used in the SOTA stack; also referenced as XSA-all in one failed technique.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Exponential moving average used as part of the base recipe.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Custom gating/architecture component in the base recipe.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based architectural component used in the base recipe.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "cache_tokens": 8192,
+          "effective_context": 50000
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Throughput-quantization co-optimization analysis showing that small per-step overheads can negate BPB gains under the 16MB/600s constraint.",
+        "parameters": {
+          "throughput_tax_bpb_per_ms": 0.007
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Systematic evaluation of six March 2026 architectural innovations on the PR #549 SOTA stack",
+    "Claim that throughput-quantization co-optimization is the binding constraint at 16MB/600s",
+    "Throughput tax formula estimating BPB gain required per millisecond of overhead",
+    "Observation that MLP shape affects quantizability",
+    "Observation that hypersphere normalization is incompatible with per-row quantization",
+    "Proposal of Neural Cache: cross-window KV caching for extended-context evaluation",
+    "Use of cached K/V pairs across sliding windows to extend effective context without changing model weights"
+  ],
+  "artifact_size": "16MB"
+}

@@ -1,0 +1,150 @@
+{
+  "pr_number": 287,
+  "title": "Record: 11L XSA + EMA + Int6 MLP3x + WD=0.04 (val_bpb: 1.1271)",
+  "author": "jfprincz",
+  "status": "closed",
+  "is_record": true,
+  "val_bpb": 1.1271,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to the last 4 layers; subtracts the component aligned with each token's own value vector from attention output.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention int6, embeddings int8"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP scaling on large matrices."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider MLP blocks with hidden size 1536 and relu\u00b2 activation.",
+        "parameters": {
+          "hidden_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending gate used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with 2048 buckets, dimension 128, projected to 512.",
+        "parameters": {
+          "vocab_size": 2048,
+          "dimension": 128,
+          "projection_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start": 0.92,
+          "warmup_steps": 1500,
+          "warmdown_iters": 3000,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + warmdown",
+        "parameters": {
+          "warmup_steps": 1500,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Exclusive Self Attention (XSA) on the last 4 layers",
+    "EMA replacing SWA for weight averaging",
+    "Mixed int6/int8 quantization with zstd-22 compression",
+    "11-layer Transformer stack with U-Net skip connections and 3x MLP blocks",
+    "OrthoInit with muP scaling and tuned Muon optimizer settings"
+  ],
+  "artifact_size": "15.5 MB"
+}

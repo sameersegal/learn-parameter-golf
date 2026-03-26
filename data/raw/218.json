@@ -1,0 +1,12 @@
+{
+  "number": 218,
+  "title": "qat + ttt + value embeddings",
+  "author": "bopmite",
+  "body": "",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-20T14:32:21Z",
+  "updated_at": "2026-03-21T07:54:04Z",
+  "submission_readme": "PR #315 base (1.1248) + Online Logit Bias. Non-record pending compute.\n\n## what's new\n\n**online logit bias (OLB)** (`OLB_LR=0.1`): online learned bias vector added to logits during sliding window eval. Updated via exact CE gradient: `bias -= lr * (softmax(logits+bias) - onehot(target))`. Learns the optimal logit correction online as it processes the validation set. Zero model parameters, near-zero compute, doesn't modify model weights. Strictly better than frequency counting.\n\n## base (matching PR #315 SOTA)\n\n11L, 512d, 3x MLP, int6+zstd, SmearGate, BigramHash(2048), OrthoInit+muP, FA3, seq2048+NTK RoPE, slide s64, Muon WD 0.04, XSA last 4 layers, EMA decay=0.997, Partial RoPE (16/64 dims), LN Scale, Late QAT.\n\n## command\n\n```bash\nNUM_LAYERS=11 BIGRAM_VOCAB_SIZE=2048 XSA_LAST_N=4 \\\nEMA_ENABLED=1 EMA_DECAY=0.997 SWA_ENABLED=0 \\\nROPE_DIMS=16 LN_SCALE=1 LATE_QAT=1 QAT_THRESHOLD=0.1 \\\nMUON_WD=0.04 ADAM_WD=0.04 \\\nMATRIX_LR=0.025 SCALAR_LR=0.025 TIED_EMBED_LR=0.035 \\\nMUON_MOMENTUM=0.99 MUON_MOMENTUM_WARMUP_START=0.92 \\\nMUON_MOMENTUM_WARMUP_STEPS=1500 WARMDOWN_ITERS=3000 \\\nTRAIN_BATCH_TOKENS=524288 \\\nITERATIONS=9000 MAX_WALLCLOCK_SECONDS=600 EVAL_STRIDE=64 \\\nOLB_LR=0.1 OLB_MOMENTUM=0.9 \\\nSEED=1337 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## run plan ($25 = 5 runs)\n\n1. `OLB_LR=0 SEED=1337` -> reproduce PR #315 baseline, expect 1.1248\n2. `OLB_LR=0.1 SEED=1337` -> test OLB\n3. `OLB_LR=0.05 SEED=1337` -> test lower OLB if 0.1 is too aggressive\n4. Best config `SEED=42` -> second seed\n5. Best config `SEED=2025` -> third seed\n\n## toggle\n\n`OLB_LR=0` disables OLB.\n"
+}
