@@ -1,0 +1,180 @@
+{
+  "pr_number": 951,
+  "title": "16L XSA-all + INT4 MLP QAT + GPTQ + EMA + Partial RoPE + 30ep Cosine TTT",
+  "author": "Bharath-970",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int4 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "All layers share a single KV set from layer 0 to save memory and fund extra layers.",
+        "parameters": {
+          "layers": 16
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 4,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "RoPE applied to only a fraction of head dimensions.",
+        "parameters": {
+          "fraction": 0.25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used as an additional input representation.",
+        "parameters": {
+          "entries": 20480,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Trigram hash embedding used as an additional input representation.",
+        "parameters": {
+          "entries": 10240,
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Residual mix gating mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections between encoder and decoder layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 30,
+          "learning_rate": 0.0005
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_iters": 5000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "XSA-all sharing a single KV set across all 16 layers to save memory",
+    "INT4 nibble-packed MLP quantization with QAT",
+    "GPTQ-lite clip search for quantization calibration",
+    "EMA weight averaging",
+    "Partial RoPE applied to 25% of head dimensions",
+    "30-epoch cosine test-time training with sliding window evaluation",
+    "Bigram and trigram hash embeddings",
+    "SmearGate and U-Net skip connections"
+  ],
+  "artifact_size": "16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
