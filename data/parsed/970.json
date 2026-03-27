@@ -1,0 +1,133 @@
+{
+  "pr_number": 970,
+  "title": "Non-record: GatedDeltaNet SSM via fla library \u2014 1.2907 bpb, 15.79MB",
+  "author": "dnldsz",
+  "status": "open",
+  "val_bpb": 1.2907,
+  "architecture": "Hybrid",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Replaces attention with a selective state space model using delta-rule recurrence and fused Triton kernels.",
+        "parameters": {
+          "layers": 12,
+          "dimensions": 384,
+          "head_dim": 64,
+          "heads_per_layer": 6,
+          "chunk_size": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses learned U-Net style skip connections in the model stack.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a BigramHash embedding alongside tied token embeddings.",
+        "parameters": {
+          "vocab": 1536,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Applies polynomial softcap to logits.",
+        "parameters": {
+          "degree": 5,
+          "cap": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "z-loss",
+        "parameters": {
+          "weight": 0.0001
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "newton_schulz": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "scalars, embeddings, and GDN-specific delta-rule params"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Gated DeltaNet selective state space model using flash-linear-attention Triton kernels",
+    "Non-attention SSM baseline for the parameter golf challenge",
+    "Chunk-parallel delta-rule recurrence with chunk size 64",
+    "U-Net skip connections combined with GatedDeltaNet",
+    "BigramHash embedding and polynomial logit softcap in a compact 16MB submission",
+    "Routing delta-rule parameters to Adam while using Muon for 2D weights"
+  ],
+  "artifact_size": "15.79 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
