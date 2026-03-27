@@ -1,0 +1,169 @@
+{
+  "pr_number": 986,
+  "title": "Record: Packed N-gram + Two-Pass   Dirichlet CTW \u2014 val_bpb 0.0830 (3-seed mean)",
+  "author": "sofiabod",
+  "status": "open",
+  "val_bpb": 0.08302574,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / embedding tying in the base model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based n-gram cache component used for backoff and phrase matching.",
+        "parameters": {
+          "orders": "2-13"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Auxiliary gating component mentioned in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual / VE128 component used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embedding applied to part of the model.",
+        "parameters": {
+          "fraction": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "squared": true,
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "two-pass full rescore",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Packed training n-gram artifact built from all training shards and stored as compressed hash tables for warm-started evaluation.",
+        "parameters": {
+          "orders": "2-13",
+          "buckets": 128000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hierarchical Dirichlet CTW mixing where each order's posterior becomes the next order's prior.",
+        "parameters": {
+          "concentration": 5.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Phrase cache with variable-length suffix matching.",
+        "parameters": {
+          "probe_lengths": [
+            48,
+            36,
+            28,
+            20,
+            16
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Packed training n-gram artifact precomputed from all training data and stored in the submission artifact",
+    "Two-pass full rescore to eliminate cold-start degradation without a second neural forward pass",
+    "Hierarchical Dirichlet CTW mixing across n-gram orders",
+    "Ratio-preserving count scaling to keep n-gram statistics within compact integer ranges",
+    "Variable-length phrase cache with suffix matching",
+    "Distributed cache prefill for sequential-equivalent distributed evaluation"
+  ],
+  "artifact_size": "5.76 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
