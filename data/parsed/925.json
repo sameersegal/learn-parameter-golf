@@ -1,0 +1,173 @@
+{
+  "pr_number": 925,
+  "title": "Record: Frozen N-gram Oracle (Order-16) + Score-First TTT (0.02807 BPB)",
+  "author": "THUQiXuan",
+  "status": "open",
+  "val_bpb": 0.02807,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "GPU-native multi-order n-gram backoff oracle with hashed count tables for context-based prediction.",
+        "parameters": {
+          "buckets": 4194304,
+          "max_order": 16,
+          "orders": "2-16"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP stack.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual enhancement used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times MLP stack.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash component used in the base architecture.",
+        "parameters": {
+          "size": 6144
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Multi-expert alpha head mixes neural and n-gram experts via learned softmax gating.",
+        "parameters": {
+          "experts": 16,
+          "hidden_size": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adamw": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 1,
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Order-16 frozen n-gram oracle prefilled from all training tokens",
+    "4M-bucket GPU-native backoff n-gram tables",
+    "Learned multi-expert alpha head to mix neural and n-gram experts",
+    "Complementary training that downweights already well-predicted tokens",
+    "Score-first test-time training evaluation protocol",
+    "Order-16 scaling with budget-aware evaluation"
+  ],
+  "artifact_size": "12.9MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

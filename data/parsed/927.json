@@ -1,0 +1,192 @@
+{
+  "pr_number": 927,
+  "title": "Recursive Transformer 4B/7L + VE + QAT + TTT \u2014 val_bpb 1.1696 (3-seed mean)",
+  "author": "Tonyy1977",
+  "status": "open",
+  "val_bpb": 1.1696,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "4 shared transformer blocks are looped 7 times to create recursive depth with weight reuse.",
+        "parameters": {
+          "blocks": 4,
+          "loops": 7,
+          "dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections across loop iterations with learnable skip weights.",
+        "parameters": {
+          "encoder_loops": 3,
+          "decoder_loops": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 32,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Sequence Attention applied in the last 4 loops.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "ValueEmbedding reinjects token identity into later loops.",
+        "parameters": {
+          "dim": 128,
+          "last_n": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension gate blending current token with previous token information.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding using previous and current tokens.",
+        "parameters": {
+          "buckets": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "large weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "final artifact"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.01,
+          "tied_embedding_lr": 0.02,
+          "grad_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.2,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500,
+          "warmup_steps": 100
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 32768
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Recursive transformer with 4 shared blocks looped 7 times for 7x weight reuse",
+    "Width-over-depth design using dim=1024 while staying under the 16MB limit",
+    "U-Net encoder-decoder skip connections across recursive loops",
+    "Int6 QAT from step 0 to prevent compounding quantization error in recursive weight reuse",
+    "ValueEmbedding to reinject token identity in later loops",
+    "SmearGate, BigramHash, and XSA used in the later loops",
+    "Score-first test-time training combined with sliding window evaluation"
+  ],
+  "artifact_size": "~15.85MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

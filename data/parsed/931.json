@@ -1,0 +1,85 @@
+{
+  "pr_number": 931,
+  "title": "Record: 0.0498 bpb - Packed Training N-gram Artifact + Learned Weighting Gate",
+  "author": "AnirudhRahul",
+  "status": "open",
+  "val_bpb": 0.04983971,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Removed the bigram hash path to make room for the packed training n-gram cache while retaining warm low-order n-gram signal through the artifact.",
+        "parameters": {
+          "vocab_size": 0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned multi-expert weighting gate over the neural model and n-gram experts for orders 2 through 9.",
+        "parameters": {
+          "experts": "neural + n-gram order 2..9"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Packed a 32K-bucket order-2..9 training n-gram cache into the artifact as 32-bit count tables so evaluation starts with a pre-warmed cache.",
+        "parameters": {
+          "buckets": 32768,
+          "orders": "2..9",
+          "count_table_bits": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 131072,
+          "temperature": 0.85,
+          "freeze_blocks": 2,
+          "epochs": 2,
+          "learning_rate": 0.0001
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_pct": 0.05
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Learned weighting gate over neural and order-2..9 n-gram experts",
+    "Packed 32K-bucket training n-gram artifact serialized into the submission",
+    "Single-pass causal evaluation with pre-warmed cache and online updates",
+    "Removed bigram hash path to fit the packed cache under the 16MB artifact limit",
+    "Simplified evaluation by removing maturity decay and heuristic switching"
+  ],
+  "artifact_size": "15,857,871 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
