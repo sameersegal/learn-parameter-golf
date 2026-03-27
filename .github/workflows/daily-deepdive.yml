@@ -1,0 +1,65 @@
+name: Daily Deep Dive Article
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # 9 AM UTC daily
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: 'Specific topic slug to write about (leave empty for auto-selection)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: daily-deepdive
+  cancel-in-progress: false
+
+jobs:
+  generate-deepdive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate deep dive article
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            You are running as a daily automated workflow to generate a deep dive article for the Parameter Golf website.
+
+            ## Your Task
+
+            1. First, read `web/src/content/deep-dives/registry.ts` to find stub articles (those with `sections: []`).
+            2. Read `.claude/agent-memory/deep-dive-writer/MEMORY.md` for context on what's already been written.
+            3. Pick the next stub article to flesh out. ${{ github.event.inputs.topic && format('The user has requested the topic: {0}. Write that one.', github.event.inputs.topic) || 'Choose the one with the lowest order number that still has empty sections.' }}
+            4. Use the deep-dive-writer agent to research the parsed submission data in `data/parsed/` and write a complete deep dive article.
+            5. Use the interactive-widget-animator agent to create any interactive animations specified in the article.
+            6. Write the article as a new TypeScript file in `web/src/content/deep-dives/` following the exact format of existing articles like `quantization-fundamentals.ts`.
+            7. Update `registry.ts` to import and use the new article (replace the stub entry).
+            8. If an animation was created, add the component to `web/src/components/animations/` and register it in the animation container.
+            9. Verify the build still works by running `cd web && npm ci && npm run build`.
+
+            ## Important Guidelines
+
+            - The article MUST follow the DeepDive TypeScript interface (slug, title, subtitle, category, sections, order).
+            - Sections can be: "text", "animation", "code", or "computation".
+            - Reference real submission data from `data/parsed/*.json` — cite specific PR numbers, val_bpb scores, and techniques.
+            - Keep the same voice and quality as existing articles (see quantization-fundamentals.ts, test-time-training.ts).
+            - Content uses a custom markdown renderer — supports bold, code, headers, tables, code blocks. NO links, images, or blockquotes.
+
+            After completing the article, commit all changes with a descriptive message and push to main.
+          claude_args: "--model claude-opus-4-6 --max-turns 25"
+
+      - name: Trigger site rebuild
+        if: success()
+        run: |
+          echo "Deep dive article generated. The update-and-deploy workflow will pick up changes on its next run."
