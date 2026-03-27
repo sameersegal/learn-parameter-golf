@@ -1,0 +1,103 @@
+{
+  "pr_number": 934,
+  "title": "WIP: 1.1xxx BPB - MDL-T Stack (LeakyReLU\u00b2 + EMA + GPTQ-lite + LateQAT + warmdown3500 + int6+zstd-22)",
+  "author": "tuanaqeelbohoran",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared in the MLP instead of ReLU squared.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "MDL-T",
+        "parameters": {
+          "lambda": 0.05,
+          "quant_bits": 6
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "per-tensor weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all weights during late training"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "blocks.* weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "MDL-T regularizer that directly optimizes weight compressibility during training",
+    "LeakyReLU(0.5)^2 MLP activation",
+    "EMA shadow weights with decay 0.997",
+    "Extended warmdown to 3500 iterations to give MDL-T more clustering time",
+    "GPTQ-lite per-tensor percentile clip search",
+    "Late STE QAT int6 during the final 15% of training",
+    "Mixed int6 per-row weights with int8 embeddings",
+    "zstd-22 compression of the final artifact"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
