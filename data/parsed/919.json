@@ -1,0 +1,122 @@
+{
+  "pr_number": 919,
+  "title": "Add ConsensusWindow Bypass (FAT-Golf) non-record submission",
+  "author": "TheDryhtscipe",
+  "status": "open",
+  "val_bpb": 2.3438,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Replaces SmearGate with a depthwise causal conv1d embedding bypass using a larger local receptive field.",
+        "parameters": {
+          "window_size": 32,
+          "receptive_field": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Adds a parallel depthwise causal convolution bypass path in the deepest layers, blended with attention via a per-dimension sigmoid gate.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash as part of the baseline architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA as part of the baseline architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE",
+        "description": "Uses value enhancement (VE) as part of the baseline architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the model.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depthwise causal convolution bypass at the embedding level via ConsensusWindowEmbed",
+    "Parallel depthwise causal convolution bypass in the deepest 4 layers via ConsensusBlockBypass",
+    "Per-dimension sigmoid gating to blend attention and bypass outputs",
+    "Improved robustness to EMA averaging and int6 quantization",
+    "Combined architecture shows better post-quantization validation BPB than baseline in small-scale experiments"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

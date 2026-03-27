@@ -1,0 +1,213 @@
+{
+  "pr_number": 918,
+  "title": "Record: TurboQuant + Full-Rescore N-gram (val_bpb=0.1653)",
+  "author": "haikosys",
+  "status": "open",
+  "val_bpb": 0.1653,
+  "architecture": "Transformer",
+  "quantization": "TurboQuant 2/3/4-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding module used in the model.",
+        "parameters": {
+          "dimensions": 128,
+          "hash_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the network.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings applied to part of the model.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embeddings_lr": 0.035,
+          "scalars_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every_n_steps": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 2,
+        "scope": "MLP up"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 3,
+        "scope": "attn/MLP down"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 4,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "full-rescore n-gram cache",
+        "parameters": {
+          "order_min": 2,
+          "order_max": 12,
+          "entropy_adaptive_alpha": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "lzma-6",
+  "novel_contributions": [
+    "TurboQuant rotation-based Lloyd-Max codebook quantization for weight compression",
+    "Progressive QAT warmdown from 4-bit to 3-bit to 2-bit",
+    "Two-pass full-rescore n-gram cache evaluation with entropy-adaptive alpha blending",
+    "Combining higher-parameter TurboQuant models with full-rescore n-gram cache to recover validation performance"
+  ],
+  "artifact_size": "15.35 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

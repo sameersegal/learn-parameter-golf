@@ -1,0 +1,158 @@
+{
+  "pr_number": 916,
+  "title": "10L + PPM Full-Rescore Order-12 N-gram (0.3461 BPB)",
+  "author": "Bortlesboat",
+  "status": "open",
+  "val_bpb": 0.3461,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation used in the MLP, squared twice as indicated by LeakyReLU(0.5)^2.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings applied with a 16/64 split.",
+        "parameters": {
+          "ratio": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Value residual connections are included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash module with 4096 buckets.",
+        "parameters": {
+          "dimensions": 4096
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP/attention"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "pass_1": "store per-token model probabilities without n-gram blending",
+          "pass_2": "rescore with frozen cache"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "PPM-style all-order blend across matching n-gram orders 2-12 using escape probabilities.",
+        "parameters": {
+          "orders": "2-12"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Leave-one-out self-exclusion during full-cache rescoring to subtract each token's own contribution before scoring.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "PPM-style all-order blend across n-gram orders 2-12 instead of hard backoff",
+    "Leave-one-out self-exclusion during full-cache rescoring to remove self-inclusion bias",
+    "Two-pass score-first evaluation pipeline with frozen cache rescoring",
+    "Vectorized cache construction over all tokens using np.bincount"
+  ],
+  "artifact_size": "15.3-15.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

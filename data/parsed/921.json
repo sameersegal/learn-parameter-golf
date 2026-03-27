@@ -1,0 +1,194 @@
+{
+  "pr_number": 921,
+  "title": "Record: Order-13 Full-Rescore N-gram + 11L Int6 GPTQ \u2014 val_bpb 0.0939 (3-seed mean)",
+  "author": "TimPietrusky",
+  "status": "open",
+  "val_bpb": 0.09391,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention mechanism modified with gating.",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Adds value residual connections and value embeddings in later layers.",
+        "parameters": {
+          "value_embedding_layers": [
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary position embeddings on only part of the head dimension.",
+        "parameters": {
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding with tied embeddings.",
+        "parameters": {
+          "vocab": 1024,
+          "dim": 256
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.05
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 8
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_rate": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Two-pass order-13 backward-looking n-gram evaluation cache with entropy-adaptive mixing and full-rescore pass.",
+        "parameters": {
+          "order": 13,
+          "passes": 2,
+          "entropy_center": 3.0,
+          "entropy_scale": 2.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma-8",
+  "novel_contributions": [
+    "Two-pass order-13 backward-looking n-gram eval cache",
+    "Full-rescore pass using the complete cache without additional forward passes",
+    "Entropy-adaptive mixing between model probabilities and n-gram cache",
+    "Int6 GPTQ with descending actorder and dead-column handling",
+    "Pure NumPy vectorized cache implementation with XOR-of-products hashing and np.bincount updates",
+    "Artifact compression with lzma to fit int6 model within the submission limit"
+  ],
+  "artifact_size": "~15.8MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

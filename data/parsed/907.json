@@ -1,0 +1,111 @@
+{
+  "pr_number": 907,
+  "title": "Record: Two-Pass Order-12 Shared N-gram Tables \u2014 val_bpb 0.0960 (3-seed mean)",
+  "author": "resouer",
+  "status": "open",
+  "val_bpb": 0.096,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention in the transformer architecture.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "heads": "8/4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3x the model dimension.",
+        "parameters": {
+          "mlp_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.9) squared activation.",
+        "parameters": {
+          "squared": true,
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not mentioned explicitly in the submission.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Shared n-gram tables across all 8 GPU ranks with deterministic updates and no all_reduce.",
+        "parameters": {
+          "ranks": 8,
+          "shared_tables": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Two-pass rescoring: first pass stores model probabilities and builds the full cache; second pass rescoring all tokens against the complete cache.",
+        "parameters": {
+          "passes": 2,
+          "tokens": 62000000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Order 2-12 backoff with entropy-adaptive alpha and per-order multipliers.",
+        "parameters": {
+          "order_min": 2,
+          "order_max": 12
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses np.bincount for fast cache construction.",
+        "parameters": {
+          "speedup_claimed": "10-50x"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Shared n-gram tables updated identically across all 8 GPU ranks without all_reduce",
+    "Two-pass rescoring that eliminates the cold-start problem by rescoring all tokens against a fully built cache",
+    "Order-2-to-12 backoff with entropy-adaptive alpha and per-order multipliers",
+    "np.bincount-based cache construction for faster table building",
+    "3-seed validation with very low variance and a sub-0.0961 val_bpb mean"
+  ],
+  "artifact_size": "~15.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

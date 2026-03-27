@@ -1,0 +1,193 @@
+{
+  "pr_number": 911,
+  "title": "Ternary Reasoner \u2014 12L/768d Capsule-Feedback Universal Transformer",
+  "author": "Akhilesh-Gogikar",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "ternary",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "12-layer encoder-decoder trunk with skip connections for structured information flow.",
+        "parameters": {
+          "layers": 12,
+          "dimensions": 768
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Iterative correction loop with multiple decoder passes and backward semantic flow.",
+        "parameters": {
+          "feedback_passes": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hadamard-gated adapters",
+        "description": "Backward semantic correction uses element-wise multiplicative modulation plus additive injection.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "capsule bank",
+        "description": "Persistent semantic slots accumulate state across correction iterations as working memory.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention on the last 4 layers to force context reliance.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Deterministic bigram hashing for local context.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimension.",
+        "parameters": {
+          "rotated_dims": 16,
+          "total_dims": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "First-layer attention values are blended into deep layers.",
+        "parameters": {
+          "layers": "10+"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction_wallclock": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "lr": 0.025,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "LZMA-9",
+  "novel_contributions": [
+    "Ternary weight packing to fit a very large model into the 16MB budget",
+    "Iterative backward semantic correction across multiple decoder passes",
+    "Recurrent capsule bank for persistent working memory across refinement iterations",
+    "Hadamard-gated feedback adapters for multiplicative and additive correction",
+    "Combination of ternary quantization with XSA, BigramHash, Partial RoPE, VRL, EMA, GPTQ-lite, and legal TTT"
+  ],
+  "artifact_size": "12MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

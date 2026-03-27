@@ -1,0 +1,59 @@
+{
+  "pr_number": 917,
+  "title": "Non-record: ConsensusWindow Bypass (FAT-Golf)",
+  "author": "TheDryhtscipe",
+  "status": "closed",
+  "val_bpb": 2.3438,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ConsensusWindowEmbed",
+        "description": "Replaces SmearGate with a depthwise causal convolution embedding path using a 16-token receptive field.",
+        "parameters": {
+          "window_size": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ConsensusBlockBypass",
+        "description": "Adds a gated parallel depthwise causal convolution bypass path alongside attention in the deepest layers, blending attention and bypass outputs.",
+        "parameters": {
+          "layers": 4,
+          "init_attention": 0.8,
+          "init_bypass": 0.2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Depthwise causal convolution bypass path derived from ORC FAT-AR architecture",
+    "ConsensusWindowEmbed replacing SmearGate at the embedding level",
+    "Gated ConsensusBlockBypass on the deepest 4 layers with 80/20 attention/bypass initialization",
+    "Improved robustness to EMA averaging and int6 quantization when the two architectural changes are combined"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

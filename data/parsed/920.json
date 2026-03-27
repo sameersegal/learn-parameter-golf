@@ -1,0 +1,143 @@
+{
+  "pr_number": 920,
+  "title": "[Record Submission] - 74.3M Ternary U-Net Transformer (v2 - Continuation from #PR640)",
+  "author": "CiprianFlorin-Ifrim",
+  "status": "open",
+  "val_bpb": 1.1539,
+  "architecture": "Transformer",
+  "quantization": "FP8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "FP8 path / model artifact"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections added to the Transformer backbone.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses relu2 activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses YaRN-scaled rotary position embeddings.",
+        "parameters": {
+          "type": "yarn",
+          "max_len": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Reduced KV head count relative to query heads.",
+        "parameters": {
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.0,
+        "momentum": 0.95,
+        "other_params": {
+          "adam_lr": 0.05,
+          "adam_wd": 0.05,
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.15
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "type": "poly",
+          "value": 10
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "BF16 scale storage for ternary dequantization scales, reducing roundtrip gap without increasing artifact size",
+    "Increased embedding bottleneck from 254 to 312 to improve representation quality while staying under the 16MB artifact budget",
+    "Adjusted warmdown fraction from 0.2 to 0.15 based on extended training experiments",
+    "Improved validation BPB and cross-seed reproducibility over the original #640 submission"
+  ],
+  "artifact_size": "15.95 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

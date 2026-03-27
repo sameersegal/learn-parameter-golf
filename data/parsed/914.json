@@ -1,0 +1,154 @@
+{
+  "pr_number": 914,
+  "title": "[Non-Record] Hymba-LongContext: 32K context training via hybrid SSM + SWA (1.1873 BPB)",
+  "author": "mkenney2",
+  "status": "open",
+  "val_bpb": 1.1873,
+  "architecture": "Hybrid",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mamba",
+        "description": "Selective state space model branch for O(1) per-token recurrent sequence processing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window attention",
+        "description": "Attention limited to a fixed local window for constant per-token cost.",
+        "parameters": {
+          "window_size": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with shared KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings used in the attention branch.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-norm",
+        "description": "Normalization applied to query/key representations.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections across layers in a U-Net style.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate embedding/gating component.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": 524288
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_iters": 3000
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Hybrid SSM + sliding window attention architecture enabling near-constant-cost long-context training",
+    "Training at 32,768-token context, far longer than the standard 1,024-token baseline",
+    "Demonstration that step time remains nearly constant from 8K to 64K context",
+    "Score-first test-time training to improve post-quantization validation BPB",
+    "Compact int6 + zstd artifact under the 16 MB limit"
+  ],
+  "artifact_size": "14.3-14.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
