@@ -1,0 +1,200 @@
+{
+  "pr_number": 945,
+  "title": "Record: Order-16 Frozen N-gram Oracle + Learned Gate + TTT \u2014 val_bpb 0.0274 (3-seed mean)",
+  "author": "TimPietrusky",
+  "status": "open",
+  "val_bpb": 0.02742,
+  "architecture": "Transformer",
+  "quantization": "int5",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added a hash-based n-gram embedding/cache component for token prediction support.",
+        "parameters": {
+          "vocab": 6144,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA-all attention variant.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses VE128 on later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared in the MLP.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to about 3.5x the model dimension.",
+        "parameters": {
+          "multiplier": 3.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.001
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "adaptive_temperature": [
+            0.9,
+            1.05
+          ],
+          "byte_weighted_loss": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "pruning": "3%"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Frozen order-16 n-gram oracle prefilled from training shards and blended with neural predictions via a learned multi-expert gate.",
+        "parameters": {
+          "orders": [
+            2,
+            16
+          ],
+          "buckets": 4000000,
+          "experts": 17,
+          "mixer_loss_weight": 0.15,
+          "neural_floor": 0.05
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training downweights loss on tokens already well predicted by the oracle.",
+        "parameters": {
+          "complement_alpha": 0.5,
+          "complement_threshold": 0.3
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Order-16 frozen n-gram oracle prefilled from training shards",
+    "Learned multi-expert gate blending neural and per-order n-gram experts",
+    "Complementary training that focuses the neural model on oracle-hard tokens",
+    "Score-first test-time training with adaptive temperature",
+    "Combination of EMA, SWA, and int5 quantization for a compact high-performing submission"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

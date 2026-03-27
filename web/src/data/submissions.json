@@ -88953,5 +88953,672 @@
     "artifact_size": "12,783,154 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 939,
+    "title": "Non-record: GatedDeltaNet, 32K Context, Document-Boundary State Reset",
+    "author": "brian386",
+    "status": "open",
+    "val_bpb": 1.2519,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GatedDeltaNet",
+          "description": "Replaces softmax attention with linear recurrent attention.",
+          "parameters": {
+            "heads": 4,
+            "head_dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth",
+          "description": "Reduced model depth to fit within byte limit.",
+          "parameters": {
+            "layers": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP",
+          "description": "Reduced MLP expansion ratio to fit within byte limit.",
+          "parameters": {
+            "expansion": 1.875
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GatedDeltaNet",
+          "description": "Document-boundary state reset using BOS-detected variable-length chunked kernel to zero recurrent state at document boundaries.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 32768,
+          "eval_length": 32768
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 8192,
+          "eval_length": 8192
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 16384,
+          "eval_length": 16384
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "norm": 1
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "GatedDeltaNet recurrent attention for long-context training",
+      "Document-boundary state reset to prevent hidden-state bleed across packed documents",
+      "32k-context training and evaluation with minimal per-step compute overhead",
+      "Gradient clipping to stabilize long recurrent chains",
+      "Architecture reductions to fit within the byte limit"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 940,
+    "title": "Record: Score-First TTT + Multi-Order N-gram Backoff (3-seed mean val_bpb=0.9581)",
+    "author": "antaloaalonso",
+    "status": "open",
+    "val_bpb": 0.9581,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Multi-order n-gram backoff cache using orders 2-7 with entropy-adaptive alpha mixing",
+          "parameters": {
+            "orders": "2-7"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "MLP width expanded to 3x",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections in the transformer",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU(0.5)^2 activation",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive self-attention applied to all layers",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Layer 0 value output mixed into subsequent layers via learned sigmoid gates",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Per-head sigmoid gates on attention output",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3000
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "per-row"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 16
+        }
+      }
+    ],
+    "compression": "zstd-16",
+    "novel_contributions": [
+      "Score-first test-time training that scores tokens under inference_mode before training on them",
+      "Multi-order n-gram backoff cache with entropy-adaptive alpha mixing",
+      "Combination of score-first TTT with backward-looking n-gram cache under competition compliance constraints",
+      "11-layer transformer with XSA on all layers, LeakyReLU(0.5)^2, Value Residual, and Gated Attention"
+    ],
+    "artifact_size": "15.7MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 941,
+    "title": "submission: LeakyReLU² + EMA + BigramHash(20480) + MLP3.5x",
+    "author": "aptsalt",
+    "status": "open",
+    "val_bpb": 1.362,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU(0.5) squared activation",
+          "parameters": {
+            "squared": true,
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embedding applied to a subset of dimensions",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Larger bigram vocabulary for token hashing",
+          "parameters": {
+            "vocab_size": 20480
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Wider MLP hidden dimension",
+          "parameters": {
+            "multiplier": 3.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Attention uses 8 heads and 4 KV heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "adamw_for_scalars_embeddings": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "LeakyReLU(0.5) squared activation",
+      "EMA weight averaging instead of SWA",
+      "Late QAT",
+      "Partial RoPE with 16/64 dimensions",
+      "LN scale regularization",
+      "BigramHash with 20480 vocabulary size",
+      "MLP width multiplier of 3.5x",
+      "Mixed int5/int6 quantization",
+      "zstd-22 artifact compression"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 943,
+    "title": "Record: Compliance-First Packed Causal Memory + Dirichlet Mixing — val_bpb 0.01654407 (3-seed mean)",
+    "author": "aamodbhatt",
+    "status": "closed",
+    "val_bpb": 0.01654407,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Packed causal memory",
+          "description": "Added a packed causal n-gram memory path built from train shards and loaded at eval start.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Dirichlet-normalized multi-order mixing with count-confidence gating for n-gram evaluation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "full-rescore",
+          "parameters": {
+            "all_chunks": true,
+            "two_pass": true
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Packed causal n-gram memory path built from train shards and loaded at eval start",
+      "Dirichlet-normalized multi-order mixing",
+      "Count-confidence gating",
+      "Optional phrase-suffix expert exploration with Dirichlet-only winner config",
+      "Compliance-first submission with score-first ordering preserved"
+    ],
+    "artifact_size": "13,810,840 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 944,
+    "title": "Record: Compliance-First Packed Causal Memory + Dirichlet Mixing — val_bpb 0.01654407 (3-seed mean)",
+    "author": "aamodbhatt",
+    "status": "open",
+    "val_bpb": 0.01654407,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Packed causal n-gram memory path built from training shards and loaded at eval start; multi-order hashed n-gram tables used for causal scoring.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Dirichlet-normalized multi-order mixing over n-gram orders with count-confidence gating.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Optional packed phrase-suffix expert blended after the n-gram posterior with confidence throttling.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Packed causal n-gram memory path built from training shards and loaded at eval start",
+      "Dirichlet-normalized multi-order mixing with count-confidence gating",
+      "Optional packed phrase-suffix expert with confidence throttling",
+      "Compliance-first score-first causal evaluation stack"
+    ],
+    "artifact_size": "13,810,840 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 945,
+    "title": "Record: Order-16 Frozen N-gram Oracle + Learned Gate + TTT — val_bpb 0.0274 (3-seed mean)",
+    "author": "TimPietrusky",
+    "status": "open",
+    "val_bpb": 0.02742,
+    "architecture": "Transformer",
+    "quantization": "int5",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Added a hash-based n-gram embedding/cache component for token prediction support.",
+          "parameters": {
+            "vocab": 6144,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA-all attention variant.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embeddings to only part of the head dimension.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Uses VE128 on later layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared in the MLP.",
+          "parameters": {
+            "squared": true,
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP width to about 3.5x the model dimension.",
+          "parameters": {
+            "multiplier": 3.5
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "interval": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int5",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "lr": 0.001
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs": 1,
+            "learning_rate": 0.001,
+            "adaptive_temperature": [
+              0.9,
+              1.05
+            ],
+            "byte_weighted_loss": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "pruning": "3%"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Frozen order-16 n-gram oracle prefilled from training shards and blended with neural predictions via a learned multi-expert gate.",
+          "parameters": {
+            "orders": [
+              2,
+              16
+            ],
+            "buckets": 4000000,
+            "experts": 17,
+            "mixer_loss_weight": 0.15,
+            "neural_floor": 0.05
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Complementary training downweights loss on tokens already well predicted by the oracle.",
+          "parameters": {
+            "complement_alpha": 0.5,
+            "complement_threshold": 0.3
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Order-16 frozen n-gram oracle prefilled from training shards",
+      "Learned multi-expert gate blending neural and per-order n-gram experts",
+      "Complementary training that focuses the neural model on oracle-hard tokens",
+      "Score-first test-time training with adaptive temperature",
+      "Combination of EMA, SWA, and int5 quantization for a compact high-performing submission"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
