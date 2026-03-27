@@ -1,0 +1,135 @@
+{
+  "pr_number": 960,
+  "title": "Preliminary: 11L VRL + Full GPTQ + Parallel Muon + Legal TTT \u2014 val_bpb 1.1882 (ADIITJ)",
+  "author": "ADIITJ",
+  "status": "open",
+  "val_bpb": 1.1882,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Layer 0 V output is blended into all subsequent layers via learned per-layer sigmoid gates.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding expanded from 1536 to 3072.",
+        "parameters": {
+          "dimensions": 3072
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.008,
+          "epochs": 3,
+          "chunk_size": 256,
+          "eval_seq_len": 1024,
+          "batch_size": 64,
+          "min_doc_len": 512
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.008,
+          "end_lr": 1e-05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.03
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with scaled projection initialization."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "every_steps": 10
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Value Residual Learning (VRL) with learned per-layer sigmoid gates",
+    "Full GPTQ quantization with Hessian Cholesky int6 calibration and error propagation",
+    "BigramHash expansion from 1536 to 3072",
+    "Tight SWA over EMA when snapshots exist",
+    "Cosine LR annealing for LoRA TTT",
+    "Lower TTT base learning rate and shorter-document adaptation threshold"
+  ],
+  "artifact_size": "18,816,038 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

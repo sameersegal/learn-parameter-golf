@@ -1,0 +1,232 @@
+{
+  "pr_number": 961,
+  "title": "Record: 0.0881 BPB \u2014 11L Int5 GPTQ + Order-12 N-gram + Phrase Cache + 65K Chunks",
+  "author": "callithyia",
+  "status": "open",
+  "val_bpb": 0.0881,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int5",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash module used in the architecture.",
+        "parameters": {
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA-4 architectural component.",
+        "parameters": {
+          "variant": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "numerator": 16,
+          "denominator": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component in the model architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 applied on layers 9-10.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5) squared activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 15,
+          "final_warmdown": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parameter_banking": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "order-12 n-gram cache",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "backoff": true,
+          "score_first": true,
+          "backward_looking": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long phrase cache",
+        "parameters": {
+          "probe_lengths": [
+            64,
+            56,
+            48,
+            36,
+            28,
+            20,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "temperature sharpening",
+        "parameters": {
+          "temperature": 0.85
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "65K chunking",
+        "parameters": {
+          "chunk_size": 65000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 65000
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Order-12 backoff n-gram cache combined with a long phrase cache",
+    "Entropy-adaptive alpha for cache blending",
+    "Temperature sharpening at T=0.85",
+    "65K-token chunking to keep evaluation under the 600s budget",
+    "Demonstration that cache-heavy evaluation can largely erase large pre-quantization model-quality gaps"
+  ],
+  "artifact_size": "~13.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,164 @@
+{
+  "pr_number": 953,
+  "title": "Record: 1.0722 BPB \u2014 Improved TTT + HedgeMixer with Per-Layer LR Groups",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.0722,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all 11 layers in the base architecture.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with SmearGate in the context mixer.",
+        "parameters": {
+          "size": 6144,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating component paired with BigramHash.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional encoding applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "squared": true,
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Full multi-head attention with equal query and KV head counts.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP expansion used in the base model.",
+        "parameters": {
+          "expansion": 3.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 4,
+          "freeze_blocks": 1,
+          "learning_rate": 0.0005,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "within_ttt": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "skipped": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Per-layer learning-rate groups for TTT, with higher LR on output projections and lower LR on input projections",
+    "Cosine learning-rate schedule within TTT to adapt aggressively early and anneal later",
+    "Increased TTT to 4 epochs while freezing only 1 block",
+    "Skipped standalone sliding window evaluation to reclaim eval budget for the extra TTT epoch",
+    "Improved HedgeMixer + legal TTT stack over PR #720"
+  ],
+  "artifact_size": "15.66 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
