@@ -1,0 +1,155 @@
+{
+  "pr_number": 1009,
+  "title": "12L INT4 bQAT + Value Embeddings \u2014 val_bpb 1.1588",
+  "author": "SoHarshh",
+  "status": "open",
+  "val_bpb": 1.1574,
+  "architecture": "Transformer",
+  "quantization": "INT4 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 4,
+        "scope": "MLP + bigram"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram embedding with 10240 buckets",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with LeakyReLU squared activation",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention in the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary position embeddings",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Learnable blend between residual stream and initial state"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 4,
+        "scope": "MLP + bigram"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embeddings reinject token identity into V at layers 10-11 using a shared embedding table",
+        "parameters": {
+          "ve_dim": 128,
+          "layers": [
+            10,
+            11
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "INT6",
+        "bits": 6,
+        "scope": "attention"
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "INT4 QAT for MLP and bigram components",
+    "Value embeddings added to V vectors at layers 10-11",
+    "Shared value embedding table to reduce parameter cost",
+    "EMA with QAT activation reset fix",
+    "Combination of U-Net skips, XSA, partial RoPE, LN scale, and resid_mix under a tight size budget"
+  ],
+  "artifact_size": "16.41 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
