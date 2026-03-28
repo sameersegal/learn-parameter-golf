@@ -97072,5 +97072,750 @@
     "artifact_size": "20.98MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1026,
+    "title": "N-gram Cache + Entropy-Adaptive Alpha: 1.0945 BPB",
+    "author": "danielxmed",
+    "status": "open",
+    "val_bpb": 1.0945,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses a bigram hash component in the model stack.",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Applies XSA to the last layers of the model.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Adds value residual enhancement in selected layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses a 3x MLP stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared activation.",
+          "parameters": {
+            "squared": true,
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "adam_weight_decay": 0.04,
+            "matrix_lr": 0.025,
+            "scalar_lr": 0.025,
+            "tied_embed_lr": 0.035,
+            "momentum_warmup_start": 0.92,
+            "momentum_warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "N-gram cache with entropy-adaptive alpha interpolates byte-level N-gram predictions with model logits during evaluation.",
+          "parameters": {
+            "max_order": 7,
+            "alpha": 0.5,
+            "nll_threshold": 2.5,
+            "adaptive_range": [
+              0.1,
+              2
+            ],
+            "backoff": "strict"
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "TTT",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "N-gram cache replaces TTT for evaluation-time adaptation",
+      "Entropy-adaptive alpha scales cache interpolation by token uncertainty",
+      "Strict backoff N-gram cache with order 7 to 2",
+      "CPU-overlapped N-gram scoring alongside GPU sliding window evaluation",
+      "Achieves 1.0945 BPB with 3-seed consistency and sub-16MB artifacts"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1027,
+    "title": "Non-record: LeakyReLU² + BigramHash + Int5/Int6 + SlidingWindow — val_bpb 1.3036 (1×H100)",
+    "author": "Syed-M-Zeeshan",
+    "status": "open",
+    "val_bpb": 1.3036,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU(0.5)^2 activation in the MLP instead of standard ReLU^2.",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds hashed bigram embeddings as cheap n-gram features.",
+          "parameters": {
+            "buckets": 1536,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": null,
+          "scope": "MLP weights and attention weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "fp16",
+          "bits": 16,
+          "scope": "tied embeddings"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "start": "last 40% of warmdown",
+            "frequency": "every 10 steps"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "lr": 0.02
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "used_for": "scalar/embed params and pre-quantization TTT"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": "extreme"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "AdamW",
+            "chunk_size": 32768,
+            "pre_quantization": true
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "iterations": 1050,
+            "warmdown": 150
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "softcap": 30
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Uses U-Net style skip connections in the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention.",
+          "parameters": {
+            "kv_heads": 4,
+            "heads": 8
+          }
+        }
+      }
+    ],
+    "compression": "lzma-extreme",
+    "novel_contributions": [
+      "LeakyReLU(0.5)^2 activation",
+      "BigramHash(1536, dim=128) features",
+      "Mixed Int5/Int6 quantization with FP16 tied embeddings",
+      "EMA plus SWA weight averaging",
+      "AdamW pre-quantization test-time training",
+      "LZMA artifact compression",
+      "Sliding window evaluation with stride 64"
+    ],
+    "artifact_size": "15,893,048 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1028,
+    "title": "Medusa: Unstable — DeltaNet Crawler 0.8104 BPB 10mb file size(best seed), mean 0.9984, Frugendorff continuation",
+    "author": "newjordan",
+    "status": "open",
+    "val_bpb": 0.8104,
+    "architecture": "Transformer",
+    "quantization": "int6+zstd",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "DeltaNet",
+          "description": "Uses canonical chunk_delta_rule DeltaNet heads inside a Frugendorff crawler topology.",
+          "parameters": {
+            "heads": 4,
+            "short_conv": true,
+            "loops": 4,
+            "flat_layers": 4,
+            "crawler_layers": 1
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses RoPE dimensions as part of the model configuration.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses a bigram vocabulary/hash-style component in the architecture.",
+          "parameters": {
+            "vocab_size": 2048
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "41 layers"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "start_step": 4400,
+            "decay": 0.99
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "iters": 2000
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Loop-aware GPTQ with quantized-flat activations and crawler Hessians.",
+          "parameters": {
+            "enabled": true
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "DeltaNet crawler topology with canonical chunk_delta_rule heads",
+      "Loop-aware GPTQ using flat Hessians first, then crawler Hessians with quantized-flat activations",
+      "Late-start EMA re-initialized at warmdown onset",
+      "High-variance multi-seed submission with best seed 0.8104 BPB",
+      "Int6 + zstd artifact compression"
+    ],
+    "artifact_size": "10MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1029,
+    "title": "Non-record: Knowledge Distillation - A Negative Result (val_bpb=1.152)",
+    "author": "fielding",
+    "status": "open",
+    "val_bpb": 1.152,
+    "architecture": "Transformer",
+    "quantization": "late QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Input-side bigram hashing used in the model setup; does not affect the prediction head.",
+          "parameters": {
+            "vocab_size": 6144
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA in the last layers of the student model.",
+          "parameters": {
+            "last_layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Uses relu-squared MLP activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 1600
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Knowledge distillation using both hard label replacement with teacher top-1 predictions and soft KL distillation against cached teacher logits.",
+          "parameters": {
+            "teacher_params": 105500000,
+            "top_k_logits": 32,
+            "temperature": 2,
+            "alpha_values": [
+              0.1,
+              0.3,
+              0.5
+            ]
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "First distillation experiment in Parameter Golf",
+      "Systematic comparison of hard distillation and soft KL distillation under tight step-budget constraints",
+      "Cached top-32 teacher logits to make distillation feasible within the training budget",
+      "Extended training analysis showing distillation does not cross the baseline even with more time",
+      "Demonstration that online teacher inference is too expensive for this setting"
+    ],
+    "artifact_size": "15.4 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1030,
+    "title": "Record: Single-Pass Packed N-gram + Dirichlet CTW — val_bpb 0.1130 (3-seed mean)",
+    "author": "sofiabod",
+    "status": "open",
+    "val_bpb": 0.11300056,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings used in the base Transformer.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Rotary positional embeddings applied to a subset of dimensions.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SWA",
+          "description": "Stochastic weight averaging used during training.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "per-row"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash component used in the model stack.",
+          "parameters": {
+            "dimensions": 128,
+            "buckets": 4096
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate module used in the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value residual/VE128 component used in later layers.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Tight SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 128,
+            "seq_len": 2048
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Single-pass score-first evaluation with packed multi-order n-gram cache and hierarchical Dirichlet CTW mixing.",
+          "parameters": {
+            "orders": "2-13",
+            "buckets_per_order": 131072,
+            "concentrations": [
+              50,
+              50,
+              20,
+              10,
+              6,
+              4,
+              3,
+              2.5,
+              2,
+              1.8,
+              1.6,
+              1.4
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Packed multi-order n-gram artifact precomputed from training shards to eliminate cold-start cache issues",
+      "Hierarchical Dirichlet CTW mixing across n-gram orders",
+      "Single-pass score-first evaluation with no two-pass rescore",
+      "Deterministic distributed cache prefill for warm-started evaluation",
+      "Ratio-preserving packed uint16 n-gram counts stored in a compressed artifact"
+    ],
+    "artifact_size": "5.76 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

@@ -1,0 +1,111 @@
+{
+  "pr_number": 1029,
+  "title": "Non-record: Knowledge Distillation - A Negative Result (val_bpb=1.152)",
+  "author": "fielding",
+  "status": "open",
+  "val_bpb": 1.152,
+  "architecture": "Transformer",
+  "quantization": "late QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Input-side bigram hashing used in the model setup; does not affect the prediction head.",
+        "parameters": {
+          "vocab_size": 6144
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last layers of the student model.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses relu-squared MLP activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1600
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Knowledge distillation using both hard label replacement with teacher top-1 predictions and soft KL distillation against cached teacher logits.",
+        "parameters": {
+          "teacher_params": 105500000,
+          "top_k_logits": 32,
+          "temperature": 2.0,
+          "alpha_values": [
+            0.1,
+            0.3,
+            0.5
+          ]
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "First distillation experiment in Parameter Golf",
+    "Systematic comparison of hard distillation and soft KL distillation under tight step-budget constraints",
+    "Cached top-32 teacher logits to make distillation feasible within the training budget",
+    "Extended training analysis showing distillation does not cross the baseline even with more time",
+    "Demonstration that online teacher inference is too expensive for this setting"
+  ],
+  "artifact_size": "15.4 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

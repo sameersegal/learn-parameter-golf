@@ -1,0 +1,175 @@
+{
+  "pr_number": 1027,
+  "title": "Non-record: LeakyReLU\u00b2 + BigramHash + Int5/Int6 + SlidingWindow \u2014 val_bpb 1.3036 (1\u00d7H100)",
+  "author": "Syed-M-Zeeshan",
+  "status": "open",
+  "val_bpb": 1.3036,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the MLP instead of standard ReLU^2.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds hashed bigram embeddings as cheap n-gram features.",
+        "parameters": {
+          "buckets": 1536,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP weights and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": "last 40% of warmdown",
+          "frequency": "every 10 steps"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "scalar/embed params and pre-quantization TTT"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": "extreme"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "chunk_size": 32768,
+          "pre_quantization": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "iterations": 1050,
+          "warmdown": 150
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses U-Net style skip connections in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention.",
+        "parameters": {
+          "kv_heads": 4,
+          "heads": 8
+        }
+      }
+    }
+  ],
+  "compression": "lzma-extreme",
+  "novel_contributions": [
+    "LeakyReLU(0.5)^2 activation",
+    "BigramHash(1536, dim=128) features",
+    "Mixed Int5/Int6 quantization with FP16 tied embeddings",
+    "EMA plus SWA weight averaging",
+    "AdamW pre-quantization test-time training",
+    "LZMA artifact compression",
+    "Sliding window evaluation with stride 64"
+  ],
+  "artifact_size": "15,893,048 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
