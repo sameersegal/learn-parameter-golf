@@ -1,0 +1,148 @@
+{
+  "pr_number": 996,
+  "title": "Pre-Enrichment + EMA-GPU + SmearGate + XSA4 (val_bpb=1.1478, \u2026",
+  "author": "Idan3011",
+  "status": "open",
+  "val_bpb": 1.1478,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension gate blending each token with the previous token.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-table embedding for token bigrams.",
+        "parameters": {
+          "dimensions": "2048x128"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider MLP with 3x expansion in the feedforward network.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections with learned skip weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention removing self-value bias via orthogonal projection.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GELU pre-enrichment",
+        "description": "Wider nonlinear pre-transformer enrichment block: 512->768->512 with GELU.",
+        "parameters": {
+          "input_dim": 512,
+          "hidden_dim": 768,
+          "output_dim": 512
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "EMA kept on GPU during training to avoid synchronous GPU-to-CPU copies each step",
+    "GELU pre-enrichment block before the transformer stack",
+    "XSA applied to the last 4 layers",
+    "Sliding window evaluation with stride 64 for improved val_bpb",
+    "Combination of SmearGate, BigramHash, EMA, and quantization-aware training in a compact artifact"
+  ],
+  "artifact_size": "14.94 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,80 @@
+{
+  "pr_number": 987,
+  "title": "[Non-record] SOTA Monolith v4.0",
+  "author": "Evreu1pro",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "scope": "Q/V weights",
+          "timing": "after evaluating token t, before token t+1"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation changed to LeakyReLU(0.5)^2 to reduce parameter count and enable deeper model under the size limit.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_steps": 5,
+          "distributed": true,
+          "target_hardware": "8xH100"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": 5,
+        "scope": "MLP and Attention"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Replaced standard embeddings with BigramHash to save embedding parameters.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1024
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Strictly causal test-time training that updates Q/V weights only after evaluating each token",
+    "LeakyReLU(0.5)^2 MLP to reduce parameter count",
+    "Parallel Muon with distributed Newton-Schulz orthogonalization",
+    "Mixed STE QAT with int5 MLP and int6 attention",
+    "BigramHash embeddings",
+    "Dynamic expanding context window"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
