@@ -94854,5 +94854,319 @@
     "artifact_size": "11.63MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 998,
+    "title": "Add Conker-5 tandem residual exact experts non-record submission",
+    "author": "asuramaya",
+    "status": "open",
+    "val_bpb": 0.5755,
+    "architecture": "Hybrid",
+    "quantization": "int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "artifact"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Hybrid",
+          "description": "Tandem-trained Conker-3 base with sparse exact residual experts and gate-only learned selection.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 256,
+          "eval_length": 256
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Tandem-trained Conker-3 base model",
+      "Sparse exact residual experts for exact continuation reuse",
+      "Gate-only learned selection over residual experts",
+      "Packaged non-record submission under the 16MB artifact limit",
+      "Local MLX/Apple Silicon training and packaging workflow"
+    ],
+    "artifact_size": "3,811,521 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 999,
+    "title": "Record: 11L Muon TTT + Entropy-Adaptive Epochs (8×H100) — val_bpb 1.1179 (3-seed mean)",
+    "author": "aamodbhatt",
+    "status": "open",
+    "val_bpb": 1.1179,
+    "architecture": "Transformer",
+    "quantization": "late QAT int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding component in the base stack.",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA on the last layers of the model.",
+          "parameters": {
+            "last_n": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-times expanded MLP block.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU^2 activation in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value residual enhancement on selected layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 7
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "epochs": "2/3/4 adaptive",
+            "chunk_tokens": 32768
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "ttt_muon": true,
+            "newton_schulz_steps": 3,
+            "parallel": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Entropy-adaptive TTT epoch selection based on chunk uncertainty, assigning 2/3/4 epochs per chunk.",
+          "parameters": {
+            "high_threshold": 2.1,
+            "low_threshold": 1.75
+          }
+        }
+      }
+    ],
+    "compression": "lzma-7",
+    "novel_contributions": [
+      "Muon-style Newton-Schulz orthogonalized updates in the test-time training loop",
+      "Entropy-adaptive epoch selection that allocates 2/3/4 epochs per chunk based on chunk uncertainty",
+      "Score-first TTT with global NLL synchronization across DDP ranks to avoid collective mismatch",
+      "Improved 3-seed mean val_bpb to 1.1179, beating the prior SOTA of 1.1194"
+    ],
+    "artifact_size": "~15.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1001,
+    "title": "Non-record: Three Approaches + Lessons Learned (best: 1.1188 BPB)",
+    "author": "ibarrajo",
+    "status": "open",
+    "val_bpb": 1.1188,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int5",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU in the #569-based approach.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Uses ReLU squared in the #569-based approach.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Uses a Value Residual-based architecture in approach A.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Uses gated attention in the #569-based approach.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses tied embeddings / weight tying in the referenced base models if applicable.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Reports a legal s_0-only TTT score to avoid illegal re-scoring after training",
+      "Compares three approaches and identifies 1.1188 BPB as the best legal result",
+      "Shows that GPTQ calibration can be completed within the 600s training budget",
+      "Documents an int5 penalty on the d=512 model variant",
+      "Highlights that artifact size constraints can exclude a stronger GEPA-based approach"
+    ],
+    "artifact_size": "15.3MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
