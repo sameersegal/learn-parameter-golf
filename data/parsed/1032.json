@@ -1,0 +1,142 @@
+{
+  "pr_number": 1032,
+  "title": "[Non-Record] QAT Dead-Code Analysis + 7 Novel Technique Sweep (1xH100)",
+  "author": "wfproc",
+  "status": "open",
+  "val_bpb": 1.3631,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "fraction": 0.05
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "Muon-VS"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Changed activation slope to 0.75; reported as better than 0.5^2 variant.",
+        "parameters": {
+          "slope": 0.75
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Thinking Deeper recurrence applied to the model.",
+        "parameters": {
+          "layers": 2,
+          "steps": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "anti-layer removal",
+        "description": "Layer ablation diagnostic by zeroing attn_scale and mlp_scale per layer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(L+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP width",
+        "description": "Wider model variant.",
+        "parameters": {
+          "model_dim": 576,
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "spectral init",
+        "description": "Spectral SVD compression variant using SVD-based factorization."
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Confirmed a torch.compile dead-code bug causing late QAT to be eliminated in #315-derived code",
+    "Implemented a working tensor-scale STE QAT fix that avoids recompilation",
+    "Showed that fixing QAT worsened int6 validation bpb on this 1xH100 setup",
+    "Swept seven previously untried techniques on the SOTA stack, all negative",
+    "Quantified the throughput tax: about 0.007 bpb per 1 ms of overhead at this step budget",
+    "Added working prune-then-quantize and anti-layer diagnostic toggles",
+    "Observed that zero-overhead changes like LeakyReLU slope tuning are the only ones that survived the budget"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,224 @@
+{
+  "pr_number": 1033,
+  "title": "Record: 0.4311 BPB - Complementary Training + Backoff N-gram Mixer + TTT",
+  "author": "Naazimsnh02",
+  "status": "open",
+  "val_bpb": 0.4311,
+  "architecture": "Transformer",
+  "quantization": "Int6 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8/4 heads.",
+        "parameters": {
+          "heads": "8/4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash cache/embedding used in the model and eval stack.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used in the architecture.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embedding applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections in a U-Net style arrangement.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Value residual learning / value residual connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeated layers to create virtual depth without extra parameters.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding module.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.01,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training that downweights tokens a bigram predictor would already get right.",
+        "parameters": {
+          "complement_alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive alpha for mixing neural and n-gram predictions during evaluation.",
+        "parameters": {
+          "formula": "0.20 + 0.55 * sigmoid(2 * (H - 3.0))"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Backoff n-gram mixer with orders 2-10 and greedy cascade.",
+        "parameters": {
+          "orders": "2-10",
+          "buckets": 4000000
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Complementary training that focuses the neural model on tokens statistical caches cannot predict well",
+    "Backoff n-gram mixer with adaptive entropy-based alpha",
+    "Score-first LoRA TTT on already-evaluated tokens",
+    "Depth recurrence to increase virtual depth without extra parameters"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
