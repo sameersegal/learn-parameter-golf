@@ -1,0 +1,157 @@
+{
+  "pr_number": 1002,
+  "title": "12L INT4 bQAT + EMA Fix + Deterministic QAT \u2014 val_bpb ~1.165",
+  "author": "SoHarshh",
+  "status": "open",
+  "val_bpb": 1.165,
+  "architecture": "Transformer",
+  "quantization": "INT4 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash table used in the model, quantized and trained with INT4 bQAT.",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with LeakyReLU activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5) squared activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention applied to the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embedding.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the residual stream.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "resid_mix",
+        "description": "Learnable x/x0 blend always active.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "qat_activation_reset": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 4,
+        "scope": "MLP and bigram; INT6 attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 4,
+        "scope": "training"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "INT4",
+        "bits": 4,
+        "scope": "BigramHash"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "legal_score_first": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "late_qat_frac": 0.65,
+          "late_qat_threshold": 0.9
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "INT4 bigram QAT to quantize the bigram table below INT6 and fit 12 layers within 16MB",
+    "EMA reset when QAT activates to avoid quantization degradation from pre-QAT EMA weights",
+    "Deterministic wallclock-based QAT trigger to remove seed-to-seed timing variance on multi-GPU runs"
+  ],
+  "artifact_size": "15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

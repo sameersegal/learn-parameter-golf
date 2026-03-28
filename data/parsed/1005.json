@@ -1,0 +1,164 @@
+{
+  "pr_number": 1005,
+  "title": "[Non-Record] Extended Compute Scaling Analysis: 1.0853 BPB at 50K steps (11.5 hours) on 4\u00d7A100MIG",
+  "author": "OnlyJundong",
+  "status": "open",
+  "val_bpb": 1.0853,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component used in the model.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Attention/sequence architecture component applied to the last layers.",
+        "parameters": {
+          "last_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied partially.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times MLP expansion with LeakyReLU squared activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "squared": true,
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual enhancement module.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 19500,
+          "muon_momentum_warmup_steps": 8350,
+          "max_wallclock_seconds": 0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 8350
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Extended compute scaling analysis of the record-track SOTA beyond the 10-minute wall-clock limit",
+    "Demonstrated 1.0853 BPB at 50K steps on 4\u00d7A100 MIG",
+    "Showed that artifact size is non-monotonic during training and recovers below 16MB after warmdown",
+    "Analyzed diminishing returns in BPB beyond roughly 30K steps",
+    "Compared 20K and 50K step runs against the record-track SOTA and quantified TTT gains scaling with compute"
+  ],
+  "artifact_size": "14.35 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

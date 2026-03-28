@@ -1,0 +1,171 @@
+{
+  "pr_number": 1007,
+  "title": "Submission/hybrid rwkv token shift",
+  "author": "dillon-blake",
+  "status": "open",
+  "val_bpb": 1.2252,
+  "architecture": "Hybrid",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "Replaced most attention layers with RWKV-inspired token-shift mixing while keeping a few short-window/full-context attention layers.",
+        "parameters": {
+          "layers": 11,
+          "attention_layers": 3,
+          "token_shift_layers": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added hashed bigram embeddings to capture local token-pair context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applied a learned gate to blend each token with the previous token after embedding normalization.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Injected value embeddings into attention/value pathways with learned per-layer scaling.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Projected attention outputs away from the value direction to encourage diverse head representations.",
+        "parameters": {
+          "layers": [
+            7,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applied rotary position embeddings to only a subset of head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Used LeakyReLU squared activation in the MLP instead of SwiGLU.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Used a 3x expansion MLP.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "late_qat": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "cap": 30.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Hybrid RWKV-inspired token-shift layers replacing most attention layers",
+    "Short-window attention in only a few layers with one final full-context attention layer",
+    "Learned per-dimension token interpolation for efficient local mixing",
+    "Combination of hybrid architecture with BigramHash, SmearGate, XSA, Partial RoPE, and value embeddings",
+    "Int6 quantized and zlib-compressed artifact under the 16MB limit"
+  ],
+  "artifact_size": "~15.86 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

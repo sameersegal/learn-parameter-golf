@@ -1,0 +1,161 @@
+{
+  "pr_number": 1006,
+  "title": "1.1085 BPB: JEPA + AdamW TTT + Full GPTQ + FA3 + LZMA",
+  "author": "NewyorkDev",
+  "status": "open",
+  "val_bpb": 1.1085,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "JEPA",
+        "description": "Auxiliary joint-embedding predictive loss that predicts future hidden states in latent space across multiple horizons.",
+        "parameters": {
+          "horizons": [
+            1,
+            2,
+            4,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "mode": "pre-quantization",
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied to all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections in the 11-layer architecture.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate gating mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied only to part of the head dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "cosine_decay": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "JEPA auxiliary training signal for language modeling",
+    "AdamW test-time training applied before quantization on EMA-averaged weights",
+    "Full Hessian-aware GPTQ quantization",
+    "Flash-Attention 3 for faster training",
+    "LZMA compression to fit under the 16MB limit",
+    "Cross-sequence attention on all 11 layers"
+  ],
+  "artifact_size": "15,977,978 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
