@@ -1,0 +1,128 @@
+{
+  "pr_number": 1023,
+  "title": "Phase 1: Three Optimization Variants",
+  "author": "DanielSooman",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "12-layer model split into encoder/decoder style blocks with skip connections.",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "attention/MLP layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "scalar_optimizer": "Adam",
+          "scalar_lr": 0.04,
+          "scalar_weight_decay": 0.01,
+          "embedding_lr": 0.05
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Enabled XSA on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate enabled in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash enabled in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reduced model width from 512 to 480 while increasing depth from 11 to 12 layers to improve loss under the artifact size limit.",
+        "parameters": {
+          "model_dim": 480,
+          "baseline_model_dim": 512,
+          "baseline_layers": 11,
+          "layers": 12
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "12-layer leaner architecture with reduced hidden dimension",
+    "Depth-width tradeoff to improve loss while staying under the 16MB artifact limit",
+    "Int6 STE QAT with per-row quantization",
+    "zstd-22 artifact compression",
+    "Use of Muon for matrix parameters with Adam for scalars and embeddings",
+    "EMA with decay 0.997",
+    "XSA on the last 4 layers",
+    "SmearGate and BigramHash enabled"
+  ],
+  "artifact_size": "~15.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
