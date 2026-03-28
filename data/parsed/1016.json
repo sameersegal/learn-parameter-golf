@@ -1,0 +1,134 @@
+{
+  "pr_number": 1016,
+  "title": "11L VRL + Parallel Muon + Legal TTT v2 (val_bpb=1.1269, non-record)",
+  "author": "ADIITJ",
+  "status": "open",
+  "val_bpb": 1.1269,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Layer 0 V output is blended into subsequent layers via learned sigmoid gates.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding size increased to improve bpb.",
+        "parameters": {
+          "dimensions": 3072
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "full_length_windows_only": true,
+          "fixed_scoring_offset": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation is used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(L+1)"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Value Residual Learning (VRL) with learned sigmoid gates",
+    "BigramHash size doubled to 3072",
+    "Tight SWA used instead of EMA when snapshots are available",
+    "zstd-22 artifact compression",
+    "Sliding window evaluation bug fix",
+    "TTT enabled by default with all blocks unfrozen",
+    "Dropped full GPTQ in favor of GPTQ-lite"
+  ],
+  "artifact_size": "~15.8 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

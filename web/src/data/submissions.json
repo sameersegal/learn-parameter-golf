@@ -96282,5 +96282,408 @@
     "artifact_size": "16.41 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1013,
+    "title": "Non-record: S4D-Lin SSM Hybrid — Fixing Why Mamba Failed in Parameter…",
+    "author": "himanshudongre",
+    "status": "open",
+    "val_bpb": 1.1682,
+    "architecture": "Hybrid",
+    "quantization": "GPTQ int5",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SSM",
+          "description": "Replaced the lower transformer layers with S4D-Lin state-space model blocks using causal depthwise conv1d with learned exponentially decaying kernels.",
+          "parameters": {
+            "layers": 2,
+            "kernel_size": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Used standard XSA attention in the upper layers of the hybrid model.",
+          "parameters": {
+            "layers": 9
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Standard LeakyReLU^2 MLP used in the transformer stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 5,
+          "scope": "full model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "ln_scale_factor": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "resid mix",
+          "description": "Used x0-mixing / residual mixing in the block design.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "First functional SSM in Parameter Golf without throughput penalty",
+      "S4D-Lin SSM blocks implemented with standard F.conv1d instead of Mamba selective scan",
+      "Hybrid architecture combining lower-layer SSM blocks with upper-layer transformer attention",
+      "Demonstrated that throughput can match the baseline while remaining torch.compile compatible",
+      "Identified that attention outperforms SSM in lower layers at full competition scale",
+      "Showed that GPTQ int5 quantization is sensitive for SSM weights",
+      "Added ssm_proj handling to the quantization tensor classes"
+    ],
+    "artifact_size": "13.0 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1014,
+    "title": "N-gram logit boost + HedgeMixer + score-first TTT",
+    "author": "haimianbaobao007",
+    "status": "open",
+    "val_bpb": 1.62,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "N-gram logit boost using hashed n-gram tables with normalized softmax-based boosting.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "HedgeMixer online multiplicative-weights mixing between neural and neural+ngram experts.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.95,
+          "other_params": {
+            "per_layer_lr": true
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Polyak averaging",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit bias",
+          "parameters": {
+            "per_document": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Normalized n-gram logit boost with softmax and collision-fix normalization",
+      "HedgeMixer online multiplicative-weights expert mixing",
+      "SGD momentum 0.95 test-time training with per-layer learning rates",
+      "Polyak averaging during TTT",
+      "Per-document online bias correction",
+      "Score-first update ordering for TTT and n-gram/HedgeMixer updates",
+      "Numba JIT acceleration and fallback chain"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1015,
+    "title": "Add Parameter Golf submission: Vocab768_LinearPhaseInit_GatedXSA_EMA_…",
+    "author": "shram86",
+    "status": "open",
+    "val_bpb": 1.21149167,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Gated XSA applied to the last layers of the Transformer.",
+          "parameters": {
+            "layers": 2,
+            "mode": "gated"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Value bias/residual applied to the last layers.",
+          "parameters": {
+            "layers": 2,
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "matrix_only"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "start_step": 9094
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "phase-mix init",
+          "description": "Linear phase-mix initialization."
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "FlashAttention 3 backend used for attention computation.",
+          "parameters": {
+            "backend": "flash_attn_3"
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Custom sp768 tokenizer export with vocab size 768",
+      "Linear phase-mix initialization",
+      "Gated XSA on the last 2 layers",
+      "EMA during late training",
+      "Late matrix-only QAT",
+      "FlashAttention 3 backend",
+      "Tokenizer and dataset export published to Hugging Face and loaded via patched manifest-driven loader"
+    ],
+    "artifact_size": "15,082,805 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1016,
+    "title": "11L VRL + Parallel Muon + Legal TTT v2 (val_bpb=1.1269, non-record)",
+    "author": "ADIITJ",
+    "status": "open",
+    "val_bpb": 1.1269,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ-lite",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Layer 0 V output is blended into subsequent layers via learned sigmoid gates.",
+          "parameters": {
+            "layers": 10
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding size increased to improve bpb.",
+          "parameters": {
+            "dimensions": 3072
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Tight SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "full_length_windows_only": true,
+            "fixed_scoring_offset": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "epochs": 3,
+            "chunk_size": 32000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings are used.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared activation is used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 4 KV heads.",
+          "parameters": {
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(L+1)"
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Value Residual Learning (VRL) with learned sigmoid gates",
+      "BigramHash size doubled to 3072",
+      "Tight SWA used instead of EMA when snapshots are available",
+      "zstd-22 artifact compression",
+      "Sliding window evaluation bug fix",
+      "TTT enabled by default with all blocks unfrozen",
+      "Dropped full GPTQ in favor of GPTQ-lite"
+    ],
+    "artifact_size": "~15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
