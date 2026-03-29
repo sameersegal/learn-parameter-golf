@@ -1,0 +1,12 @@
+{
+  "number": 1042,
+  "title": "Record: Adaptive Precision Embedding Quantization (4-seed mean val_bpb=1.1217)",
+  "author": "nothingLiva",
+  "body": "## Adaptive Precision Embedding Quantization\r\n\r\n**val_bpb: 1.1217** (4-seed mean) | **15.8 MB** | 8\u00d7H100 SXM\r\n\r\n### Key Innovation\r\n\r\nTop 100 tokens cover 53% of all text. Instead of uniform int6 quantization, this applies:\r\n- **Top 100 tokens \u2192 int8** (higher precision)\r\n- **Remaining 924 tokens \u2192 int6** (standard precision)\r\n\r\nFrequent tokens deserve more precision because their errors compound across the entire dataset.\r\n\r\n### Results (4 seeds)\r\n\r\n| Seed | val_bpb |\r\n|------|---------|\r\n| 1 | **1.121** |\r\n| 2 | 1.122 |\r\n| 3 | 1.1217 |\r\n| 4 | 1.1222 |\r\n\r\n**Mean: 1.1217 | Std: 0.0005**",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-28T23:06:05Z",
+  "updated_at": "2026-03-28T23:06:05Z",
+  "submission_readme": "# Adaptive Precision Embedding Quantization\n\n**val_bpb: 1.1217** (4-seed mean) | **15.8 MB** | 8\u00d7H100 SXM\n\n## The Idea\n\nAnalysis of the FineWeb training data revealed that token frequency follows a heavy-tailed distribution:\n\n- **Top 100 tokens** cover **53.2%** of all text\n- These include: `.` `,` `the` `s` `to` `and` `ing` `of` `a` `in`...\n\nInstead of uniform quantization across all embedding weights, this submission applies **adaptive precision quantization**:\n\n- **Top 100 tokens \u2192 int8** (higher precision for 53% of text)\n- **Remaining 924 tokens \u2192 int6** (standard precision)\n\nThe intuition: errors in frequent tokens compound across the entire dataset, so they deserve more precision.\n\n## Results (4 seeds, 8xH100 SXM)\n\n| Seed | val_bpb |\n|------|---------|\n| 1 | **1.121** |\n| 2 | 1.122 |\n| 3 | 1.1217 |\n| 4 | 1.1222 |\n\n**Mean: 1.1217 | Std: 0.0005**\n\n## Files\n\n- `train_16MBQTo.py` - Training script with adaptive precision quantization\n- `top_tokens.py` - Set of top 100 most frequent token IDs\n- `submission.json` - Submission metadata\n- `train_seed1.log` - Training log seed 1\n- `train_seed2.log` - Training log seed 2\n- `train_seed3.log` - Training log seed 3\n- `train_seed4.log` - Training log seed 4\n\n## Run Command\n\n```bash\nSEED=1337 \\\nDATA_PATH=./data/datasets/fineweb10B_sp1024/ \\\nTOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model \\\nVOCAB_SIZE=1024 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## Credits\n\n\u2219 Base model: PR #549 stack by @abaybektursun\n"
+}

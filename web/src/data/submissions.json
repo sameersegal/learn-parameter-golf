@@ -98580,5 +98580,1170 @@
     "artifact_size": "15.95MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1038,
+    "title": "Add 1.20 BPB submission with Legal TTT and Calibration (9L/448D)",
+    "author": "Vibes-me",
+    "status": "open",
+    "val_bpb": 1.20576485,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Model configuration uses 9 layers, 512 model dimension, 8 attention heads, 4 KV heads, and MLP multiplier 2.",
+          "parameters": {
+            "layers": 9,
+            "model_dim": 512,
+            "num_heads": 8,
+            "num_kv_heads": 4,
+            "mlp_mult": 2
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Legal test-time training (TTT)",
+      "Calibration",
+      "Weight tying",
+      "Long-context training with sequence length 2048",
+      "Int8 quantized roundtrip submission"
+    ],
+    "artifact_size": "15.87MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1039,
+    "title": "Add LeakyReLU² + 4ep Legal TTT submission",
+    "author": "yufengli-oai",
+    "status": "open",
+    "val_bpb": 1.11835341,
+    "architecture": "Transformer",
+    "quantization": "late QAT int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared activation in the model.",
+          "parameters": {
+            "power": 2,
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses bigram hashing embedding.",
+          "parameters": {
+            "vocab_size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA in the last layers.",
+          "parameters": {
+            "last_n_layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies RoPE only partially.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Uses value residual embeddings/paths with dimension 128.",
+          "parameters": {
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "muon_momentum_warmup_start": 0.92,
+            "muon_momentum_warmup_steps": 1500,
+            "warmdown_iters": 3500,
+            "matrix_lr": 0.025,
+            "scalar_lr": 0.025,
+            "tied_embed_lr": 0.035
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.0025,
+            "epochs": 4,
+            "chunk_tokens": 32768,
+            "momentum": 0.9,
+            "freeze_blocks": 0,
+            "batch_seqs": 32,
+            "grad_clip": 1
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "ttt": true
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_wd": 0.04,
+            "adam_wd": 0.04
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "enabled": true
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Improved Legal TTT submission based on the prior LeakyReLU LegalTTT Parallel Muon run",
+      "Increased legal TTT learning rate from 0.002 to 0.0025",
+      "Increased legal TTT epochs from 3 to 4",
+      "Skipped diagnostic pre-TTT evaluations to keep evaluation under the time limit",
+      "Added eval-only checkpoint loading for faster TTT sweeps",
+      "Combined LeakyReLU² with Parallel Muon, EMA, SWA, and late QAT"
+    ],
+    "artifact_size": "15,882,595 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1040,
+    "title": "Non-record: 11L Int5 QAT + Score-First TTT — val_bpb 1.1336 (15.59 MiB)",
+    "author": "JoeProAI",
+    "status": "closed",
+    "val_bpb": 1.13360681,
+    "architecture": "Transformer",
+    "quantization": "int5 QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram buckets and bigram embedding used in the model",
+          "parameters": {
+            "buckets": 4096,
+            "embed_dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Embeddings are not tied",
+          "parameters": {
+            "tied": false
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "11-layer U-Net style model with Int5 QAT",
+      "Score-first legal test-time training",
+      "Independent seed validation run",
+      "Artifact kept under the 16 MiB limit"
+    ],
+    "artifact_size": "15.59 MiB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1041,
+    "title": "Non-record: 11L Int5 QAT + Score-First TTT — val_bpb 1.1356 (15.60 MiB)",
+    "author": "JoeProAI",
+    "status": "closed",
+    "val_bpb": 1.13557402,
+    "architecture": "Transformer",
+    "quantization": "int5 QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int5",
+          "bits": 5,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses bigram buckets and bigram embeddings in the model.",
+          "parameters": {
+            "buckets": 4096,
+            "embed_dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Embeddings are not tied.",
+          "parameters": {
+            "tie_embeddings": false
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Submission uses an 11-layer U-Net style architecture.",
+          "parameters": {
+            "layers": 11,
+            "model_dim": 512,
+            "heads": 8,
+            "mlp_hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "11-layer U-Net style model",
+      "Int5 quantization-aware training",
+      "Score-first legal test-time training",
+      "Independent seed validation run"
+    ],
+    "artifact_size": "15.60 MiB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1042,
+    "title": "Record: Adaptive Precision Embedding Quantization (4-seed mean val_bpb=1.1217)",
+    "author": "nothingLiva",
+    "status": "open",
+    "val_bpb": 1.1217,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": null,
+          "scope": "embeddings"
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Adaptive precision embedding quantization based on token frequency",
+      "Assigning int8 to the top 100 most frequent tokens and int6 to the remaining tokens",
+      "Using higher precision for frequent tokens that cover 53.2% of the text"
+    ],
+    "artifact_size": "15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1043,
+    "title": "PP12: Bayesian posterior packets + selective gating (1.1261 BPB)",
+    "author": "okezue",
+    "status": "open",
+    "val_bpb": 1.1261,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared MLP activation in the base stack.",
+          "parameters": {
+            "power": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Legal TTT",
+          "description": "Score-first test-time training stack used in the base model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash component used in the base stack.",
+          "parameters": {
+            "vocab_size": 3072
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross/self-attention style component applied to the last layers.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embeddings to a subset of dimensions.",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value embedding component used in later layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Tight SWA",
+          "parameters": {
+            "interval": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 3,
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "grad_clip": 1
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "formula": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Bayesian posterior packets distilled from training data and updated online with conjugate counts.",
+          "parameters": {
+            "packet_store": true,
+            "online_update": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Selective gating mixes packet posteriors with neural predictions only when packet confidence is higher.",
+          "parameters": {
+            "confidence_margin": 0.05,
+            "has_data_threshold": 20
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Bayesian posterior packets distilled from training data",
+      "Conjugate online updating of packet posteriors with eval-time counts",
+      "Selective gating to avoid degradation from naive probability mixing",
+      "Packet-based improvement over pure neural TTT",
+      "Periodic TTT reset idea to address drift during long evaluation"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1044,
+    "title": "H-Net: First Learned Byte-Level Tokenization (README Wishlist) -- 1.90 BPB, 22M params",
+    "author": "greqone",
+    "status": "open",
+    "val_bpb": 1.8989,
+    "architecture": "Hybrid",
+    "quantization": "int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Hybrid",
+          "description": "H-Net-style learned byte-level tokenization with dynamic chunking gate, chunk/dechunk layers, and a transformer operating on compressed chunks; replaces Mamba-2 with causal depthwise Conv1d encoder/decoder.",
+          "parameters": {
+            "layers": 9,
+            "d_model": 512,
+            "heads": 8,
+            "kv_heads": 4,
+            "chunk_ratio": 0.25
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU activation in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied output head / tied embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "EMA",
+          "description": "Uses EMA-based dechunking / expansion back to full byte sequence.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Differentiable chunking gate using cosine similarity with straight-through estimation to learn byte-level boundaries dynamically.",
+          "parameters": {
+            "target_ratio": 0.25
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Auxiliary chunk ratio loss used to steer boundary density during training.",
+          "parameters": {
+            "weight": 1
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Vectorized ChunkLayer and DeChunkLayer implemented with cumsum-based segment IDs, scatter operations, and broadcasted exponential decay.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "First tiny-scale H-Net implementation for Parameter Golf",
+      "First learned byte-level tokenization submission using dynamic chunking",
+      "Vectorized ChunkLayer/DeChunkLayer without Python batch loops",
+      "Pure-PyTorch depthwise causal Conv1d replacement for Mamba-2 SSM layers",
+      "Demonstrated end-to-end training of a chunking gate with auxiliary ratio loss",
+      "Produced a sub-16MB artifact at 15.4MB"
+    ],
+    "artifact_size": "15.4MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1045,
+    "title": "[Non-Record] XSA-all-layers + VRL + bigram3072 + lzma9 — 1.1509 bpb, AdamW TTT findings",
+    "author": "Hilo-Hilo",
+    "status": "open",
+    "val_bpb": 1.15088552,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-attention applied to all layers instead of only the last few layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Adds residual value gating (V = V + residual_V).",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "3072-vocab bigram head with reduced embedding dimension.",
+          "parameters": {
+            "vocab_size": 3072,
+            "dimensions": 112
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 9
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.01,
+          "momentum": null,
+          "other_params": {
+            "betas": [
+              0.9,
+              0.999
+            ],
+            "eps": 1e-8
+          }
+        }
+      }
+    ],
+    "compression": "lzma-9",
+    "novel_contributions": [
+      "XSA applied to all 11 layers of the 11L d512 stack",
+      "Value Residual Learning added on XSA layers",
+      "bigram3072 head with dimension 112",
+      "lzma preset 9 used to reduce artifact size",
+      "Measured that AdamW TTT at lr=0.002 significantly degrades performance compared with no TTT"
+    ],
+    "artifact_size": "15.3MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1046,
+    "title": "Record: 11L Adaptive Markov + Int6 Mixed Quant (1.2174 bpb)",
+    "author": "Jayteare",
+    "status": "open",
+    "val_bpb": 1.2174,
+    "architecture": "Hybrid",
+    "quantization": "mixed int6/int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Used grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4,
+            "layers": 11,
+            "dim": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Used relu squared MLP activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Adaptive per-position gate mixing transformer logits with Markov logits, including confidence-based thresholding.",
+          "parameters": {
+            "threshold": 0.2,
+            "temp": 0.03
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Added an explicit unigram Markov transition table combined with transformer logits as a short-range prior.",
+          "parameters": {
+            "table_size": "1024x1024"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": 6,
+          "scope": "MLP and attention weights int6; embeddings and Markov table int8; control tensors fp16"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Adaptive Markov mixing with a learned per-position gate",
+      "Confidence-based suppression of Markov contribution using the top-2 Markov logit gap",
+      "Mixed int6/int8 quantization to fit under the 16MB artifact limit",
+      "Large 786K-token batch training for improved throughput within the 10-minute budget",
+      "Explicit short-range Markov prior combined with a causal transformer"
+    ],
+    "artifact_size": "15,107,918 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1047,
+    "title": "(0.8822 BPB mean) Medusa: Unstable S2 — DeltaNet Crawler, Legal  10mb. .77bpb single seed.",
+    "author": "newjordan",
+    "status": "open",
+    "val_bpb": 0.8822,
+    "architecture": "Hybrid",
+    "quantization": "int6 GPTQ",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "4 flat layers plus 1 crawler layer repeated across 4 loops (Frugendorff compression).",
+          "parameters": {
+            "layers": 4,
+            "crawler_layers": 1,
+            "loops": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "DeltaNet",
+          "description": "Uses DeltaNet heads with canonical chunk_delta_rule from fla.ops.delta_rule.",
+          "parameters": {
+            "heads": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "41 layers"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "start_step": 4400,
+            "decay": 0.99
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 2000
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "GPTQ reserve time stops training early so calibration runs within the 600s wallclock budget.",
+          "parameters": {
+            "gptq_reserve_ms": 30000
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Legal resubmission fixing GPTQ calibration timing to stay within the 600s wallclock budget",
+      "DeltaNet crawler architecture with 4 flat layers plus 1 crawler layer repeated over 4 loops",
+      "Loop-aware two-phase GPTQ calibration for 41 layers",
+      "EMA-based post-training improvement with reported 3-seed mean BPB of 0.8822",
+      "Use of canonical DeltaNet kernel chunk_delta_rule"
+    ],
+    "artifact_size": "~9.9MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1048,
+    "title": "Non-record: Compression moonshots — 8 negative/marginal findings (Procrustes, SWA smoothness, selective fp16, pruning+zstd)",
+    "author": "mrdavtan",
+    "status": "open",
+    "val_bpb": 1.1724,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP hidden size to 3x baseline (1536 vs 1024).",
+          "parameters": {
+            "hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "well-conditioned weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "fp16",
+          "bits": 16,
+          "scope": "selected embedding rows"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "sparsity": 0.03
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "backend_steps": 5
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 20000
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Int6 per-row quantization with 3x MLP expansion achieved the best reported validation score.",
+      "Systematic ablation study of nine techniques, including SWA, doc-isolated evaluation, curriculum learning, multi-token prediction, SmearGate + BigramHash, depth recurrence, and int8 QAT.",
+      "Checkpoint-analysis findings showing Procrustes rotational structure across layers and across seeds, but with no artifact-size benefit.",
+      "Selective fp16 embedding export based on embedding entropy to reduce artifact size.",
+      "Observation that small amounts of magnitude pruning can increase compressed artifact size due to interaction with zstd.",
+      "Identification of a block-7 quantization outlier with unusually high kurtosis, suggesting selective fp16 protection.",
+      "Finding that SWA produces smoother weights and smaller artifacts than EMA, but only if step count is preserved."
+    ],
+    "artifact_size": "15,175,136 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1050,
+    "title": "Add Stack Integration + Legal TTT submission package",
+    "author": "Taleef7",
+    "status": "open",
+    "val_bpb": 1.119367,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "enabled": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "stride-based eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Promoted script is byte-identical to a proven record script; no explicit architecture change beyond the referenced submission setup is described.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Promoted reviewer-ready submission folder with audited evidence logs",
+      "Legal TTT submission package with canonical metric legal_ttt",
+      "Parallel Muon optimizer usage",
+      "Byte-identical promoted train_gpt.py inherited from a proven prior record",
+      "Included train.log alias plus three audited seed logs",
+      "Submission metadata generated from audit payload"
+    ],
+    "artifact_size": "15,990,006 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

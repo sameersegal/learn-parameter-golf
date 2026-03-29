@@ -1,0 +1,169 @@
+{
+  "pr_number": 1039,
+  "title": "Add LeakyReLU\u00b2 + 4ep Legal TTT submission",
+  "author": "yufengli-oai",
+  "status": "open",
+  "val_bpb": 1.11835341,
+  "architecture": "Transformer",
+  "quantization": "late QAT int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the model.",
+        "parameters": {
+          "power": 2,
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses bigram hashing embedding.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE only partially.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses value residual embeddings/paths with dimension 128.",
+        "parameters": {
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500,
+          "warmdown_iters": 3500,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0025,
+          "epochs": 4,
+          "chunk_tokens": 32768,
+          "momentum": 0.9,
+          "freeze_blocks": 0,
+          "batch_seqs": 32,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "ttt": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.04,
+          "adam_wd": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Improved Legal TTT submission based on the prior LeakyReLU LegalTTT Parallel Muon run",
+    "Increased legal TTT learning rate from 0.002 to 0.0025",
+    "Increased legal TTT epochs from 3 to 4",
+    "Skipped diagnostic pre-TTT evaluations to keep evaluation under the time limit",
+    "Added eval-only checkpoint loading for faster TTT sweeps",
+    "Combined LeakyReLU\u00b2 with Parallel Muon, EMA, SWA, and late QAT"
+  ],
+  "artifact_size": "15,882,595 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

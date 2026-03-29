@@ -1,0 +1,168 @@
+{
+  "pr_number": 1043,
+  "title": "PP12: Bayesian posterior packets + selective gating (1.1261 BPB)",
+  "author": "okezue",
+  "status": "open",
+  "val_bpb": 1.1261,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared MLP activation in the base stack.",
+        "parameters": {
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Legal TTT",
+        "description": "Score-first test-time training stack used in the base model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash component used in the base stack.",
+        "parameters": {
+          "vocab_size": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self-attention style component applied to the last layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding component used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "Tight SWA",
+        "parameters": {
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Bayesian posterior packets distilled from training data and updated online with conjugate counts.",
+        "parameters": {
+          "packet_store": true,
+          "online_update": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Selective gating mixes packet posteriors with neural predictions only when packet confidence is higher.",
+        "parameters": {
+          "confidence_margin": 0.05,
+          "has_data_threshold": 20.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Bayesian posterior packets distilled from training data",
+    "Conjugate online updating of packet posteriors with eval-time counts",
+    "Selective gating to avoid degradation from naive probability mixing",
+    "Packet-based improvement over pure neural TTT",
+    "Periodic TTT reset idea to address drift during long evaluation"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

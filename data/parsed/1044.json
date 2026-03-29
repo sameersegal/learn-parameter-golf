@@ -1,0 +1,122 @@
+{
+  "pr_number": 1044,
+  "title": "H-Net: First Learned Byte-Level Tokenization (README Wishlist) -- 1.90 BPB, 22M params",
+  "author": "greqone",
+  "status": "open",
+  "val_bpb": 1.8989,
+  "architecture": "Hybrid",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "H-Net-style learned byte-level tokenization with dynamic chunking gate, chunk/dechunk layers, and a transformer operating on compressed chunks; replaces Mamba-2 with causal depthwise Conv1d encoder/decoder.",
+        "parameters": {
+          "layers": 9,
+          "d_model": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "chunk_ratio": 0.25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied output head / tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Uses EMA-based dechunking / expansion back to full byte sequence.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Differentiable chunking gate using cosine similarity with straight-through estimation to learn byte-level boundaries dynamically.",
+        "parameters": {
+          "target_ratio": 0.25
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Auxiliary chunk ratio loss used to steer boundary density during training.",
+        "parameters": {
+          "weight": 1.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Vectorized ChunkLayer and DeChunkLayer implemented with cumsum-based segment IDs, scatter operations, and broadcasted exponential decay.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "First tiny-scale H-Net implementation for Parameter Golf",
+    "First learned byte-level tokenization submission using dynamic chunking",
+    "Vectorized ChunkLayer/DeChunkLayer without Python batch loops",
+    "Pure-PyTorch depthwise causal Conv1d replacement for Mamba-2 SSM layers",
+    "Demonstrated end-to-end training of a chunking gate with auxiliary ratio loss",
+    "Produced a sub-16MB artifact at 15.4MB"
+  ],
+  "artifact_size": "15.4MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

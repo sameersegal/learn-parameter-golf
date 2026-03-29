@@ -1,0 +1,119 @@
+{
+  "pr_number": 1048,
+  "title": "Non-record: Compression moonshots \u2014 8 negative/marginal findings (Procrustes, SWA smoothness, selective fp16, pruning+zstd)",
+  "author": "mrdavtan",
+  "status": "open",
+  "val_bpb": 1.1724,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP hidden size to 3x baseline (1536 vs 1024).",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "well-conditioned weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp16",
+        "bits": 16,
+        "scope": "selected embedding rows"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.03
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 20000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int6 per-row quantization with 3x MLP expansion achieved the best reported validation score.",
+    "Systematic ablation study of nine techniques, including SWA, doc-isolated evaluation, curriculum learning, multi-token prediction, SmearGate + BigramHash, depth recurrence, and int8 QAT.",
+    "Checkpoint-analysis findings showing Procrustes rotational structure across layers and across seeds, but with no artifact-size benefit.",
+    "Selective fp16 embedding export based on embedding entropy to reduce artifact size.",
+    "Observation that small amounts of magnitude pruning can increase compressed artifact size due to interaction with zstd.",
+    "Identification of a block-7 quantization outlier with unusually high kurtosis, suggesting selective fp16 protection.",
+    "Finding that SWA produces smoother weights and smaller artifacts than EMA, but only if step count is preserved."
+  ],
+  "artifact_size": "15,175,136 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

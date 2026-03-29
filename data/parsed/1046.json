@@ -1,0 +1,94 @@
+{
+  "pr_number": 1046,
+  "title": "Record: 11L Adaptive Markov + Int6 Mixed Quant (1.2174 bpb)",
+  "author": "Jayteare",
+  "status": "open",
+  "val_bpb": 1.2174,
+  "architecture": "Hybrid",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4,
+          "layers": 11,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Used relu squared MLP activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adaptive per-position gate mixing transformer logits with Markov logits, including confidence-based thresholding.",
+        "parameters": {
+          "threshold": 0.2,
+          "temp": 0.03
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Added an explicit unigram Markov transition table combined with transformer logits as a short-range prior.",
+        "parameters": {
+          "table_size": "1024x1024"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP and attention weights int6; embeddings and Markov table int8; control tensors fp16"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Adaptive Markov mixing with a learned per-position gate",
+    "Confidence-based suppression of Markov contribution using the top-2 Markov logit gap",
+    "Mixed int6/int8 quantization to fit under the 16MB artifact limit",
+    "Large 786K-token batch training for improved throughput within the 10-minute budget",
+    "Explicit short-range Markov prior combined with a causal transformer"
+  ],
+  "artifact_size": "15,107,918 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
