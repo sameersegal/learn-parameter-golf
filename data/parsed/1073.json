@@ -1,0 +1,104 @@
+{
+  "pr_number": 1073,
+  "title": "Non-record: Deep Supervision on M4 MacBook",
+  "author": "ranausmanai",
+  "status": "open",
+  "val_bpb": 2.1164,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Hourglass/U-Net-style encoder-decoder architecture with skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "deep supervision",
+        "description": "Adds an auxiliary next-token prediction loss at the encoder-decoder boundary using the existing final norm and output projection.",
+        "parameters": {
+          "layers": [
+            "encoder-decoder boundary"
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(L+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.99
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": "50%",
+          "every_n_steps": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses RoPE on only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "int8 quantized roundtrip evaluation",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Introduces deep supervision at the encoder-decoder boundary for this competition.",
+    "Finds an optimal deep supervision weight of 0.03 with an inverted-U response.",
+    "Shows deep supervision helps at small batch sizes but becomes neutral or slightly harmful at larger batch sizes.",
+    "Demonstrates batch scaling improvements up to 128K tokens/step with no plateau observed.",
+    "Separates step-count-dependent techniques like EMA/SWA from architecture-dependent techniques like deep supervision.",
+    "Reports that EMA, SWA, Partial RoPE + LN Scale, and longer sequence length hurt at 300 steps on the M4 setup."
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,108 @@
+{
+  "pr_number": 1071,
+  "title": "Non-record: Reproduction of SOTA #1 (SmearGate+BigramHash+Int6+SWA) on RunPod 8xH100",
+  "author": "AbhayAnandUCSD",
+  "status": "open",
+  "val_bpb": 1.1455,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned bigram blending at the embedding layer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with 4096 buckets projected to model dimension.",
+        "parameters": {
+          "buckets": 4096,
+          "dimension": 128,
+          "projected_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion in the feedforward blocks.",
+        "parameters": {
+          "hidden_dim": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02,
+          "warmup_momentum": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 30
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Reproduction of the March 20 SOTA #1 submission on RunPod 8xH100 SXM",
+    "Confirmed reproducibility with val_bpb 1.1455 matching the published 1.1458 result",
+    "Achieved training within the 600s wallclock limit while keeping the artifact under 16MB"
+  ],
+  "artifact_size": "15.88 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
