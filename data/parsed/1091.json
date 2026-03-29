@@ -1,0 +1,175 @@
+{
+  "pr_number": 1091,
+  "title": "The Kitchen Sink",
+  "author": "MichaelMcCulloch",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int5/int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses relu_squared as the default MLP activation, with optional leaky_relu_squared or star_relu.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "Mixed pre-norm/post-norm scheme with post-norm used for deeper layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Overrides the MLP hidden dimension to widen the feed-forward network.",
+        "parameters": {
+          "hidden_dim": 1792
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied to the last N layers with KV caching.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_fraction": 0.8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Auxiliary multi-token prediction heads are added during training and stripped before export.",
+        "parameters": {
+          "num_heads": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.02
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hadamard rotation is applied before quantization to improve error distribution.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Post-TTT temperature scaling is used for calibration.",
+        "parameters": {
+          "temperature": 0.98
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-order backoff n-gram cache with entropy-adaptive interpolation.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hidden-state nearest-neighbor language model used at evaluation time.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "3-bit KV cache compression via random rotation and scalar quantization.",
+        "parameters": {
+          "bits": 3
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "A single train_gpt.py combining 26 independently toggleable techniques",
+    "Hybrid architecture with ReLU\u00b2 activation, HybridNorm, widened MLPs, and XSA",
+    "Training enhancements including EMA, SWA, QAT, and multi-token prediction heads",
+    "Compression/quantization stack with variable bit-width quantization, OptRot, GPTQ, pruning, and entropy coding",
+    "Evaluation-time augmentation with LoRA TTT, n-gram cache, kNN-LM, and TurboQuant",
+    "Ablation framework for measuring isolated contribution of each technique"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

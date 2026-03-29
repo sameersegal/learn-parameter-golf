@@ -1,0 +1,12 @@
+{
+  "number": 1086,
+  "title": "Track A: 11L U-Net + BigramHash + SmearGate + Partial RoPE + QAT (1.1349 bpb)",
+  "author": "Omrigotlieb",
+  "body": "## Summary\n\n11-layer U-Net transformer achieving **1.1349 bpb** (raw, pre-quantization) on FineWeb validation in 600 seconds on 8\u00d7H100 SXM. Post-quantization with mixed int6/int8 GPTQ-lite: **1.1618 bpb**.\n\n### Architecture (28M params, dim=512)\n- 11-layer U-Net with skip connections (5 encoder + 6 decoder)\n- GQA: 8 query heads, 4 KV heads, head_dim=64\n- MLP 3\u00d7 expansion with LeakyReLU(0.5)\u00b2 activation\n- BigramHash embeddings (8192 buckets, 128-dim projection)\n- SmearGate: learned prev-token blend after embedding norm\n- Exclusive Self-Attention (XSA) on last 4 layers\n- Partial RoPE (16/64 dims rotated, rest position-independent)\n- Learned vocab_bias (per-token logit prior)\n- Z-loss regularization (1e-4 \u00d7 logsumexp\u00b2)\n\n### Training\n- Muon optimizer (momentum=0.99, warmup 0.92\u21920.99/1500 steps) + Adam for embeddings/scalars\n- Gradient clipping at 0.3\n- EMA weight averaging (decay=0.997)\n- Late QAT: int6 STE noise in last 15% of warmdown\n- Warmdown: 3500 steps, wallclock-adaptive\n- seq_len=2048, batch=786K tokens/step\n\n### Quantization\n- Mixed strategy: int8 for embeddings (quality-sensitive), int6 for MLP+attention (compression-friendly)\n- GPTQ-lite: best-of-5 percentile search per row\n- zstd-22 compression\n- Flash Attention 3 with SDPA fallback\n\n### Results\n| Seed | Raw bpb | int8 roundtrip | Mixed int6/int8 roundtrip |\n|------|---------|----------------|--------------------------|\n| 1337 | 1.1349  | 1.1491         | 1.1618                   |\n\n### Artifact size\nCurrently 16.33MB (optimizing to fit under 16MB \u2014 reducing BigramHash size)\n\n## Test plan\n- [x] Smoke test on 2\u00d7H100 (3 iters, no crash)\n- [x] Full 600s run on 8\u00d7H100 SXM\n- [x] int8 roundtrip validation\n- [x] Mixed int6/int8 roundtrip validation\n- [ ] Final artifact under 16MB limit\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-29T17:41:22Z",
+  "updated_at": "2026-03-29T18:27:45Z",
+  "submission_readme": null
+}

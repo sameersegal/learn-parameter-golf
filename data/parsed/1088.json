@@ -1,0 +1,117 @@
+{
+  "pr_number": 1088,
+  "title": "Non-Record Universal Transformer submission. (2x Attention layers, 3 Layer MLP, depth scheduling)",
+  "author": "serdardoesml",
+  "status": "open",
+  "val_bpb": 1.2542,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shared Universal Transformer-style recurrent block with weights reused across depth.",
+        "parameters": {
+          "layers": null
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention",
+        "description": "Two attention layers before the MLP to enable circuits like induction heads.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP with an added fully connected layer between up and down projections.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Main weights are shared across depth while norms remain independent.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "bias to pre-norms",
+        "description": "Added bias terms to pre-norm layers to act like a depth embedding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "final roundtrip"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "layer/depth schedule",
+        "parameters": {
+          "schedule": "0:2,2000:6"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Compiled all scheduled depths up front during warmup/priming to avoid recompiles when switching depths.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Removed U-Net style extra skip connections for simplicity.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Universal Transformer-style shared recurrent block with two attention layers before the MLP",
+    "Three-layer MLP instead of a standard wider MLP",
+    "Independent norms across depth with bias added to pre-norms as a depth embedding",
+    "Noisy QAT for quantized BPB improvement",
+    "Depth/layer scheduling with early low-depth training",
+    "Precompiling all scheduled depths during warmup to avoid recompiles",
+    "Removal of U-Net skip connections for shared-weight simplicity"
+  ],
+  "artifact_size": "15,982,324 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

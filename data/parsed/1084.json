@@ -1,0 +1,185 @@
+{
+  "pr_number": 1084,
+  "title": "Non-Record: SLOT Eval-Time Augmentation on PR #549 SOTA Stack val_bpb = 1.1185 (3-seed mean, std 0.0003) | ~15.9 MB | 8\u00d7H100 SXM",
+  "author": "AnubhavBharadwaaj",
+  "status": "open",
+  "val_bpb": 1.1185,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component used in the base model.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention modification using the last N tokens.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embedding applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual / VE module with 128-dimensional value enhancement.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation used in the feed-forward blocks.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "ttt_gradient_clip": 1.0,
+          "ttt_batch_seqs": 32
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 1e-08,
+        "momentum": null,
+        "other_params": {
+          "slot_learning_rate": 0.001,
+          "slot_steps": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SLOT eval-time augmentation that optimizes a single additive delta vector at the last hidden layer during evaluation.",
+        "parameters": {
+          "enabled": true,
+          "learning_rate": 0.001,
+          "steps": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CTW eval-time augmentation was tested as a negative result and did not improve BPB.",
+        "parameters": {
+          "weight": 0.1,
+          "depth": 4
+        }
+      }
+    }
+  ],
+  "compression": "lzma-6",
+  "novel_contributions": [
+    "First SLOT-based entry in Parameter Golf",
+    "Eval-time augmentation using SLOT integrated inside the TTT scoring loop",
+    "Reported consistent BPB improvement across three seeds with minimal overhead",
+    "Negative-result analysis of CTW as an eval-time augmentation",
+    "Demonstration that SLOT stacks on top of score-first TTT"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,198 @@
+{
+  "pr_number": 1086,
+  "title": "Track A: 11L U-Net + BigramHash + SmearGate + Partial RoPE + QAT (1.1349 bpb)",
+  "author": "Omrigotlieb",
+  "status": "open",
+  "val_bpb": 1.1349,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "11-layer U-Net transformer with encoder-decoder skip connections",
+        "parameters": {
+          "layers": 11,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP with 3x expansion",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embeddings with projection",
+        "parameters": {
+          "buckets": 8192,
+          "projection_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned previous-token blend after embedding normalization",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied in the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Only part of the head dimension uses rotary position embeddings",
+        "parameters": {
+          "rotated_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "vocab_bias",
+        "description": "Learned per-token logit prior",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "z-loss",
+        "parameters": {
+          "weight": 0.0001
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "warmup_momentum_end": 0.99,
+          "warmup_steps": 1500,
+          "adam_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "last 15% of warmdown"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "embeddings, MLP, attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "steps": 3500,
+          "wallclock_adaptive": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "11-layer U-Net transformer with skip connections",
+    "BigramHash embeddings",
+    "SmearGate token blending",
+    "Partial RoPE",
+    "Exclusive self-attention in the last 4 layers",
+    "Mixed int6/int8 GPTQ-lite quantization",
+    "Late QAT during warmdown",
+    "Muon optimizer with EMA"
+  ],
+  "artifact_size": "16.33MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
