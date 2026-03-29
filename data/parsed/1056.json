@@ -1,0 +1,218 @@
+{
+  "pr_number": 1056,
+  "title": "Record: Packed Causal N-gram + Dirichlet Backoff \u2014 val_bpb 0.0180 (3-seed    mean)",
+  "author": "sofiabod",
+  "status": "open",
+  "val_bpb": 0.01800106,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings with a reduced active dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SWA",
+        "description": "Stochastic weight averaging used during training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a bigram hash component to the model stack.",
+        "parameters": {
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses VE128 on later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses squared LeakyReLU activation.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA attention across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped KV heads.",
+        "parameters": {
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Packed causal n-gram cache built from training shards and stored in the artifact for eval-time lookup.",
+        "parameters": {
+          "orders": "2-12",
+          "buckets_per_order": 32768
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Dirichlet posterior backoff mixing with count-confidence gating for eval-time blending of neural and n-gram probabilities.",
+        "parameters": {
+          "concentrations": [
+            50,
+            50,
+            20,
+            10,
+            6,
+            4,
+            3,
+            2.5,
+            2,
+            1.8,
+            1.6
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Packed causal n-gram cache precomputed from training shards and stored in the artifact",
+    "Dirichlet posterior backoff mixing with count-confidence gating",
+    "Single-pass score-first evaluation with cache update after lookup",
+    "Distributed prefill to warm caches across ranks before evaluation",
+    "Order-2 to order-12 hash-table backoff with dual hashing"
+  ],
+  "artifact_size": "~1.4 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
