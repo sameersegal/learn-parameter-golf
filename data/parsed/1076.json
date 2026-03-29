@@ -1,0 +1,91 @@
+{
+  "pr_number": 1076,
+  "title": "Record: Packed Causal N-gram + Dirichlet Backoff \u2014 val_bpb 0.0109 (3-seed mean, NEW SOTA)",
+  "author": "sofiabod",
+  "status": "closed",
+  "val_bpb": 0.01085226,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GPT",
+        "description": "2-layer 128d GPT used as a vestigial neural backbone alongside n-gram cache scoring.",
+        "parameters": {
+          "layers": 2,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Packed causal n-gram cache with precomputed order 2-12 hash tables stored in 32K buckets and zstd-compressed in the artifact.",
+        "parameters": {
+          "orders": "2-12",
+          "buckets_per_order": 32768
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Dirichlet posterior backoff mixing with greedy highest-order-first backoff and count-confidence gating.",
+        "parameters": {
+          "concentrations": [
+            50,
+            50,
+            20,
+            10,
+            6,
+            4,
+            3,
+            2.5,
+            2,
+            1.8,
+            1.6
+          ],
+          "confidence_scale": 12.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-first evaluation with lookup before update and distributed prefill for warm cache start.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Packed causal n-gram cache with precomputed multi-order hash tables",
+    "Dirichlet posterior backoff mixing for n-gram/neural blending",
+    "Count-confidence gating for adaptive blending",
+    "Score-first single-pass evaluation with cache update after lookup",
+    "Distributed prefill to warm caches across ranks",
+    "Very small artifact size while achieving strong validation performance"
+  ],
+  "artifact_size": "~1.5 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

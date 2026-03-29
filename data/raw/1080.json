@@ -1,0 +1,12 @@
+{
+  "number": 1080,
+  "title": "Add non-record 16MB submission: quant-quality-first 1.12276 BPB",
+  "author": "ciach",
+  "body": "",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-29T14:47:13Z",
+  "updated_at": "2026-03-29T14:47:13Z",
+  "submission_readme": "This record captures a cap-valid 10-minute 8xH100 run using a quality-first mixed-quant setup.\n\nTrainer snapshot:\n- `train_gpt_frontier.py` copied as `train_gpt.py` in this folder\n- decimal cap enforced: `SUBMISSION_SIZE_CAP_BYTES=16000000`\n- compression backend selection: `QUANT_COMPRESSOR=auto` (selected `zstd`)\n- int6 packing disabled: `INT6_PACK=0`\n- mixed quantization: `MIXED_QUANT_INT6_CATS=mlp,attn` (embeddings on int8 path)\n\nConfiguration:\n- Layout: `VOCAB_SIZE=1024 NUM_LAYERS=11 MODEL_DIM=512 NUM_HEADS=8 NUM_KV_HEADS=4`\n- Capacity: `MLP_MULT=3.0 BIGRAM_VOCAB_SIZE=2048`\n- Context/batch: `TRAIN_SEQ_LEN=2048 TRAIN_BATCH_TOKENS=786432`\n- Eval: `EVAL_STRIDE=64`\n- XSA: last 4 layers (`[7, 8, 9, 10]`)\n- VE: enabled, layers `9,10`\n\nCommand (track-relevant params):\n```bash\nSUBMISSION_SIZE_CAP_BYTES=16000000 \\\nEVAL_STRIDE=64 \\\nQUANT_COMPRESSOR=auto \\\nINT6_PACK=0 \\\nMIXED_QUANT_KEEP_FLOAT_MAX_NUMEL=16384 \\\nMIXED_QUANT_INT6_CATS=mlp,attn \\\nMLP_MULT=3.0 \\\nBIGRAM_VOCAB_SIZE=2048 \\\nRUN_ID=00_quant_quality_tweak_mlp3_bg2048_no_embed_int6 \\\ntorchrun --standalone --nproc_per_node=8 ./train_gpt.py\n```\n\nKey metrics (from `train.log`):\n- Timed training stopped at `7020/20000` due to wallclock cap (`600071ms`)\n- Pre-quant eval at stop: `val_loss:1.9239`, `val_bpb:1.1394`\n- Post-EMA diagnostic: `val_loss:1.9221`, `val_bpb:1.1384`\n- Final int6 roundtrip exact: `val_loss:1.93586004`, `val_bpb:1.14652536`\n- Final sliding-window exact (stride 64): `val_loss:1.89573468`, `val_bpb:1.12276383`\n- Code size: `74406 bytes`\n- Serialized model int6+zstd: `15487334 bytes`\n- Total submission size int6+zstd: `15561740 bytes`\n- Cap check: `PASS` (`margin +438260`)\n\nIncluded files:\n- `train_gpt.py` (exact trainer snapshot used for this run)\n- `train.log` (full raw run log)\n- `submission.json` (leaderboard metadata)\n- `run_manifest.tsv` and `results_summary.txt` (batch provenance)\n"
+}

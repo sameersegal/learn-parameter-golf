@@ -1,0 +1,146 @@
+{
+  "pr_number": 1077,
+  "title": "Sota 11 l submission",
+  "author": "malc3om",
+  "status": "open",
+  "val_bpb": 1.113,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Symmetric skip connections between encoder and decoder blocks in an 11-layer U-Net Transformer.",
+        "parameters": {
+          "layers": 11,
+          "skip_pairs": [
+            "0->5",
+            "1->6",
+            "2->7",
+            "3->8",
+            "4->9"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 instead of standard ReLU^2 to avoid dead neurons and improve gradient flow.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied in the last 4 layers to subtract attention components aligned with token embeddings.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE only to the first 16 dimensions of query/key heads, leaving the remaining dimensions position-free.",
+        "parameters": {
+          "rope_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Injects shared 128-dimensional value embeddings into the final blocks to stabilize logit projections.",
+        "parameters": {
+          "dimensions": 128,
+          "blocks": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50,
+          "swa_start_fraction": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "mixed; MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "window_size": 32768,
+          "optimizer": "SGD"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "prune_fraction": 0.03
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "11-layer U-Net Transformer with symmetric skip connections",
+    "LeakyReLU(0.5)^2 activation",
+    "Exclusive Self Attention in the final 4 layers",
+    "Partial RoPE applied to only the first 16 dimensions",
+    "Layerwise LN scaling by 1/sqrt(layer+1)",
+    "VE128 value embeddings in the last blocks",
+    "Mixed int5/int6 quantization with late STE QAT",
+    "EMA combined with SWA",
+    "Test-time training over 32K-token windows",
+    "GPTQ-lite per-row quantization",
+    "Magnitude pruning before compression"
+  ],
+  "artifact_size": "15,998,200 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
