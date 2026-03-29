@@ -100865,5 +100865,336 @@
     "artifact_size": "~11.2MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1062,
+    "title": "Non-record: LeakyReLU(0.9)² slope sweep (local validation, compute pending)",
+    "author": "yaowubarbara",
+    "status": "open",
+    "val_bpb": 1.4508,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU with negative slope 0.9 in the MLP activation, squared after activation as LeakyReLU².",
+          "parameters": {
+            "negative_slope": 0.9
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA in the last 4 layers of the base stack.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies partial rotary positional embeddings.",
+          "parameters": {
+            "range": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses 3x MLP blocks in the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses bigram hash embeddings/features.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses SmearGate in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Investigates LeakyReLU negative slope 0.9 as an alternative to 0.5 for LeakyReLU² activations",
+      "Reports local RTX 5060 validation for the PR #466 stack with slope 0.9",
+      "Compares baseline relu² model against PR #466 stack with LeakyReLU(0.9)²",
+      "Applies sliding window evaluation correction to the reported validation bpb",
+      "Includes a planned slope sweep over multiple negative-slope values on full 8xH100 validation"
+    ],
+    "artifact_size": "12.7 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1063,
+    "title": "Add Compiled LeakyReLU2 + Slide64 Eval non-record submission",
+    "author": "SHN2004",
+    "status": "open",
+    "val_bpb": 1.3321,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses leakyrelu2 MLP activation in a 9-layer Transformer baseline.",
+          "parameters": {
+            "layers": 9,
+            "width": 512,
+            "heads": 8,
+            "kv_heads": 4,
+            "mlp_mult": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings are enabled.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0,
+          "momentum": null,
+          "other_params": {
+            "adam_weight_decay": 0,
+            "embed_lr": 0.05,
+            "head_lr": 0
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 450
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_weight_decay": 0,
+            "adam_weight_decay": 0
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Compiled LeakyReLU2 baseline with torch.compile enabled",
+      "Sliding-window evaluation with stride 64 instead of flat chunk evaluation",
+      "Demonstrated a clear validation bpb improvement from richer left-context scoring on the same 600-second training run",
+      "Documented a non-record single-GPU confirmation run and accompanying sweep context"
+    ],
+    "artifact_size": "14.86 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1065,
+    "title": "[Non-Record] Competitive Baseline: 10L GQA + Mixed Int6/Int8 + SWA + Seq4096 (val_bpb=1.1536)",
+    "author": "rithunkp",
+    "status": "open",
+    "val_bpb": 1.1536,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "10-layer Transformer using grouped query attention with 8 query heads and 4 KV heads.",
+          "parameters": {
+            "layers": 10,
+            "num_heads": 8,
+            "num_kv_heads": 4,
+            "model_dim": 512,
+            "mlp_hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": 6,
+          "scope": "block weights and embeddings"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "decay": 0.4
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.95,
+          "other_params": {
+            "matrix_lr": 0.04,
+            "scalar_lr": 0.04,
+            "embed_lr": 0.6,
+            "head_lr": 0.008
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input and output embeddings share weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.04
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "10-layer Transformer with GQA under the 16MB constraint",
+      "Mixed int6/int8 quantization with zstandard compression",
+      "Stochastic Weight Averaging for quantization-friendly weights",
+      "Extended training sequence length of 4096",
+      "Muon optimizer for matrix parameters with AdamW for scalars/embeddings",
+      "Weight tying to reduce parameter count"
+    ],
+    "artifact_size": "15.74MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
