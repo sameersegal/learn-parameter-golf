@@ -1,0 +1,153 @@
+{
+  "pr_number": 1096,
+  "title": "Record: Depth-Recurrent UT + Rank-1 LoRA Per-Iteration Adaptation \u2014 val_bpb 1.3342",
+  "author": "vimeto",
+  "status": "open",
+  "val_bpb": 1.3342,
+  "architecture": "Transformer",
+  "quantization": "INT6 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Universal Transformer-style recurrent depth with 1 prelude, 4 shared blocks repeated for 3 loops, and 1 coda.",
+        "parameters": {
+          "effective_layers": 14,
+          "unique_blocks": 6,
+          "model_dim": 640,
+          "heads": 10,
+          "kv_heads": 5,
+          "head_dim": 64,
+          "mlp_multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared as the activation.",
+        "parameters": {
+          "slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "shared block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "shared block weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "ns5": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "rank-1 LoRA vectors"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "description": "capped timestep scaling / clamped scale vectors"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "description": "Output-LN / Peri-LN on shared blocks"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Rank-1 LoRA per-iteration adaptation applied to Q, V, MLP-up, and MLP-down matrices with unique rank-1 deltas at each loop iteration.",
+        "parameters": {
+          "rank": 1,
+          "targets": [
+            "Q",
+            "V",
+            "MLP-up",
+            "MLP-down"
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Birkhoff-constrained residual mixing using sigmoid-gated mixing to keep spectral norm <= 1.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "shared weights"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Rank-1 LoRA per-iteration adaptation for stable recurrent transformer training",
+    "Depth-recurrent Universal Transformer with 14 effective layers from 6 unique blocks",
+    "Demonstration that rank-8 LoRA diverges under Muon scaling while rank-1 vectors on AdamW remain stable",
+    "Combination of Output-LN, Birkhoff-constrained mixing, capped timestep scaling, and noisy QAT in a 640d recurrent model",
+    "Achieves 1.3342 val_bpb with an 11.39 MB artifact"
+  ],
+  "artifact_size": "11.39 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

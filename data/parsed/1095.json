@@ -1,0 +1,139 @@
+{
+  "pr_number": 1095,
+  "title": "Record: Seed-Regenerated Random Model + Incremental N-gram Cache \u2014 val_bpb 0.0905",
+  "author": "vimeto",
+  "status": "open",
+  "val_bpb": 0.0905,
+  "architecture": "Transformer",
+  "quantization": "int8 adapters",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Frozen orthogonal random projections regenerated from deterministic 8-byte seeds at load time."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "LoRA adapters"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query style attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses an MLP multiplier of 3.0.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Incrementally builds an n-gram cache during training and freezes it for evaluation; blends neural and n-gram probabilities with entropy-adaptive alpha.",
+        "parameters": {
+          "ngram_orders": "2-7",
+          "cache_type": "INT16",
+          "multi_gpu_sync": "all_reduce"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Seed-regenerated frozen orthogonal random base weights stored as 8-byte seeds instead of full matrices",
+    "Incremental n-gram cache built during training with negligible overhead",
+    "Entropy-adaptive blending of neural and n-gram probabilities",
+    "INT8 quantization of LoRA adapters with small BPB loss",
+    "Orthogonal initialization enabling stable training of deeper random-weight models"
+  ],
+  "artifact_size": "15.09 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

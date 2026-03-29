@@ -1,0 +1,12 @@
+{
+  "number": 1093,
+  "title": "Add Modal single-node 8xH100 launcher",
+  "author": "Muhtasham",
+  "body": "## Summary\n\nAdds a small single-node Modal launcher for the public Parameter Golf baseline stack so experiments can run on `8xH100` with persistent Modal Volumes and a minimal setup path.\n\n## What changed\n\n- add `modal_train.py` as a single-node Modal launcher for the public `torch 2.9.1 + cu128` stack\n- use explicit file mounts instead of mounting the full repo\n- persist datasets, tokenizers, Hugging Face cache, and run outputs in dedicated Modal Volumes\n- support running either `train_gpt.py` or another explicitly requested script via `--script`\n- run distributed training in-process with `torch.distributed.run` rather than shelling out to `torchrun`\n- add a README section covering `modal setup`, `modal run`, `--skip-dataset`, and `--extra-env`\n- ignore local `.env` files in `.gitignore`\n\n## Why\n\nThe repo docs point people to Runpod for the canonical evaluation environment, but Modal is still useful for fast iteration:\n\n- startup is quick\n- volumes make repeated dataset/tokenizer reuse cheap\n- single-node `8xH100` runs are easy to launch from one command\n\nThis keeps the launcher out of `train_gpt.py` itself and keeps the change infra-only.\n\n## Validation\n\n- `python3 -m py_compile modal_train.py`\n- Modal smoke run on `H100!:8`\n- full public-baseline-style Modal runs using `train_gpt.py`\n\nRepresentative full-run observations on Modal:\n\n- training loop respects the ~10 minute wallclock cap (`train_time` ~599s inside trainer logs)\n- public stack reproduces the expected single-node baseline behavior well enough for iteration\n- exact Modal perf still differs from the archived/OpenAI baseline, so this is positioned as an iteration launcher rather than a claim of canonical leaderboard parity\n\n## Notes\n\n- this is intentionally single-node only; it does not add multi-node `@clustered` support\n- this keeps `train_gpt.py` unchanged and follows the repo guidance that core scripts stay simple while heavier experimentation lives outside them\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-29T19:46:28Z",
+  "updated_at": "2026-03-29T20:25:05Z",
+  "submission_readme": null
+}

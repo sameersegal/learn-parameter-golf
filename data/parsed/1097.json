@@ -1,0 +1,136 @@
+{
+  "pr_number": 1097,
+  "title": "Parameter golf jepa",
+  "author": "danielxmed",
+  "status": "open",
+  "val_bpb": 1.3355,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses a U-Net style encoder-decoder transformer with stored skip connections between encoder and decoder blocks.",
+        "parameters": {
+          "layers": 10,
+          "encoder_layers": 5,
+          "decoder_layers": 5,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 as the activation function.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings with softcap logits.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_orthogonalization": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "artifact"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "JEPA bottleneck",
+        "description": "Adds a 256-dim latent projection and next-position latent predictor at the bottleneck for JEPA-style training.",
+        "parameters": {
+          "jepa_dim": 256
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "SIGReg",
+        "parameters": {
+          "weight": 0.03,
+          "num_proj": 128,
+          "subsample": 4096
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses a JEPA auxiliary loss on latent embeddings with stop-gradient targets and MSE prediction loss.",
+        "parameters": {
+          "jepa_alpha": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "First application of JEPA to text compression / language model parameter golf",
+    "Adds a JEPA-style latent projection and next-position predictor at the transformer bottleneck",
+    "Introduces SIGReg to prevent latent collapse in a text setting",
+    "Claims zero inference overhead from JEPA components because they are used only during training",
+    "Combines CE with auxiliary JEPA MSE and SIGReg losses"
+  ],
+  "artifact_size": "~16.5 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

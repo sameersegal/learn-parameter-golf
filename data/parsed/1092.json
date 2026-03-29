@@ -1,0 +1,154 @@
+{
+  "pr_number": 1092,
+  "title": "XSA-All 11L + LeakyReLU(0.75)\u00b2 + Aggressive Legal TTT \u2192 1.1219 BPB",
+  "author": "teddyoweh",
+  "status": "open",
+  "val_bpb": 1.1219,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Extended self-attention applied to all 11 layers instead of only the last 4 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with negative slope 0.75, squared after activation.",
+        "parameters": {
+          "negative_slope": 0.75
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.03,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 0,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "ttt_learning_rate": 0.03,
+          "ttt_epochs": 3,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram vocabulary hashing used as part of the model input representation.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding / value expansion module enabled on selected layers.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "XSA applied to all 11 layers instead of only the last 4",
+    "LeakyReLU(0.75) squared activation variant",
+    "Aggressive legal score-first TTT with lr=0.03 and all blocks unfrozen",
+    "Automatic Flash Attention 3 fallback to PyTorch SDPA"
+  ],
+  "artifact_size": "15.92 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
