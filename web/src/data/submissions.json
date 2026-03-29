@@ -100381,5 +100381,489 @@
     "artifact_size": "~1.4 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1057,
+    "title": "11L MLP2x + LeakyReLU² + Legal TTT (val_bpb=1.2201, 3-seed mean, std=0.0015)",
+    "author": "Programmerryoki",
+    "status": "open",
+    "val_bpb": 1.2201,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT + GPTQ-lite",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "MLP uses LeakyReLU(0.5) squared in a 2x MLP block.",
+          "parameters": {
+            "mlp_mult": 2,
+            "negative_slope": 0.5,
+            "squared": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding with 4096 buckets.",
+          "parameters": {
+            "buckets": 4096
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate enabled in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections enabled.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied in the last 4 layers.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "epochs_per_chunk": 7,
+            "chunk_size": 32768,
+            "all_blocks_unfrozen": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.95,
+          "other_params": {
+            "adamw": true,
+            "lr": 0.025
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "LeakyReLU(0.5) squared MLP activation",
+      "Legal score-first TTT with 7 epochs per chunk",
+      "Combination of BigramHash, SmearGate, U-Net skips, and XSA in a compact 11-layer model",
+      "Int6 QAT plus GPTQ-lite compression to fit under the 16MB artifact limit"
+    ],
+    "artifact_size": "~15.0 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1058,
+    "title": "Publish clean prune baseline 1.12470947 as non-record package",
+    "author": "resouer",
+    "status": "open",
+    "val_bpb": 1.12470947,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "mode": "selective_prune_pre_quant",
+            "enabled": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "TTT",
+          "parameters": {
+            "enabled": false
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "exact": true
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Publishes a non-record 16MB submission package for an existing clean prune-before-quant baseline",
+      "Records-only packaging change with no new method or metric change",
+      "Uses selective prune-before-quant boundary with no pre-quant TTT and no mixed export",
+      "Provides validated packaged artifacts and exact terminal metrics for audit/reproduction"
+    ],
+    "artifact_size": "15,922,913 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1059,
+    "title": "Int5 MLP + Int6 Attn + zstd-22, val_bpb 1.1996",
+    "author": "edidisheng",
+    "status": "open",
+    "val_bpb": 1.1996,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": null,
+          "scope": "MLP int5, attention int6"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Increased MLP expansion ratio from 2x to 3x.",
+          "parameters": {
+            "mlp_mult": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Used tied embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Attention configuration uses 4 KV heads.",
+          "parameters": {
+            "kv_heads": 4
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Mixed precision quantization with int5 for MLP blocks and int6 for attention blocks",
+      "Switched artifact compression from zlib to zstd level 22",
+      "Increased MLP expansion to 3x and model depth to 11 layers while staying under the size limit",
+      "Used tied embeddings"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1060,
+    "title": "Record: 1.1123 BPB — Coprime-Stride Loader + Full GPTQ + XSA-all (3-seed mean)",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.1123,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Expanded bigram hash embedding from the prior scaffold to capture more bigram patterns.",
+          "parameters": {
+            "vocab_size": 2816,
+            "dimensions": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive Self-Attention applied to all layers instead of only the last few layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared MLP activation in the base scaffold.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Coprime-stride multi-shard data pipeline that samples blocks from multiple shards with coprime strides to increase batch diversity.",
+          "parameters": {
+            "shards": "multi-shard",
+            "stride_scheme": "coprime"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Coprime-stride multi-shard data pipeline",
+      "Full Hessian GPTQ with Cholesky error compensation",
+      "XSA extended to all 11 layers",
+      "BigramHash enlarged to 2816x112",
+      "No TTT; sliding window evaluation outperformed test-time training"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1061,
+    "title": "Causal Oscillator LM: physics-native architecture (BPB 1.34)",
+    "author": "rolandnsharp",
+    "status": "open",
+    "val_bpb": 1.3379,
+    "architecture": "Hybrid",
+    "quantization": "int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Hybrid",
+          "description": "Causal Oscillator Language Model using damped harmonic oscillator transfer functions as the core computational primitive, with causal FFT convolution over oscillator impulse responses and attention on physics-enriched states.",
+          "parameters": {
+            "oscillators": 192,
+            "layers": 12,
+            "heads": 16
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "2D weight matrices"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "oscillator parameters and embeddings"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "custom",
+          "level": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "linear warmup + cosine decay",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "custom",
+    "novel_contributions": [
+      "Causal Oscillator Language Model based on damped harmonic oscillator dynamics",
+      "Causal convolution via FFT over oscillator impulse responses",
+      "Physics-native temporal context instead of positional embeddings",
+      "Tokens drive a bank of 192 oscillators through learned impulse coupling",
+      "Same architecture is claimed to transfer across text and audio/sequential wave signals",
+      "Physically interpretable parameters such as frequency and damping ratio"
+    ],
+    "artifact_size": "~11.2MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
