@@ -1,0 +1,169 @@
+{
+  "pr_number": 1101,
+  "title": "Add non-record pre-TTT anchor submission",
+  "author": "amrayach",
+  "status": "open",
+  "val_bpb": 1.12904446,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Learnable skip connections in the model backbone.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses relu^2 MLP activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped Query Attention with fewer KV heads than query heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Sigmoid gate interpolates current and previous token representations.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "XOR-hash bigram embedding with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048,
+          "embed_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA on the last 4 layers with SDPA layout adaptation.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotates only the first 16 dimensions while passing the rest through.",
+        "parameters": {
+          "rotated_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "decoupled_update": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "tok/scalar/head optimizers"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "MLP+attn int6; embeddings+other int8"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with 1/sqrt(2*num_layers) scaling for projection layers."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx + 1)"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Pre-TTT anchor submission adapted from the repo-root train_gpt.py skeleton",
+    "SDPA-based adaptation of donor features originally designed for flash_attn_3",
+    "Selective transplant of donor techniques including SmearGate, BigramHash, XSA, and Partial RoPE",
+    "Mixed int6/int8 export with zstd compression to fit the 16MB artifact limit",
+    "Stride-64 sliding evaluation for validation",
+    "EMA-based weight averaging and Muon optimization with decoupled weight decay"
+  ],
+  "artifact_size": "15751324 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

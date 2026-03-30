@@ -1,0 +1,158 @@
+{
+  "pr_number": 1107,
+  "title": "Mamba-3 SSD + Attention Hybrid with QAT (1.5633 bpb)",
+  "author": "mradassaad",
+  "status": "open",
+  "val_bpb": 1.5633,
+  "architecture": "Hybrid",
+  "quantization": "INT6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mamba",
+        "description": "Hybrid model using 7 Mamba-3 SISO SSD blocks and 1 attention layer in an 8-layer stack",
+        "parameters": {
+          "layers": 8,
+          "mamba_layers": 7,
+          "attention_layers": 1,
+          "dim": 512,
+          "d_state": 64,
+          "mlp_mult": 3,
+          "seq_len": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Causal grouped-query attention with 8 heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings used in attention",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared hidden activation in the MLP",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections included in the hybrid architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash component used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings used",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "Mamba projections and standard CastedLinear layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 1
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 22000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "Mamba-3 SISO SSD + attention hybrid architecture for parameter golf",
+    "QAT applied to Mamba-3 projections by replacing nn.Linear projections with CastedLinear",
+    "Hardware-dependent warmdown schedule fix based on step time",
+    "Demonstration that fewer attention layers and smaller MLPs win under a fixed wall-clock budget",
+    "GLU values in attention provided the largest ablation gain"
+  ],
+  "artifact_size": "10.9MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

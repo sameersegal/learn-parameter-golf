@@ -1,0 +1,243 @@
+{
+  "pr_number": 1108,
+  "title": "nGPT on the Hypersphere: Making Normalized Transformers Work at 16MB (Research)",
+  "author": "DbBested",
+  "status": "open",
+  "val_bpb": 1.1502,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hashing input representation with 8192 vocabulary.",
+        "parameters": {
+          "vocab": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with reduced KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x expansion MLP with LeakyReLU\u00b2 activation.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the block stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Extra attention applied in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of head dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.078
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "embed_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": "last ~10% of warmdown"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Modified residual mixing / interpolation behavior in nGPT; paper-faithful signed alpha was tested and found worse."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Opaque custom autograd normalize function wrapped with allow_in_graph to prevent torch.compile precision compounding and graph breaks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Post-dequantization renormalization to project int6-dequantized weights back onto the hypersphere.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Stochastic RYS / layer repetition during training to encourage refinable representations.",
+        "parameters": {
+          "method": "SRYS"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate_range": [
+            5e-05,
+            0.002
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Made full nGPT trainable by fixing three interacting bugs that previously caused catastrophic underperformance.",
+    "Identified and fixed a torch.compile precision compounding bug using an opaque custom autograd function with allow_in_graph.",
+    "Introduced post-dequantization renormalization, dramatically reducing the int6 quantization gap for unit-norm weights.",
+    "Mapped the nGPT design space with a broad ablation study across architecture, quantization, and training choices.",
+    "Showed that structured-weight compression advantages can disappear at full training length.",
+    "Demonstrated stronger stochastic RYS effects on the hypersphere due to geometric constraints preventing identity collapse."
+  ],
+  "artifact_size": "15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

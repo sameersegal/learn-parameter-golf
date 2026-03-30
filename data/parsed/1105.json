@@ -1,0 +1,177 @@
+{
+  "pr_number": 1105,
+  "title": "Record: CUTLASS EVT Backward MLP Fusion + Brotli + Turbo-Muon + Memmap",
+  "author": "abaybektursun",
+  "status": "open",
+  "val_bpb": 1.2208,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared in the MLP and fuses the up-projection, activation, and square into a single kernel.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the model architecture.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in all transformer layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash embeddings for token representation.",
+        "parameters": {
+          "vocab_size": 3072,
+          "dimension": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "partial": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses VE128 layers in the model.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "turbo_variant": true,
+          "aol_preconditioned": true,
+          "iterations": 4,
+          "polar_express": true,
+          "ns_variant": "NS4"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Memmap multi-shard data pipeline with coprime-stride sampling, daemon-thread CPU batch building, and CUDA stream double-buffered GPU prefetch.",
+        "parameters": {
+          "shards": "multi-shard",
+          "prefetch": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CUTLASS EVT backward MLP fusion using a pingpong warp-specialized schedule and precomputed activation gradients to eliminate intermediate HBM traffic.",
+        "parameters": {
+          "kernel": "CUTLASS EVT",
+          "schedule": "WarpSpecializedPingpong"
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Fused Triton TMA forward MLP kernel that keeps the pre-activation output off HBM",
+    "CUTLASS EVT backward MLP fusion with pingpong schedule for faster dpre computation",
+    "Pre-computed activation gradient stored in forward pass to remove conditional logic from backward epilogue",
+    "Brotli-11 artifact compression replacing LZMA-9",
+    "Turbo-Muon / AOL-preconditioned 4-iteration Newton-Schulz optimizer variant",
+    "Memmap multi-shard data pipeline with GPU prefetch",
+    "Reported same-machine 2xH100 improvement to 1.2208 BPB"
+  ],
+  "artifact_size": "11.51 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
