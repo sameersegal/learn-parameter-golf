@@ -1,0 +1,89 @@
+{
+  "pr_number": 1145,
+  "title": "Record: 1.1109 BPB Loader FullGPTQ XSA11 + online ngram augment",
+  "author": "AnirudhRahul",
+  "status": "open",
+  "val_bpb": 1.11085863,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "base model"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses the Loader_FullGPTQ_XSA11 BigramHash2816 architecture from PR #1060 as the base model.",
+        "parameters": {
+          "last_n": 11,
+          "bigram_vocab_size": 2816,
+          "bigram_dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram-hash architecture used as the base for the submission.",
+        "parameters": {
+          "last_n": 11,
+          "bigram_vocab_size": 2816,
+          "bigram_dim": 112
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "online n-gram agreement eval",
+        "parameters": {
+          "experts": [
+            "token n-gram top-token hints",
+            "within-word continuation hints",
+            "word-start first-token hints"
+          ],
+          "single_pass": true,
+          "normalized_boost": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal eval-time ensemble that boosts a prefix-derived hinted token with agreement between multiple online experts.",
+        "parameters": {
+          "single_pass": true,
+          "prefix_only": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Retunes the training schedule with WARMDOWN_ITERS=4000.",
+    "Adds a single-pass online token/within-word/word-start agreement evaluator.",
+    "Uses a causal prefix-only ensemble with agreement boosting on top of the base model distribution.",
+    "Applies a normalized one-token boost and renormalization rather than target-conditioned cache scoring.",
+    "Packages the online evaluator inside the record folder for eval-time use."
+  ],
+  "artifact_size": "15,953,221 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

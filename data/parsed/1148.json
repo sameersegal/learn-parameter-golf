@@ -1,0 +1,172 @@
+{
+  "pr_number": 1148,
+  "title": "Record: 11L Muon Legal TTT + Entropy-Adaptive Epochs (8\u00d7H100) \u2014 val_bpb 1.1179 (3-seed mean)",
+  "author": "aamodbhatt",
+  "status": "open",
+  "val_bpb": 1.1179,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used in the base stack.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last layers of the model.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider MLP stack with LeakyReLU activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied partially to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual enhancement on selected layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 7
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": [
+            2,
+            3,
+            4
+          ],
+          "chunk_tokens": 32768,
+          "entropy_adaptive": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "ns_steps": 3,
+          "warmup_momentum_start": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": 32768
+      }
+    }
+  ],
+  "compression": "lzma-7",
+  "novel_contributions": [
+    "Muon-style Newton-Schulz orthogonalized updates applied inside the test-time training loop",
+    "Entropy-adaptive test-time training epochs that allocate 2/3/4 epochs per chunk based on chunk uncertainty",
+    "Score-first legal TTT with global NLL synchronization across DDP ranks to avoid collective mismatch",
+    "Improved SOTA validation score with a 3-seed mean of 1.1179"
+  ],
+  "artifact_size": "15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -110325,5 +110325,523 @@
     "artifact_size": "15.47MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1145,
+    "title": "Record: 1.1109 BPB Loader FullGPTQ XSA11 + online ngram augment",
+    "author": "AnirudhRahul",
+    "status": "open",
+    "val_bpb": 1.11085863,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "base model"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses the Loader_FullGPTQ_XSA11 BigramHash2816 architecture from PR #1060 as the base model.",
+          "parameters": {
+            "last_n": 11,
+            "bigram_vocab_size": 2816,
+            "bigram_dim": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram-hash architecture used as the base for the submission.",
+          "parameters": {
+            "last_n": 11,
+            "bigram_vocab_size": 2816,
+            "bigram_dim": 112
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "online n-gram agreement eval",
+          "parameters": {
+            "experts": [
+              "token n-gram top-token hints",
+              "within-word continuation hints",
+              "word-start first-token hints"
+            ],
+            "single_pass": true,
+            "normalized_boost": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Causal eval-time ensemble that boosts a prefix-derived hinted token with agreement between multiple online experts.",
+          "parameters": {
+            "single_pass": true,
+            "prefix_only": true
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Retunes the training schedule with WARMDOWN_ITERS=4000.",
+      "Adds a single-pass online token/within-word/word-start agreement evaluator.",
+      "Uses a causal prefix-only ensemble with agreement boosting on top of the base model distribution.",
+      "Applies a normalized one-token boost and renormalization rather than target-conditioned cache scoring.",
+      "Packages the online evaluator inside the record folder for eval-time use."
+    ],
+    "artifact_size": "15,953,221 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1148,
+    "title": "Record: 11L Muon Legal TTT + Entropy-Adaptive Epochs (8×H100) — val_bpb 1.1179 (3-seed mean)",
+    "author": "aamodbhatt",
+    "status": "open",
+    "val_bpb": 1.1179,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding used in the base stack.",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied to the last layers of the model.",
+          "parameters": {
+            "last_n_layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-times wider MLP stack with LeakyReLU activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU activation used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary position embeddings applied partially to a subset of dimensions.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value residual enhancement on selected layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "formula": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 7
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "epochs": [
+              2,
+              3,
+              4
+            ],
+            "chunk_tokens": 32768,
+            "entropy_adaptive": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "ns_steps": 3,
+            "warmup_momentum_start": 0.92,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 32768,
+          "eval_length": 32768
+        }
+      }
+    ],
+    "compression": "lzma-7",
+    "novel_contributions": [
+      "Muon-style Newton-Schulz orthogonalized updates applied inside the test-time training loop",
+      "Entropy-adaptive test-time training epochs that allocate 2/3/4 epochs per chunk based on chunk uncertainty",
+      "Score-first legal TTT with global NLL synchronization across DDP ranks to avoid collective mismatch",
+      "Improved SOTA validation score with a 3-seed mean of 1.1179"
+    ],
+    "artifact_size": "15.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1149,
+    "title": "Add non-record submission: faithful KV-cache quantization backends on 1x RTX 3090",
+    "author": "LucasErcolano",
+    "status": "open",
+    "val_bpb": 1.6507,
+    "architecture": "Transformer",
+    "quantization": "int8 + KV quant",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model artifact export"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "autoregressive KV-cache eval",
+          "parameters": {
+            "context_length": 1024,
+            "max_tokens": 2048
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Teacher-forced autoregressive evaluation path with explicit per-layer KV cache updates and selectable KV-cache quantization backends (none, qjl, polar, turbo).",
+          "parameters": {
+            "backends": [
+              "none",
+              "qjl",
+              "polar",
+              "turbo"
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Teacher-forced autoregressive KV-cache evaluation path with explicit per-layer cache updates",
+      "Paper-inspired KV-cache quantization backends: QJL-style, PolarQuant-style, and TurboQuant-style",
+      "Pure PyTorch KV evaluator without Triton/custom CUDA kernels",
+      "Evaluation of multiple KV-cache backends on the same checkpoint with capped validation tokens"
+    ],
+    "artifact_size": "10,458,900 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1150,
+    "title": "Legal TTT (SGD, 3-epoch) + SLOT (lr=0.003, steps=5) on PR #549 base -- val_bpb: 1.11512 (3-seed mean, beats merged SOTA 1.1194)",
+    "author": "sahiee-dev",
+    "status": "open",
+    "val_bpb": 1.11512,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary position embeddings applied to a subset of dimensions.",
+          "parameters": {
+            "rope_dims": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared MLP activation.",
+          "parameters": {
+            "squared": true,
+            "mlp_mult": 2.8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding module.",
+          "parameters": {
+            "vocab": 1536,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "VE128 used at layers 9-10.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA used in the last 4 layers.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LN Scale",
+          "description": "LayerNorm scale modification.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate component included in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections in the transformer backbone.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 6
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "adamw": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "test_time_training": true,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "chunk_tokens": 32768,
+            "batch_seqs": 32,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "SLOT test-time adaptation using a per-batch residual delta optimized on top of frozen hidden states before the final logits projection.",
+          "parameters": {
+            "lr": 0.003,
+            "steps": 5
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma-6",
+    "novel_contributions": [
+      "Adds SLOT test-time adaptation on top of legal score-first TTT.",
+      "Uses a per-batch residual delta in hidden space to adapt logits without updating model weights.",
+      "Combines legal TTT with SLOT while preserving score-first, left-to-right evaluation constraints.",
+      "Achieves a 3-seed mean val_bpb of 1.11512, beating the merged SOTA of 1.1194.",
+      "Keeps artifact size under 16MB and evaluation time under 600s across all seeds."
+    ],
+    "artifact_size": "15.95-15.96MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

@@ -1,0 +1,189 @@
+{
+  "pr_number": 1150,
+  "title": "Legal TTT (SGD, 3-epoch) + SLOT (lr=0.003, steps=5) on PR #549 base -- val_bpb: 1.11512 (3-seed mean, beats merged SOTA 1.1194)",
+  "author": "sahiee-dev",
+  "status": "open",
+  "val_bpb": 1.11512,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "rope_dims": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation.",
+        "parameters": {
+          "squared": true,
+          "mlp_mult": 2.8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding module.",
+        "parameters": {
+          "vocab": 1536,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 used at layers 9-10.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale modification.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the transformer backbone.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adamw": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "test_time_training": true,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "chunk_tokens": 32768,
+          "batch_seqs": 32,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SLOT test-time adaptation using a per-batch residual delta optimized on top of frozen hidden states before the final logits projection.",
+        "parameters": {
+          "lr": 0.003,
+          "steps": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma-6",
+  "novel_contributions": [
+    "Adds SLOT test-time adaptation on top of legal score-first TTT.",
+    "Uses a per-batch residual delta in hidden space to adapt logits without updating model weights.",
+    "Combines legal TTT with SLOT while preserving score-first, left-to-right evaluation constraints.",
+    "Achieves a 3-seed mean val_bpb of 1.11512, beating the merged SOTA of 1.1194.",
+    "Keeps artifact size under 16MB and evaluation time under 600s across all seeds."
+  ],
+  "artifact_size": "15.95-15.96MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
