@@ -1,0 +1,285 @@
+{
+  "pr_number": 1126,
+  "title": "review: Rerun of PR #1089",
+  "author": "AnirudhRahul",
+  "status": "open",
+  "val_bpb": 1.1091,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Turbo-Muon",
+        "description": "Muon variant with AOL preconditioning, Polar Express coefficients, and post-NS row/col normalization to reduce Newton-Schulz iterations.",
+        "parameters": {
+          "newton_schulz_iterations": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EngramLite",
+        "description": "Multi-head prime-based hash embeddings capturing bigram and trigram statistics.",
+        "parameters": {
+          "heads": 2,
+          "orders": 2,
+          "buckets": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parameter Banking",
+        "description": "Stores per-layer linear weights in contiguous banks to enable batched orthogonalization and reduce optimizer overhead.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder/decoder skip connections with learned sigmoid gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ValueEmbedding",
+        "description": "Reinjects token identity into attention values at deep layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Causal shift blending each token with its predecessor using padding-based mixing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied to all layers, subtracting self-value projection from attention output.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mimetic V-O initialization",
+        "description": "Output projections initialized as a small negative multiple of value projections per head.",
+        "parameters": {
+          "alpha": 0.05
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer_idx + 1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped Query Attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input and output embeddings share weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared in the MLP.",
+        "parameters": {
+          "negative_slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int7",
+        "bits": null,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "threshold": "|q| <= 2"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50,
+          "start_fraction": 0.2
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.6,
+          "betas": [
+            0.7,
+            0.95
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.035,
+          "betas": [
+            0.7,
+            0.95
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.025,
+          "betas": [
+            0.9,
+            0.95
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Rerun and comparison of the latest fetched PR #1089 head using the executable submission wrapper",
+    "Documentation of the rerun environment and exact seed-42 outputs in-repo",
+    "Evidence that the executable code path still reserves 14000ms despite README-only mention of 9000ms",
+    "Mixed-precision GPTQ pipeline with dynamic bit allocation across tensor groups",
+    "Turbo-Muon optimizer with AOL preconditioning, Polar Express coefficients, and post-normalization",
+    "EngramLite hash embeddings for bigram and trigram context",
+    "Parameter banking for batched orthogonalization and reduced optimizer overhead",
+    "Selective pruning plus brotli/byte-shuffle compression to fit the artifact budget"
+  ],
+  "artifact_size": "15.3 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
