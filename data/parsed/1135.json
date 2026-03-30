@@ -1,0 +1,115 @@
+{
+  "pr_number": 1135,
+  "title": "Record: Fused Triton MLP + Full GPTQ + Coprime Loader + XSA-all + BH2816 (val_bpb 1.1116)",
+  "author": "barneywohl",
+  "status": "open",
+  "val_bpb": 1.1116,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Fused Triton kernel for leaky_relu(x, 0.5).square() in the MLP",
+        "parameters": {
+          "activation": "leaky_relu(x, 0.5).square()"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied to all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Enlarged bigram feature embedding/projection",
+        "parameters": {
+          "vocab_size": 2816,
+          "dimensions": 112
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "with_adamw_embeddings": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Fused Triton MLP kernel for leaky_relu(x, 0.5).square()",
+    "Full Hessian GPTQ with Cholesky error compensation, actorder, and clip sweep",
+    "Coprime-stride multi-shard data loader with memmap and diversity-weighted shard sampling",
+    "XSA applied to all 11 layers",
+    "Enlarged BigramHash(2816\u00d7112)"
+  ],
+  "artifact_size": "16,000,000 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
