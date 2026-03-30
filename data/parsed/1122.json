@@ -1,0 +1,155 @@
+{
+  "pr_number": 1122,
+  "title": "Record: EngramLite + Gated Skips + Full GPTQ + FA3 \u2014 val_bpb 1.1146 (1-seed, 2 pending)",
+  "author": "icryo",
+  "status": "open",
+  "val_bpb": 1.1146,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EngramLite",
+        "description": "Multi-head bigram+trigram hash embeddings with learned sigmoid gate, replacing BigramHash.",
+        "parameters": {
+          "buckets": 8192,
+          "heads": 2,
+          "orders": 2,
+          "dim_per_head": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated skip connections on U-Net skips using learned gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation with negative slope 0.3.",
+        "parameters": {
+          "negative_slope": 0.3,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "ns_steps": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "frequency_steps": 50,
+          "scale_threshold": 0.2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "lr_floor": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(l+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Coprime-stride multi-shard data loader for diverse batches across 80 shards.",
+        "parameters": {
+          "shards": 80
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "FlashAttention 3 on Hopper native hardware.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "EngramLite multi-head bigram+trigram hash embeddings",
+    "Sigmoid-gated skip connections on U-Net skips",
+    "Full Hessian GPTQ with Cholesky error compensation",
+    "Coprime-stride multi-shard loader across 80 shards",
+    "XSA applied to all 11 layers",
+    "FlashAttention 3 Hopper-native setup",
+    "Combined stack from prior PR innovations"
+  ],
+  "artifact_size": "15.71 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

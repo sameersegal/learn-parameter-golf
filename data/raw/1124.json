@@ -1,0 +1,12 @@
+{
+  "number": 1124,
+  "title": "Record: 1.1194 BPB \u2014 v9 Batched Muon + Full GPTQ Random Calib + JEPA Research",
+  "author": "NewyorkDev",
+  "body": "## Summary\n\n- **val_bpb: 1.1194** (3-seed mean, std 0.0002) | **15.90 MB** max artifact | 8xH100 SXM, 600s\n- **Key innovation:** Batched Newton-Schulz orthogonalization via `torch.bmm` \u2014 groups 66 weight matrices into 4 shape-matched batches, 5% optimizer speedup, ~400 extra training steps\n- **Full GPTQ with random token calibration** \u2014 compliant Hessian collection without training data access\n- **20+ hours of JEPA/STP research** \u2014 14 ablation tests proving auxiliary losses hurt at this scale, documented with full tables\n\n## Results (3 seeds)\n\n| Seed | Sliding BPB | Artifact |\n|------|-------------|----------|\n| 1337 | 1.1191 | 15.90 MB |\n| 42 | 1.1195 | 15.98 MB |\n| 7 | 1.1195 | 15.90 MB |\n| **Mean** | **1.1194** | - |\n\n## Research Contributions\n\n- **JEPA negative result at 27M scale:** 14 controlled ablations showing JEPA (Joint-Embedding Predictive Architecture) hurts training at 600s/27M params. Found and fixed gradient interference bug (67% penalty reduction), but still net negative.\n- **STP negative result:** Tested LeCun lab's Semantic Tube Prediction (arXiv 2602.22617) \u2014 zero-param JEPA variant. Also negative at this scale.\n- **Label smoothing eval bug:** Discovered and fixed a subtle bug where label smoothing was applied during eval via model.forward(), contaminating BPB measurements.\n- **TTT on XSA-all:** Confirmed PR #1019's finding that score-first TTT is ineffective when XSA covers all layers.\n\n## Compliance\n\n- [x] 3 seeds, all <= 600s training\n- [x] All artifacts <= 16,000,000 bytes\n- [x] No training data access during quantization (random calibration tokens)\n- [x] No TTT on validation data\n- [x] No network calls during evaluation\n- [x] Single file train_gpt.py\n\n## Run Command\n\n```bash\nDATA_PATH=./data/datasets/fineweb10B_sp1024 \\\nTOKENIZER_PATH=./data/tokenizers/fineweb_1024_bpe.model \\\nGPTQ_ENABLED=1 STP_ENABLED=0 TTT_ENABLED=0 LABEL_SMOOTHING=0.0 \\\nXSA_LAST_N=11 EVAL_STRIDE=64 SEED=1337 \\\ntorchrun --nproc_per_node=8 train_gpt.py\n```\n\nFull research journey, ablation tables, and architecture details in the [README](submission/README.md).\n\nGenerated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-30T07:21:10Z",
+  "updated_at": "2026-03-30T07:21:10Z",
+  "submission_readme": null
+}

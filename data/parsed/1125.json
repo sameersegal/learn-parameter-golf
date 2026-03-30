@@ -1,0 +1,176 @@
+{
+  "pr_number": 1125,
+  "title": "Non-record: XSA-All + QK Gain 4.0 + LN Scale \u2014 45 Experiments on 1\u00d7RTX 5090",
+  "author": "jainpranjal97",
+  "status": "open",
+  "val_bpb": 1.1946,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA to all layers instead of only the last few layers.",
+        "parameters": {
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Used LeakyReLU squared activation.",
+        "parameters": {
+          "alpha": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Used partial rotary position embeddings with some dimensions left position-free.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.06,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "momentum_warmup_start": 0.85,
+          "momentum_warmup_steps": 200,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 20.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 200
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup",
+        "parameters": {
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "start_step": 0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "scale_threshold": 0.5,
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP multiplier from baseline to 3x.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "qk_gain",
+        "description": "Scaled QK dot products with a higher initialization gain.",
+        "parameters": {
+          "init": 4.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "XSA applied to all layers instead of only the deepest layers",
+    "qk_gain_init sweep showing 4.0 is better than the default 1.5",
+    "Warmdown calibration for wallclock-capped training",
+    "Observation that pre-quantization improvements can degrade post-quantization performance",
+    "Systematic 45-experiment exploration on a single RTX 5090"
+  ],
+  "artifact_size": "18.1 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
