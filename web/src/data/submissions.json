@@ -109146,5 +109146,250 @@
     "artifact_size": "15,961,751 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1130,
+    "title": "Record: 1.1140 BPB — ResidLambdas + Split-LR + Train-Budget GPTQ + Coprime Loader (12-seed mean)",
+    "author": "Gusanidas",
+    "status": "open",
+    "val_bpb": 1.114,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Residual lambdas",
+          "description": "Learnable per-sublayer residual scaling with exponential recency bias across layers.",
+          "parameters": {
+            "init": "sqrt(1.1)"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "split_early_late_lr": true,
+            "matrix_lr_early": 0.036,
+            "matrix_lr_late": 0.044,
+            "scalar_lr_early": 0.028,
+            "scalar_lr_late": 0.018
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "full model"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Expanded hash-based embedding table to reduce collision ratio.",
+          "parameters": {
+            "buckets": 6144
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE196",
+          "description": "Increased value embedding dimension on selected layers.",
+          "parameters": {
+            "dimensions": 196,
+            "layers": [
+              5,
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive self-attention applied to the last 7 layers.",
+          "parameters": {
+            "layers": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared activation in the MLP.",
+          "parameters": {
+            "squared": true,
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Cache + backout",
+          "description": "Cached layer 7 hidden state is subtracted back via a learnable gate before the LM head.",
+          "parameters": {
+            "layer": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary positional embeddings applied partially.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "full model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Coprime-stride multi-shard data loader for batch diversity.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Train-data GPTQ calibration performed within the training budget.",
+          "parameters": {
+            "calibration_time_seconds": 14
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "MiLe margin loss with entropy-weighted cross-entropy and gamma=0.75.",
+          "parameters": {
+            "gamma": 0.75
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-times MLP expansion.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Residual lambdas for per-sublayer residual scaling",
+      "Split early/late learning-rate banks for Muon and Adam parameters",
+      "Train-budget GPTQ calibration using training data",
+      "Coprime-stride multi-shard data loader",
+      "Expanded BigramHash table",
+      "Larger value embeddings on selected layers",
+      "XSA extended to the last 7 layers",
+      "MiLe margin loss",
+      "Cache-and-backout residual path",
+      "Flash Attention 3 integration",
+      "Tuned batch size for the training budget"
+    ],
+    "artifact_size": "15.88 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1131,
+    "title": "Improve baseline with LeakyReLU² activation",
+    "author": "JianYan11",
+    "status": "open",
+    "val_bpb": 1.2947,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Replaced ReLU² with LeakyReLU(0.5)² in the MLP forward pass to preserve negative gradient flow while keeping squared outputs.",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Replaced ReLU² with LeakyReLU(0.5)² in the MLP forward pass",
+      "Preserved negative gradient flow while maintaining squared output characteristic",
+      "Reported improved validation bpb over the ReLU² baseline"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
