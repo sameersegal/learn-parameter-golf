@@ -1,0 +1,137 @@
+{
+  "pr_number": 1142,
+  "title": "SpotlightLFB + Aux-Int6 Compression \u2014 1.1493 BPB (3-seed mean)",
+  "author": "ymrohit",
+  "status": "open",
+  "val_bpb": 1.14932328,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a hashed bigram embedding path as part of the lexical side path.",
+        "parameters": {
+          "vocab_size": 1536,
+          "dimension": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are enabled in the main trunk.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses late attention with only the last few layers active.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual / VE refinement path in late layers.",
+        "parameters": {
+          "dim": 96,
+          "layers": [
+            8,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a widened MLP with 3x multiplier.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped KV heads in the trunk attention.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "Adds a one-site late feature bank with previous-token, hashed bigram, and boundary signals at a single late insertion layer.",
+        "parameters": {
+          "lfb_layers": 6,
+          "lfb_dim": 80,
+          "lfb_bigram_vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "enabled": 1,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "auxiliary embeddings + main trunk int8"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 448,
+        "eval_length": 448
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "One-site late feature bank (SpotlightLFB) concentrated at a single late insertion layer",
+    "Auxiliary embedding tables exported to int6 while keeping the main trunk on int8+lzma",
+    "Compression-aware architecture/export co-design to stay under the 16MB artifact cap",
+    "Exact sliding-window evaluation used as the main submission metric"
+  ],
+  "artifact_size": "~15.92 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
