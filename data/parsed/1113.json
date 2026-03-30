@@ -1,0 +1,129 @@
+{
+  "pr_number": 1113,
+  "title": "Notable Non-Record: Learning Adapters on Random Linear Maps \u2014 1.3705 BPB",
+  "author": "gowtham0992",
+  "status": "open",
+  "val_bpb": 1.3705,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FrozenRandomLinearWithLoRA",
+        "description": "Replaces attention and MLP projection weights with frozen random orthogonal linear maps plus LoRA adapters.",
+        "parameters": {
+          "rank": 32
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Frozen weights are random orthogonal matrices generated via QR decomposition from deterministic seeds."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimension.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds BigramHash features for token interactions.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate as part of the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Frozen random orthogonal weights stored as non-persistent buffers, regenerated from seed at load time, costing 0 bytes in the artifact",
+    "LoRA adapters trained on top of random linear maps instead of learned base projections",
+    "Save/load roundtrip that reconstructs frozen weights deterministically with identical logits",
+    "Compact 5.19 MB submission with about 30M effective parameters"
+  ],
+  "artifact_size": "5.19 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
