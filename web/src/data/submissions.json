@@ -110843,5 +110843,501 @@
     "artifact_size": "15.95-15.96MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1152,
+    "title": "Non-record: Connectome-JEPA — Sparse I/O Bottleneck (val_bpb 1.7942 ± 0.003, 1.97MB artifact, first JEPA submission)",
+    "author": "ericdatum",
+    "status": "open",
+    "val_bpb": 1.7942,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input embedding and output projection share weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses rotary positional embeddings in causal cross-position attention.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Gated sensory re-injection every 2 sparse hops to preserve gradient flow through the sparse chain.",
+          "parameters": {
+            "skip_every": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Gated skip/re-injection mechanism between sparse hop blocks.",
+          "parameters": {
+            "init": 0.1
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-position attention layers interleaved with sparse connectome hops.",
+          "parameters": {
+            "layers": 3,
+            "heads": 4,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "Sparse connectome-derived masked linear network based on the C. elegans wiring diagram with sensory/interneuron/motor bottleneck.",
+          "parameters": {
+            "neurons": 300,
+            "sensory": 88,
+            "motor": 123,
+            "hops": 6,
+            "density": 0.0565
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "cap": 30
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "JEPA latent prediction objective with SigREG collapse prevention used alongside cross-entropy.",
+          "parameters": {
+            "jepa_weight": 0.5,
+            "sigreg_weight": 0.0001
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "First JEPA-based submission in Parameter Golf",
+      "First biologically inspired sparse architecture submission",
+      "Sparse I/O bottleneck language model using a C. elegans connectome-derived mask",
+      "Gated sensory re-injection skip connections to prevent gradient death in deep sparse hops",
+      "Interleaved sparse connectome hops with multi-head causal cross-position attention",
+      "JEPA + SigREG training objective adapted to text",
+      "Ablation study showing random sparse topology slightly outperforms biological topology for language"
+    ],
+    "artifact_size": "1.97MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1153,
+    "title": "Non-record: Triton KV-cache backend for autoregressive eval",
+    "author": "LucasErcolano",
+    "status": "open",
+    "val_bpb": 1.6507,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "autoregressive eval",
+          "parameters": {
+            "context_length": 1024,
+            "max_tokens": 2048
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Triton-backed KV-cache evaluation backends with fused grouped-int8 score/apply kernels and fused QJL sign-score plus grouped value apply kernels",
+          "parameters": {
+            "backends": [
+              "int8_triton",
+              "qjl_triton"
+            ]
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Prewarm logic to avoid first-use Triton JIT compile overhead during short evaluations",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Benchmark-side peak CUDA memory reporting to sanity-check allocator behavior",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Added Triton-backed KV-cache evaluation paths for autoregressive evaluation",
+      "Implemented fused grouped-int8 score/apply kernels",
+      "Implemented fused QJL sign-score kernel plus grouped value apply kernel",
+      "Added backend selftests and a dedicated GPU benchmark script",
+      "Added prewarm logic to reduce Triton JIT compile overhead on short evals",
+      "Added peak CUDA memory reporting in the benchmark"
+    ],
+    "artifact_size": "10,458,900 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1154,
+    "title": "Non-record: Polar STE QAT for structural weights",
+    "author": "LucasErcolano",
+    "status": "open",
+    "val_bpb": 1.7757,
+    "architecture": "Transformer",
+    "quantization": "polar STE QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": null,
+          "scope": "structural weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "polar",
+          "bits": null,
+          "scope": "large 2D structural tensors at export"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "long context eval",
+          "parameters": {
+            "context_length": 32768
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 256,
+          "eval_length": 32768
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Fresh-process artifact-load harness to verify autonomous reconstruction from polar+zlib artifacts",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Distributed-safe final KV evaluation path to avoid DDP deadlock during final eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Fixed RoPE eval cache interaction so inference-mode validation does not leave cached inference tensors behind and break later training steps",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Polar STE QAT for structural weights",
+      "Polar weight export path for large 2D structural tensors",
+      "Shared polar row encode/decode helpers for QAT and serialization",
+      "Roundtrip dequantization in final validation",
+      "Fresh-process artifact isolation/load harness for polar+zlib reconstruction",
+      "Distributed-safe final KV evaluation under DDP",
+      "RoPE cache fix for inference-mode validation"
+    ],
+    "artifact_size": "14,782,032 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1156,
+    "title": "Record: EGGROLL v2 — val_bpb 1.1161 (3-seed mean, std 0.0001)",
+    "author": "haikosys",
+    "status": "open",
+    "val_bpb": 1.1161,
+    "architecture": "Transformer",
+    "quantization": "GPTQ 6-bit",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "weights"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "EGGROLL (Antithetic Ternary Bin Search)",
+      "Post-GPTQ quantization refinement that optimizes INT6 bin assignments against BPB loss during evaluation budget",
+      "Antithetic +1/-1 bin search on randomly selected quantized weight indices",
+      "Adds missing eval_val_sliding_ttt call to the evaluation pipeline"
+    ],
+    "artifact_size": "~15.3 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1159,
+    "title": "Add non-record 16MB submission: Dirichlet PPM + Legal TTT on 8xH100",
+    "author": "JDAppleseed",
+    "status": "open",
+    "val_bpb": 0.36930761,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Gated attention disabled in this run.",
+          "parameters": {
+            "enabled": 0
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Value residual disabled in this run.",
+          "parameters": {
+            "enabled": 0
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value embedding / VE stack enabled with 128-dimensional VE.",
+          "parameters": {
+            "dim": 128,
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding component used.",
+          "parameters": {
+            "dim": 128,
+            "vocab_size": 1536
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "enabled": 1,
+            "every": 50
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_start": 0.92,
+            "warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "seq_len": 2048
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "enabled": 1,
+            "epochs": 3,
+            "batch_seqs": 32,
+            "chunk_tokens": 32768,
+            "learning_rate": 0.002,
+            "momentum": 0.9
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "adamw": 0.04,
+            "muon": 0.04
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "enabled": 1
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Dirichlet posterior predictive PPM cache mixing over orders 2..7 using current model probability as the base prior.",
+          "parameters": {
+            "cache_mode": "ppm",
+            "max_order": 7,
+            "mixing": "dirichlet",
+            "alpha": 0.3,
+            "count_smoothing": 4
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Dirichlet PPM cache mixing for posterior predictive backoff over PPM orders 2..7",
+      "Score-first causal cache updates using only previously committed counts plus current model probability",
+      "Validation of distributed exact-eval path for cache-enabled post-train evaluation on 8xH100",
+      "Legal test-time training (TTT) combined with exact sliding-window evaluation in a non-record run"
+    ],
+    "artifact_size": "10,176,408 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
