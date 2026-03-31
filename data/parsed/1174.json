@@ -1,0 +1,140 @@
+{
+  "pr_number": 1174,
+  "title": "[Non-Record] 5L MLP\u00d74 EMA=0.97 Optuna \u2014 GH200 proxy, val_bpb=1.3069 (int6+zlib)",
+  "author": "Okropniak",
+  "status": "open",
+  "val_bpb": 1.3069,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increased MLP multiplier to 4.0 (hidden size 2048) in a 5-layer Transformer with GQA and bigram features.",
+        "parameters": {
+          "num_layers": 5,
+          "model_dim": 512,
+          "mlp_mult": 4.0,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "bigram_vocab_size": 4096,
+          "bigram_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added bigram vocabulary/dimension features.",
+        "parameters": {
+          "bigram_vocab_size": 4096,
+          "bigram_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Applied VE layers fix to use the last two layers in the 5-layer model.",
+        "parameters": {
+          "ve_layers": [
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.97
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 100
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.025,
+        "momentum": 0.947,
+        "other_params": {
+          "adam_wd": 0.0014,
+          "matrix_lr": 0.068,
+          "scalar_lr": 0.042,
+          "grad_clip_norm": 0.308,
+          "muon_beta2": 0.986,
+          "muon_momentum_warmup_steps": 1644
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 64
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Proxy-scale GH200 MIG submission demonstrating active research methodology before H100 access",
+    "Optuna v1 TPE hyperparameter search with 25 trials",
+    "Warmdown schedule shortened from 3500 to 100 iterations",
+    "Fixed VE layer targeting for a 5-layer model",
+    "Calibrated EMA decay to 0.97 for short proxy runs",
+    "Used int6 quantization with zlib compression to fit artifact constraints"
+  ],
+  "artifact_size": "12.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
