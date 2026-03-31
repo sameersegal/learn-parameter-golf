@@ -1,0 +1,12 @@
+{
+  "number": 1192,
+  "title": "Non-record: Fused Triton Megakernels \u2014 RMSNorm + LeakyReLU\u00b2 (val_bpb 1.3560)",
+  "author": "dentity007",
+  "body": "## Summary\nCustom Triton kernels for RMSNorm and LeakyReLU(0.75)\u00b2 \u2014 beats baseline by 0.0017 BPB via eval speedup.\n\n**val_bpb: 1.3560** | 1\u00d7RTX 5090, 600s\n\n- Triton fwd kernels for eval, PyTorch for training (fullgraph=True compatible)\n- autograd.Function wrappers included for training-time kernel use\n- `MEGAKERNEL_ENABLED=0` falls back to identical baseline behavior\n- Implements OpenAI's requested \"Megakernels\" research direction\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-31T20:40:00Z",
+  "updated_at": "2026-03-31T20:40:00Z",
+  "submission_readme": "# Non-record: Fused Triton Megakernels (RMSNorm + LeakyReLU\u00b2)\n\n**val_bpb: 1.3560** | 1\u00d7RTX 5090, 600s | Beats baseline by 0.0017\n\n## Summary\n\nCustom Triton kernels for RMSNorm and LeakyReLU(0.75)\u00b2 used during eval to speed up the evaluation phase, allowing slightly more training time within the wallclock budget. Training uses PyTorch with `fullgraph=True` torch.compile. Includes `torch.autograd.Function` wrappers for future training-time kernel use.\n\nImplements one of OpenAI's requested research directions (Megakernels).\n\n## Results (1\u00d7RTX 5090, 600s)\n\n| Config | Steps | BPB |\n|--------|-------|-----|\n| Megakernel (Triton eval) | 975 | **1.3560** |\n| Control (no Triton) | 958 | 1.3577 |\n\n## Triton Kernels\n1. `_rms_norm_fwd` \u2014 fused RMSNorm in single kernel pass\n2. `_leaky_relu_sq_fwd` \u2014 fused LeakyReLU(slope)\u00b2 avoiding intermediate write\n3. PyTorch fallback when Triton unavailable or `MEGAKERNEL_ENABLED=0`\n"
+}

@@ -1,0 +1,95 @@
+{
+  "pr_number": 1201,
+  "title": "records: add 2026-03-27 TrigramHash run, harden quantization safety, and clean docs",
+  "author": "Mister2005",
+  "status": "closed",
+  "val_bpb": 1.63711028,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Adds trigram hash embeddings wired into the GPT forward and logits paths.",
+        "parameters": {
+          "vocab_size": 4096,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Uses value residual blending with v0 carry-over in causal self-attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "bank slices (Q/K/V/O and MLP up/down)"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7/int5",
+        "bits": null,
+        "scope": "bank tensors"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "Adam TTT",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "TrigramHash embeddings integrated into the GPT forward and logits paths",
+    "Value Residual mechanism in causal self-attention",
+    "Bank-level QAT with late enabling and torch.compile recompile path",
+    "GradQuant tiered mixed quantization with rebank/unbank export path",
+    "Multi-token prediction heads trained but excluded from export size",
+    "Legal score-first Adam-based TTT support",
+    "Temperature calibration using training tokens only",
+    "Extended warmdown and lzma preset 9 for final artifact compression"
+  ],
+  "artifact_size": "5909270 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
