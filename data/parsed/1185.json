@@ -1,0 +1,220 @@
+{
+  "pr_number": 1185,
+  "title": "[10min_16mb] 0.9641 BPB: LeakyReLU\u00b2 + Score-First TTT + N-gram Backoff Cache",
+  "author": "skoustav35",
+  "status": "open",
+  "val_bpb": 0.9641,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention used in later layers.",
+        "parameters": {
+          "layers": [
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Adds value residual connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses gated attention blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applies SmearGate gating mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding enabled on selected layers.",
+        "parameters": {
+          "layers": [
+            8,
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses hashed bigram features.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP width.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9985
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "split": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3,
+          "chunk_size": 32000,
+          "stride": 64,
+          "optimizer": "SGD"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "n-gram backoff cache",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "backoff": "highest matching order",
+          "smoothing": "Laplace add-1",
+          "entropy_adaptive_alpha": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "LeakyReLU squared architecture with gated attention and value residuals",
+    "Legal score-first test-time training that scores tokens before updates",
+    "Eval-time multi-order n-gram backoff cache with Laplace smoothing",
+    "Entropy-adaptive alpha scaling for blending neural and n-gram probabilities",
+    "Int6 per-row quantization with LZMA compression to fit the 16MB limit"
+  ],
+  "artifact_size": "15,989,583 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
