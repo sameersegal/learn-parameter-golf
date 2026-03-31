@@ -1,0 +1,12 @@
+{
+  "number": 1165,
+  "title": "Structured Embedding Init (BPB 1.2314)",
+  "author": "brandonpf",
+  "body": "## Summary\n- Pre-computed PCA token positions from corpus co-occurrence data\n- Xavier-standardized, selectively overriding 665/1024 tokens\n- BPB 1.2314 (+0.001 vs baseline)\n- Early convergence advantage at step 1000 that doesn't persist through full training\n\n## Files\n- `train_gpt.py` \u2014 ~10 lines added after model init for embedding override\n- `structured_embeddings.npy` \u2014 1024x512 pre-computed positions\n- `embedding_mask.npy` \u2014 boolean mask for which tokens to override\n- `submission.json` + `README.md` + `train.log`",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-31T02:54:32Z",
+  "updated_at": "2026-03-31T02:54:32Z",
+  "submission_readme": "Structured Embedding Initialization: Pre-computed token positions from PCA-reduced corpus analysis.\n\nInstead of random Xavier init for the 1024-token embedding table, we pre-compute token positions using PCA on large-scale co-occurrence statistics, then selectively override 665/1024 tokens that have sufficient coverage (5+ associations). Remaining tokens keep default init. All overridden embeddings are per-token Xavier-standardized to preserve gradient flow.\n\nChanges from baseline:\n- Added ~10 lines after model init to load `structured_embeddings.npy` and `embedding_mask.npy`\n- No architecture changes, no hyperparameter changes, no data changes\n\nConfiguration (same as baseline):\n- Layout: `VOCAB_SIZE=1024 NUM_LAYERS=9 MODEL_DIM=512 NUM_HEADS=8 NUM_KV_HEADS=4 MLP_MULT=2`\n- Tied embeddings, 10-minute wallclock on 8xH100\n\nResult:\n- **BPB: 1.2314** (vs 1.2303 baseline \u2014 +0.001 worse)\n- The structured init converges faster in early steps (BPB 1.380 vs 1.383 at step 1000) but the advantage does not persist through full training\n- Analysis suggests the PCA positions optimize for semantic similarity rather than predictive co-occurrence, which is the actual training objective\n\nThis submission demonstrates the approach, not a leaderboard improvement. The embedding init framework is designed to be combined with bigram hash tables and curriculum ordering in future iterations.\n"
+}

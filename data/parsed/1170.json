@@ -1,0 +1,214 @@
+{
+  "pr_number": 1170,
+  "title": "Non-record: 11L NativeFlowMatcher + Legal TTT \u2014 val_bpb 1.1199 (single seed)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "val_bpb": 1.11991,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component used in the model.",
+        "parameters": {
+          "vocab": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention applied to all transformer layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Adds value residual connections in attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses gated attention in the transformer blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation.",
+        "parameters": {
+          "variant": "squared",
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional encoding.",
+        "parameters": {
+          "dimensions": 16,
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses 3x MLP expansion.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "NativeFlowMatcher",
+        "description": "Conditional flow matching velocity network inserted after final LayerNorm to correct hidden states.",
+        "parameters": {
+          "hidden_dim": 256
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5",
+        "bits": null,
+        "scope": "MLP layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 16
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 10,
+          "chunk_size": 32768,
+          "freeze_blocks": 2,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "adam_for_scalars_and_embeddings": true,
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 2800
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "value": 1
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    }
+  ],
+  "compression": "zstd-16",
+  "novel_contributions": [
+    "NativeFlowMatcher (NFM) hidden-state correction module trained jointly with the autoregressive objective",
+    "Legal score-first test-time training combined with NFM",
+    "Single-seed exploratory evaluation of NFM + legal TTT",
+    "Mixed int6/int5 quantization with auto-downgrade to fit the 16MB artifact budget"
+  ],
+  "artifact_size": "15,745,776 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
