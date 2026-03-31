@@ -111860,6 +111860,170 @@
     "is_record": false
   },
   {
+    "pr_number": 1169,
+    "title": "Turbo-Muon + EngramLite + ParamBanking + GPTQ Reserve Opt — val_bpb 1.1126 (3-seed mean)",
+    "author": "Bortlesboat",
+    "status": "open",
+    "val_bpb": 1.1126,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6/int7 GPTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "Turbo-Muon": true,
+            "AOL preconditioning": true,
+            "Polar Express coefficients": true,
+            "row_col normalization": true,
+            "newton_schulz_iterations": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Hash embeddings for bigrams",
+          "parameters": {
+            "heads": 2,
+            "buckets": 8192
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TrigramHash",
+          "description": "Hash embeddings for trigrams",
+          "parameters": {
+            "heads": 2,
+            "buckets": 8192
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "MLP uses LeakyReLU(0.3) squared activation",
+          "parameters": {
+            "negative_slope": 0.3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Sigmoid-gated skip connections in a U-Net style",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embeddings",
+          "parameters": {
+            "partial_dim": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate component",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ValueEmbedding",
+          "description": "ValueEmbedding used in later layers",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "threshold": 0.2,
+            "every": 50,
+            "snapshots": 14
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997,
+            "fallback": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "mixed int5 base with selective int6/int7 promotion"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "Brotli-11",
+    "novel_contributions": [
+      "GPTQ reserve optimization that reduced calibration reserve from 14s to 9s, recovering additional training steps",
+      "Experimental forward-only fused Triton MLP kernel architecture using triton_op and standard PyTorch backward",
+      "Centralized activation parameter handling via a shared negative slope constant",
+      "Turbo-Muon + EngramLite + ParamBanking combined submission built on prior PR #1089"
+    ],
+    "artifact_size": "~15.98 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
     "pr_number": 1170,
     "title": "Non-record: 11L NativeFlowMatcher + Legal TTT — val_bpb 1.1199 (single seed)",
     "author": "Christopher-Lee-McClendon",
@@ -112621,6 +112785,308 @@
       "Combined 3-seed mean val_bpb of 1.0962"
     ],
     "artifact_size": "≤16.0 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1177,
+    "title": "review: Rerun of PR #1120 (Rascal) on 8xH100 SXM",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.10979,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "final artifact"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Independent rerun of PR #1120 on 8xH100 SXM",
+      "Reports rerun metrics versus published seed 300 result",
+      "Clarifies that the submitted train_gpt.py computes pre-quantization final_sliding_window_exact on an unquantized model",
+      "Notes that int6+zstd quantization and final_int6_roundtrip metrics appear to come from an external runner"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1179,
+    "title": "Record: Split-LR + BigramHash(2816x160) + Full GPTQ + Brotli — val_bpb 1.1105 (3-seed mean)",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.1105,
+    "architecture": "Transformer",
+    "quantization": "Full GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash projection with fewer buckets and wider projection dimension.",
+          "parameters": {
+            "buckets": 2816,
+            "dimensions": 160
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Sigmoid-gated encoder-decoder skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "byte-shuffle",
+          "level": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_interval": 50
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "Split learning rates for early and late transformer layers",
+      "BigramHash with 2816 buckets and 160-dimensional projection",
+      "Sigmoid-gated U-Net skip connections",
+      "Soft-round QAT with alpha ramp from 1 to 16",
+      "Brotli-11 plus byte-shuffle artifact compression",
+      "Code minification to reduce artifact size",
+      "Reduced GPTQ calibration reserve to increase training time"
+    ],
+    "artifact_size": "~15.81 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1180,
+    "title": "SR-CM-P2Loss: 1.0577 bpb (~15.06MB)",
+    "author": "estesryan",
+    "status": "open",
+    "val_bpb": 1.0577016,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 15
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.012,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Adam",
+          "weight_decay": 0.012,
+          "momentum": null,
+          "other_params": {
+            "role": "scalar/embed params"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with fewer KV heads than attention heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Squared activation in the MLP",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depthwise Conv1D",
+          "description": "Local token mixing before transformer blocks",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "residual mixing",
+          "description": "Learned mixing between current state and initial embedding with per-channel scaling",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_frac": 0.35,
+            "wallclock_aligned": true
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon": 0.012,
+            "adam": 0.012
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "P2 loss ((1-p)^2) for difficulty-aware training",
+      "Wallclock-aware LR warmdown aligned to the 10-minute cap",
+      "Residual mixing plus convolutional token mixing",
+      "Muon optimizer for matrix parameters with Adam for scalar/embed parameters",
+      "Compression-aware training with int6 quantization and late QAT"
+    ],
+    "artifact_size": "~15.06MB",
     "prompt_version": "v2",
     "is_record": false
   }

@@ -1,0 +1,12 @@
+{
+  "number": 1177,
+  "title": "review: Rerun of PR #1120 (Rascal) on 8xH100 SXM",
+  "author": "dexhunter",
+  "body": "## Summary\n\nIndependent rerun of [PR #1120](https://github.com/openai/parameter-golf/pull/1120) (Rascal, val_bpb 1.1099) on 8xH100 SXM (GCP).\n\nRan the submitted `train_gpt.py` from commit `39ed402` with `SKIP_GPTQ=1`, as specified in PR #1120's README reproduction instructions.\n\n## Rerun Result\n\n| Metric | Published (seed 300) | Rerun (seed 1337) | Delta |\n|--------|---------------------|-------------------|-------|\n| `final_sliding_window_exact val_bpb` | **1.10979** | **1.11350** | **+0.00371** |\n| `final_sliding_window_exact val_loss` | 1.87383 | 1.88010 | +0.00627 |\n| Steps | 6,593 | 6,881 | +288 |\n| step_avg | ~91 ms | 87.2 ms | \u22123.8 ms |\n\nThe rerun `val_bpb` is **+0.00371 worse** than the published seed 300 result. This gap is approximately **7\u00d7 typical seed variance** (~0.0005 std) and **17\u00d7 the published 3-seed std** (0.00021).\n\n## Environment\n\n- **Hardware**: 8\u00d7 H100 80GB SXM (GCP `a3-highgpu-8g`)\n- **Driver**: 565.57.01\n- **Python**: 3.12.13\n- **PyTorch**: 2.9.1+cu128\n- **NCCL_NET**: Socket (required on GCP)\n- **Command**: `NCCL_NET=Socket SKIP_GPTQ=1 torchrun --standalone --nproc_per_node=8 train_gpt.py`\n\n## Observations\n\n1. The rerun achieves **more training steps** (6,881 vs 6,593) due to a faster step time (87.2 ms vs ~91 ms), yet the final result is significantly worse.\n\n2. The submitted `train_gpt.py` does not contain quantization code. It outputs `final_model.pt` (raw state dict) and computes `final_sliding_window_exact` on the unquantized model. The `int6+zstd` quantization and `final_int6_roundtrip` metrics visible in the published seed logs appear to be produced by an external runner rather than by `train_gpt.py` itself.\n\n3. The reported 3-seed metric (`val_bpb 1.1099`) corresponds to `final_sliding_window_exact`, which is measured on the **pre-quantization** model.\n\n## Files\n\n- `RERUN_NOTES.md` \u2014 detailed notes\n- `RERUN_seed1337.log` \u2014 full rerun output log\n\nThis rerun is provided for community transparency, following the precedent of [PR #1126](https://github.com/openai/parameter-golf/pull/1126) (rerun of PR #1089).",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-03-31T10:06:09Z",
+  "updated_at": "2026-03-31T10:06:09Z",
+  "submission_readme": null
+}
