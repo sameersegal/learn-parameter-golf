@@ -1,0 +1,173 @@
+{
+  "pr_number": 1181,
+  "title": "RecurLoRA: Quantization-Stable Shallow Recurrence with Low-Rank Corrective Adapters",
+  "author": "Tanush1912",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are repeated once to create 13 virtual layers from 11 physical layers.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "repeats": 1,
+          "virtual_layers": 13,
+          "physical_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Rank-2 low-rank corrective adapters are added on attention projections for the recurrent pass.",
+        "parameters": {
+          "rank": 2,
+          "targets": [
+            "Q",
+            "K",
+            "V",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RMSNorm",
+        "description": "RMSNorm is applied before re-entering the shared recurrent block to reduce distribution drift.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "learnable_alpha": true,
+          "alpha_init": 0.6
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with slope 0.9 is used.",
+        "parameters": {
+          "negative_slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding is used as part of the input stack.",
+        "parameters": {
+          "vocab_size": 2816,
+          "dimension": 160
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate is used in the model input stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is applied on all layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings are used.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "split_lr": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Shallow recurrence with layers 4 and 5 repeated once to increase effective depth without deep recurrence instability",
+    "Rank-2 LoRA corrective adapters on attention projections for recurrent passes",
+    "RMSNorm gating before recurrence to reduce distribution drift",
+    "Learnable alpha scaling for recurrent correction strength",
+    "Keeping LoRA overhead as fp16 passthrough to avoid extra quantization error"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
