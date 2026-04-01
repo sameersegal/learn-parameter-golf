@@ -7,13 +7,13 @@
 - Content rendered via `web/src/components/ContentRenderer.tsx` (custom markdown parser)
 - Types defined in `web/src/lib/types.ts` (DeepDive, DeepDiveSection types)
 
-## Content Rendering Limitations (CRITICAL)
+## Content Rendering Capabilities (CRITICAL)
 - Custom markdown parser, NOT a full markdown library
-- **Supports**: bold (**), code (`), ### headers, tables with |, lists with -/*
-- **Does NOT support**: links, images, blockquotes (>), numbered lists (1. 2. 3.), nested lists, LaTeX/KaTeX ($$, \\(\\))
-- No math rendering library installed -- avoid LaTeX notation entirely
-- The optimizers article uses LaTeX but it renders as raw text (bug)
-- Use code formatting for formulas instead: `shadow = decay * shadow + (1 - decay) * current`
+- **Supports**: bold (**), code (`), ### headers, tables with |, lists with -/*, LaTeX math via KaTeX
+- **Math notation**: Use `\\(x^2\\)` for inline math and `$$x^2$$` for display math (rendered by KaTeX)
+- **Does NOT support**: links, images, blockquotes (>), numbered lists (1. 2. 3.), nested lists
+- Use LaTeX for mathematical formulas: `\\(W_{ij}\\)`, `$$X_{k+1} = \\frac{1}{2} X_k$$`
+- Use code formatting for code-like formulas: `shadow = decay * shadow + (1 - decay) * current`
 
 ## Data Facts (verified April 2026, 1162 parsed submissions)
 - 1162 total parsed, 967 with val_bpb scores
@@ -30,7 +30,7 @@
 
 ## Written Articles (as of April 2026)
 1. **quantization-fundamentals** (order 1) - 4 sections, no LaTeX
-2. **optimizers** (order 3) - 10 sections, has LaTeX (renders as raw text)
+2. **optimizers** (order 3) - 10 sections, uses LaTeX math notation (KaTeX)
 3. **weight-averaging** (order 4) - 12 sections, rewritten April 2026
 4. **test-time-training** (order 6)
 5. **evaluation-strategies** (order 10)
