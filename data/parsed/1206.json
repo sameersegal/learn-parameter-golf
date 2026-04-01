@@ -1,0 +1,120 @@
+{
+  "pr_number": 1206,
+  "title": "Non-record: Universal Transformer (4h unlimited compute track)",
+  "author": "oneKn8",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "A single shared transformer block is iterated 24 times instead of using many unique layers.",
+        "parameters": {
+          "iterations": 24
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "One shared block is reused across all iterations to reduce unique parameters and enable a wider model.",
+        "parameters": {
+          "blocks": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with more query heads than KV heads.",
+        "parameters": {
+          "query_heads": 16,
+          "kv_heads": 4,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Standard rotary positional encoding applied in each iteration.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the transformer block.",
+        "parameters": {
+          "expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "step embeddings",
+        "description": "Learned per-iteration embeddings are added to the residual stream so the shared block can distinguish depth steps.",
+        "parameters": {
+          "dimension": 1024,
+          "iterations": 24
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "embeddings_scalars_optimizer": "Adam"
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Universal Transformer for the unlimited compute track",
+    "Single shared transformer block iterated 24 times",
+    "Learned step embeddings to differentiate iterations",
+    "Wider 1024d model enabled by weight sharing",
+    "LeakyReLU(0.5)^2 activation",
+    "GQA-based shared block with 16 query heads and 4 KV heads"
+  ],
+  "artifact_size": "9.3MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

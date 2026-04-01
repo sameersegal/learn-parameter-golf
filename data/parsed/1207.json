@@ -1,0 +1,166 @@
+{
+  "pr_number": 1207,
+  "title": "HYDRA-\u03a9: SLOT-Optimized Parameter-Efficient Language Model (WIP)",
+  "author": "RAVINDRA8008",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int6 GPTQ",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component for additional token interaction capacity.",
+        "parameters": {
+          "dimensions": "2048x128"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embeddings used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "communication": "reduce-scatter \u2192 Adam \u2192 NS5+all-gather",
+          "phases": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 2,
+          "learning_rate": 0.003,
+          "freeze_blocks": [
+            0,
+            1,
+            2
+          ],
+          "chunk_size": 32768
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SLOT hidden-state delta optimization with cosine LR scheduling and two-pass hard-token refinement.",
+        "parameters": {
+          "steps": 10,
+          "learning_rate": 0.006,
+          "passes": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "SLOT hidden-state delta optimization",
+    "Score-first test-time training",
+    "Full-Hessian GPTQ with mixed precision int6 quantization",
+    "Parallel Muon optimizer with overlapped communication",
+    "Evaluation-time adaptation focused approach"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
