@@ -1,0 +1,109 @@
+{
+  "pr_number": 1229,
+  "title": "Record: Scored-Position SLOT + Per-Sample Delta + GPTQ (val_bpb: 0.9300)",
+  "author": "resouer",
+  "status": "open",
+  "val_bpb": 0.93,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.008,
+          "steps": 16
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated skip connections using lerp blending between skip and residual paths.",
+        "parameters": {
+          "skip_connections": 5,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit bias",
+        "description": "Per-sample logit-space bias optimized alongside hidden-state delta.",
+        "parameters": {
+          "shape": "[bsz,1,vocab]"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Per-sample delta optimized in hidden space instead of a shared delta.",
+        "parameters": {
+          "shape": "[bsz,1,512]"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.008,
+          "end_lr": 0.0008,
+          "steps": 16
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Scored-position SLOT mask aligned delta training to eval scoring positions",
+    "Per-sample delta instead of a shared delta",
+    "Per-sample logit bias for direct logit-space adaptation",
+    "Training-data GPTQ calibration using real batches instead of autoregressive self-generated data",
+    "Cosine learning-rate schedule for SLOT optimization",
+    "Sigmoid-gated skip connections",
+    "Brotli-11 compression with byte-shuffle",
+    "Lower GPTQ block size of 64"
+  ],
+  "artifact_size": "~15.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

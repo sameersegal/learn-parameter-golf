@@ -1,0 +1,182 @@
+{
+  "pr_number": 1230,
+  "title": "Stable Growing Recurrence: Progressive Depth + Error Feedback (non-record)",
+  "author": "nestamidavaine",
+  "status": "closed",
+  "val_bpb": 1.1163,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shared recurrent core with progressive pass growth during training and evaluation.",
+        "parameters": {
+          "stem_layers": 4,
+          "core_layers": 3,
+          "tail_layers": 4,
+          "passes": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding for token representation.",
+        "parameters": {
+          "vocab_size": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self-attention style skip mechanism applied to the last layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual enhancement on selected layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "core weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "export"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "error feedback",
+        "description": "Low-rank correction branch injected before recurrent passes to compensate accumulated quantization error.",
+        "parameters": {
+          "rank": 2
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "Jacobian proxy loss",
+        "parameters": {
+          "lambda": 0.01
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 32768,
+          "epochs": 3,
+          "learning_rate": 0.002,
+          "optimizer": "SGD + momentum",
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "used_for": "TTT"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Progressive recurrence depth growth during training (1 pass to 2 passes to 3 passes).",
+    "Learnable residual scaling to make recurrent dynamics contractive.",
+    "Low-rank error feedback branch to compensate quantization error across recurrent passes.",
+    "Jacobian proxy loss to stabilize hidden-state growth without full Jacobian computation.",
+    "Warmup precompilation of all pass/QAT graph variants to avoid compile stalls.",
+    "Legal score-first TTT adapted to the recurrent architecture."
+  ],
+  "artifact_size": "~15.96 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
