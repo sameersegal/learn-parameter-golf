@@ -23,6 +23,14 @@ const animationRegistry: Record<
     () => import("./animations/TTTDemo"),
     { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
   ),
+  "muon-vs-adam-demo": dynamic(
+    () => import("./animations/MuonVsAdamDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
+  "newton-schulz-demo": dynamic(
+    () => import("./animations/NewtonSchulzDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
 };
 
 export default function AnimationContainer({

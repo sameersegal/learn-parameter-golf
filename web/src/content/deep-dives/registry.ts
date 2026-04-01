@@ -2,6 +2,7 @@ import { DeepDive } from "@/lib/types";
 import { quantizationFundamentals } from "./quantization-fundamentals";
 import { testTimeTraining } from "./test-time-training";
 import { evaluationStrategies } from "./evaluation-strategies";
+import { optimizers } from "./optimizers";
 
 export const DEEP_DIVES: DeepDive[] = [
   quantizationFundamentals,
@@ -13,14 +14,7 @@ export const DEEP_DIVES: DeepDive[] = [
     sections: [],
     order: 2,
   },
-  {
-    slug: "optimizers",
-    title: "Optimizers",
-    subtitle: "Muon, Adam, and optimizer selection strategies",
-    category: "optimizer_technique",
-    sections: [],
-    order: 3,
-  },
+  optimizers,
   {
     slug: "weight-averaging",
     title: "Weight Averaging",
