@@ -31,6 +31,10 @@ const animationRegistry: Record<
     () => import("./animations/NewtonSchulzDemo"),
     { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
   ),
+  "weight-averaging-demo": dynamic(
+    () => import("./animations/WeightAveragingDemo"),
+    { ssr: false, loading: () => <Placeholder label="Loading animation..." /> }
+  ),
 };
 
 export default function AnimationContainer({
