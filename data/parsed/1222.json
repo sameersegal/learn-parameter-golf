@@ -1,0 +1,99 @@
+{
+  "pr_number": 1222,
+  "title": "[Non-record] TTT-E2E: Meta-learned test-time training via FOMAML",
+  "author": "abaybektursun",
+  "status": "open",
+  "val_bpb": 1.4707,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Adds rank-256 prime MLPs to the last 3 transformer blocks, each with its own RMSNorm, running before the main MLP; prime MLPs use LeakyReLU(0.5)^2.",
+        "parameters": {
+          "layers": 3,
+          "rank": 256,
+          "prime_layers": [
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "zero-init",
+        "description": "Down projections of the prime MLPs are zero-initialized so the model starts identical to the baseline."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "inner_loop": true,
+          "used_for": "test-time adaptation and FOMAML inner loop"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "outer_loop": true,
+          "used_for": "prime initialization meta-update"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.01,
+          "chunk_size": 1024,
+          "adapted_components": "prime MLPs only"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Two-phase end-to-end meta-learning with FOMAML: standard pretraining followed by meta-fine-tuning to learn an initialization that adapts well at test time.",
+        "parameters": {
+          "phase1_steps": 7200,
+          "phase2_steps": 1500,
+          "inner_steps": 1
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Applies TTT-E2E / meta-learned test-time training to Parameter Golf",
+    "Uses FOMAML to meta-learn prime MLP initializations for adaptation",
+    "Introduces rank-256 prime MLPs in the last three transformer blocks",
+    "Implements legal score-first test-time adaptation to preserve causality",
+    "Demonstrates that adaptation recovers part of the Phase 2 degradation"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,160 @@
+{
+  "pr_number": 1221,
+  "title": "Non-record: Oscillatory Recurrence at Layer 0 (1.1915 BPB, 3-seed)",
+  "author": "amabito",
+  "status": "open",
+  "val_bpb": 1.1915,
+  "architecture": "Hybrid",
+  "quantization": "dynamic int4/int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TRN",
+        "description": "Adds a Temporal Resonance Network / oscillatory recurrence block at layer 0, followed by standard Transformer layers.",
+        "parameters": {
+          "layers": 1,
+          "oscillators": 240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "XOR hash of consecutive token pairs into a learned embedding table added to input embeddings.",
+        "parameters": {
+          "buckets": 2816,
+          "dimensions": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embedding to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Scale Attention subtracts the value-direction projection from attention output to reduce head redundancy.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses leaky_relu(x, 0.5).square() as the MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 1024
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5,
+          "lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.95,
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500,
+          "schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4/int5",
+        "bits": null,
+        "scope": "all"
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Oscillatory recurrence (TRN) inserted at layer 0 of an otherwise standard Transformer",
+    "3-seed result with mean val_bpb 1.1915 and low variance",
+    "Sliding window evaluation to improve reported BPB",
+    "Dynamic mixed int4/int5 quantization to fit within the artifact budget",
+    "Ablation showing TRN improves per-step convergence but loses on wall-clock due to overhead",
+    "Combination of BigramHash, partial RoPE, XSA, and SWA in a compact hybrid model"
+  ],
+  "artifact_size": "15.02 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

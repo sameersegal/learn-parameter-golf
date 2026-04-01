@@ -115922,5 +115922,352 @@
     "artifact_size": "15,916,170",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1219,
+    "title": "Record: PR #1105 + window attn + mixed seq_len — 1.1084 bpb (3-seed mean) 1.1084 bpb",
+    "author": "Gusanidas",
+    "status": "open",
+    "val_bpb": 1.1084,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention",
+          "description": "Window attention applied on layers 2, 4, 6, 8, and 10 using FlashAttention 3.",
+          "parameters": {
+            "layers": [
+              2,
+              4,
+              6,
+              8,
+              10
+            ],
+            "window_size": 512
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 6144,
+          "eval_length": 6144
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 128,
+            "context_length": 6144
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "train-data calibration"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Causal n-gram fix",
+          "description": "Fixed within_hint/word_hint to be prefix-only for causal behavior.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 6144,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Causal n-gram prefix-only fix for within_hint/word_hint",
+      "Window attention on selected layers via FlashAttention 3",
+      "Mixed sequence-length training across 2048 and 6144 token batches",
+      "Train-data GPTQ calibration for faster quantization setup",
+      "Automatic eval sequence-length detection from maximum training length",
+      "Sliding-window evaluation at 6144 context with stride 128"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1221,
+    "title": "Non-record: Oscillatory Recurrence at Layer 0 (1.1915 BPB, 3-seed)",
+    "author": "amabito",
+    "status": "open",
+    "val_bpb": 1.1915,
+    "architecture": "Hybrid",
+    "quantization": "dynamic int4/int5",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TRN",
+          "description": "Adds a Temporal Resonance Network / oscillatory recurrence block at layer 0, followed by standard Transformer layers.",
+          "parameters": {
+            "layers": 1,
+            "oscillators": 240
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "XOR hash of consecutive token pairs into a learned embedding table added to input embeddings.",
+          "parameters": {
+            "buckets": 2816,
+            "dimensions": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embedding to only part of the head dimensions.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-Scale Attention subtracts the value-direction projection from attention output to reduce head redundancy.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses leaky_relu(x, 0.5).square() as the MLP activation.",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "every": 50
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "context_length": 1024
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "backend_steps": 5,
+            "lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Adam",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "beta1": 0.9,
+            "beta2": 0.95,
+            "lr": 0.025
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500,
+            "schedule": "cosine decay"
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int4/int5",
+          "bits": null,
+          "scope": "all"
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Oscillatory recurrence (TRN) inserted at layer 0 of an otherwise standard Transformer",
+      "3-seed result with mean val_bpb 1.1915 and low variance",
+      "Sliding window evaluation to improve reported BPB",
+      "Dynamic mixed int4/int5 quantization to fit within the artifact budget",
+      "Ablation showing TRN improves per-step convergence but loses on wall-clock due to overhead",
+      "Combination of BigramHash, partial RoPE, XSA, and SWA in a compact hybrid model"
+    ],
+    "artifact_size": "15.02 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1222,
+    "title": "[Non-record] TTT-E2E: Meta-learned test-time training via FOMAML",
+    "author": "abaybektursun",
+    "status": "open",
+    "val_bpb": 1.4707,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Adds rank-256 prime MLPs to the last 3 transformer blocks, each with its own RMSNorm, running before the main MLP; prime MLPs use LeakyReLU(0.5)^2.",
+          "parameters": {
+            "layers": 3,
+            "rank": 256,
+            "prime_layers": [
+              8,
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "zero-init",
+          "description": "Down projections of the prime MLPs are zero-initialized so the model starts identical to the baseline."
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "inner_loop": true,
+            "used_for": "test-time adaptation and FOMAML inner loop"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "outer_loop": true,
+            "used_for": "prime initialization meta-update"
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.01,
+            "chunk_size": 1024,
+            "adapted_components": "prime MLPs only"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Two-phase end-to-end meta-learning with FOMAML: standard pretraining followed by meta-fine-tuning to learn an initialization that adapts well at test time.",
+          "parameters": {
+            "phase1_steps": 7200,
+            "phase2_steps": 1500,
+            "inner_steps": 1
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 1024
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Applies TTT-E2E / meta-learned test-time training to Parameter Golf",
+      "Uses FOMAML to meta-learn prime MLP initializations for adaptation",
+      "Introduces rank-256 prime MLPs in the last three transformer blocks",
+      "Implements legal score-first test-time adaptation to preserve causality",
+      "Demonstrates that adaptation recovers part of the Phase 2 degradation"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
