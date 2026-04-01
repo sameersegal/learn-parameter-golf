@@ -115159,5 +115159,244 @@
     "artifact_size": null,
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1212,
+    "title": "Record: Window Attention + Mixed Seq_Len Training, bpb 1.1108, eval at 6144 (5-seed mean)",
+    "author": "Gusanidas",
+    "status": "open",
+    "val_bpb": 1.1108,
+    "architecture": "Transformer",
+    "quantization": "int6+brotli",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses a bigram hash embedding component.",
+          "parameters": {
+            "size": 5120
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Uses value embeddings with dimension 128.",
+          "parameters": {
+            "dimensions": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Builds on cross-head subtracted attention from prior work.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses banked weight matrices and SmearGate from prior work.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU(0.5)-squared MLP activation.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Uses sigmoid-gated skip connections in place of learned scalar skip weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention modification",
+          "description": "Applies sliding-window attention to selected layers while keeping full attention in others.",
+          "parameters": {
+            "window_size": 512,
+            "layers": [
+              2,
+              4,
+              6,
+              8,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 6144,
+          "eval_length": 6144
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 128,
+            "context_length": 6144
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.985,
+          "other_params": {
+            "warmdown_iters": 4000
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses tied embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses partial RoPE from prior work.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "Window attention on selected layers using Flash Attention 3 window_size",
+      "Mixed sequence-length training across GPUs (2048 and 6144 within the same step)",
+      "Evaluation at long context length with sliding window eval",
+      "12-layer configuration with tuned qk_gain and mixed short/long sequence exposure"
+    ],
+    "artifact_size": "15,726,762 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1214,
+    "title": "Non-record: Emergent weight symmetry in QO projections + learnable SymMix",
+    "author": "gersh",
+    "status": "open",
+    "val_bpb": 1.1688,
+    "architecture": "Transformer",
+    "quantization": "int6 + lzma",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Transformer variant with encoder-decoder skip connections; symmetry emerges in middle decoder QO layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "artifact weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Learnable SymMix applied to QO matrices: W_eff = W + tanh(beta) * W^T with one scalar beta per matrix.",
+          "parameters": {
+            "num_parameters": 22
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Post-training force-symmetrization of selected QO projections using (W + W^T) / 2 before quantization.",
+          "parameters": {
+            "layers": [
+              6,
+              7,
+              8
+            ]
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Discovery of emergent near-perfect symmetry in layers 6-8 O projections during full training",
+      "Identification of a sharp bimodal symmetry pattern across QO matrices",
+      "Introduction of learnable SymMix for QO projections",
+      "Post-training force-symmetrization of near-symmetric layers to reduce artifact size",
+      "Structural analysis showing no other exploitable symmetry or block structure in the model"
+    ],
+    "artifact_size": "14,799 KB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
