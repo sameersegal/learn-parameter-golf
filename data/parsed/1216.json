@@ -1,0 +1,154 @@
+{
+  "pr_number": 1216,
+  "title": "11L INT6 XSA-all + EMA + VE \u2014 ttt_bpb 1.1487",
+  "author": "SoHarshh",
+  "status": "open",
+  "val_bpb": 1.1574,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int4",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention applied across layers, including an all-layers variant in the reported experiment.",
+        "parameters": {
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "Shared value embeddings are added into the V stream at later attention layers to reinject token identity.",
+        "parameters": {
+          "ve_dim": 128,
+          "layers": [
+            10,
+            11
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider MLP with LeakyReLU activation.",
+        "parameters": {
+          "multiplier": 3,
+          "activation": "LeakyReLU"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections added in a U-Net style across the network.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashed bigram embedding table used as an input component.",
+        "parameters": {
+          "buckets": 10240
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "qat_reset": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int4",
+        "bits": 6,
+        "scope": "attn/MLP/bigram"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "async_reduce_scatter": true,
+          "no_ddp": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "legal": true,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late QAT trigger based on wallclock fraction of the training budget.",
+        "parameters": {
+          "fraction": 0.65
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Value embeddings injected into later attention layers",
+    "Parallel Muon with async reduce-scatter on banked gradients",
+    "Banked model tensors for qo/kv/mlp_up/mlp_down",
+    "EMA with QAT-reset at quantization activation",
+    "Mixed INT4/INT6 quantization with zstd compression",
+    "XSA-all experiment achieving a new quality best"
+  ],
+  "artifact_size": "16.41MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
