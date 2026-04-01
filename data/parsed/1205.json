@@ -1,0 +1,131 @@
+{
+  "pr_number": 1205,
+  "title": "Non-record: Turbo-Muon + EngramLite(10240) + VE(8,9,10) \u2014 val_bpb 1.1431",
+  "author": "SergheiBrinza",
+  "status": "open",
+  "val_bpb": 1.1431,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Added bigram hash embeddings to provide cheap access to previous-token information.",
+        "parameters": {
+          "dimensions": 128,
+          "table_size": 10240
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Used ReLU squared MLP activation with 3x expansion.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Added U-Net style skip connections across layers.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Applied value residual / token identity injection on selected layers.",
+        "parameters": {
+          "layers": [
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization for all weight matrices."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_fraction": 0.5,
+          "interval_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "gradient_clipping": 0.3,
+          "momentum_warmup_steps": 1000,
+          "momentum_start": 0.85,
+          "momentum_end": 0.99
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4500
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Wider EngramLite / BigramHash-style embedding table (10240) for more n-gram coverage",
+    "VE applied on layers 8, 9, and 10 for additional token identity injection",
+    "Higher learning rate for faster convergence",
+    "Longer warmdown schedule for smoother weight averaging",
+    "Muon momentum warmup adjustment",
+    "Mixed quantization and zstd compression to fit the artifact budget"
+  ],
+  "artifact_size": "16.36MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

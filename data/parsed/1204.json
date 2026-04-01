@@ -1,0 +1,72 @@
+{
+  "pr_number": 1204,
+  "title": "Record: ParallelResiduals + MiniDepthRecurrence, 1.1063 BPB / 1.8679 nats, -0.0072 vs PR #1179, -0.0143 vs merged SOTA",
+  "author": "msisovic",
+  "status": "open",
+  "val_bpb": 1.1063,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "mixed quantization"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeated a small set of middle layers instead of the full stack; recurrence was activated only partway through training and repeated MLPs were untied.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "num_layers": 11,
+          "start_step": 3000,
+          "untie_mlp": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Split attention and MLP into separate residual lanes starting from a later layer, with learned routing back into both lanes.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Parallel residual lanes for attention and MLP starting at layer 7",
+    "Mini depth recurrence by repeating only middle layers 4 and 5",
+    "Delayed activation of recurrence during training",
+    "Untying repeated MLP weights while keeping the rest of the recurrent block shared",
+    "Mixed-quantization with autoregressive self-generated GPTQ calibration"
+  ],
+  "artifact_size": "~15.94 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
