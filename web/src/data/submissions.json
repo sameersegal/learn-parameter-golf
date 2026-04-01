@@ -115692,5 +115692,235 @@
     "artifact_size": "16.41MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1217,
+    "title": "Record: MuonEq-R + Context-Only SLOT + QK_GAIN=5.0 — val_bpb 1.1027 (3-seed mean)",
+    "author": "bigbag",
+    "status": "open",
+    "val_bpb": 1.1027,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "MuonEq-R": true,
+            "row_normalization_before_newton_schulz": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "QK_GAIN_INIT set to 5.0 as a tuned hyperparameter for attention scaling",
+          "parameters": {
+            "qk_gain_init": 5
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "seq_len": 2048
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": null
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Context-only SLOT: optimize delta using only already-scored context tokens, excluding future tokens from the loss",
+          "parameters": {
+            "slot_steps": 8,
+            "slot_lr": 0.005
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": 2048
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "MuonEq-R optimizer variant with row-normalization before Newton-Schulz orthogonalization",
+      "QK_GAIN_INIT=5.0 hyperparameter sweep and selection",
+      "Context-only SLOT evaluation variant that uses only past/context tokens for delta optimization",
+      "Combined improvement over prior PR #1179 base to reach 1.1027 val_bpb"
+    ],
+    "artifact_size": "15.80 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1218,
+    "title": "Record: 4096-Vocab + 4.0-MLP-mult + 0.085-WD + Simplifications — val_bpb 1.09785 (3-seed mean)",
+    "author": "clarkkev",
+    "status": "open",
+    "val_bpb": 1.09785,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Use XSA in all layers instead of only the last 4.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.085,
+          "momentum": null,
+          "other_params": {
+            "embeddings_weight_decay": 0.085
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.02,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "muon_weight_decay": 0.085,
+            "embeddings_weight_decay": 0.085,
+            "adam_weight_decay": 0.02
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Widened MLPs from 3x to 4x multiplier.",
+          "parameters": {
+            "mlp_mult": 4
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Added sigmoid-gated skip connections to the U-Net.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Removed gated attention from the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Removed value residuals from the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Removed hash embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Removed the smear gate.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "Fixed a bug in sliding window evaluation that double-counted tokens near the end of validation.",
+      "Increased vocabulary size from 1024 to 4096 using a new SentencePiece tokenizer.",
+      "Used a larger, more strongly regularized model with higher weight decay and wider MLPs.",
+      "Added coprime-stride data loading to reduce nearby repeated document exposure.",
+      "Added GPTQ Hessian-aware quantization.",
+      "Used more efficient byte shuffle + brotli compression.",
+      "Added sigmoid-gated skip connections to the U-Net.",
+      "Increased qk_gain_init from 1.5 to 4."
+    ],
+    "artifact_size": "15,916,170",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
