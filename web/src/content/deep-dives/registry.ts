@@ -3,6 +3,7 @@ import { quantizationFundamentals } from "./quantization-fundamentals";
 import { testTimeTraining } from "./test-time-training";
 import { evaluationStrategies } from "./evaluation-strategies";
 import { optimizers } from "./optimizers";
+import { weightAveraging } from "./weight-averaging";
 
 export const DEEP_DIVES: DeepDive[] = [
   quantizationFundamentals,
@@ -15,14 +16,7 @@ export const DEEP_DIVES: DeepDive[] = [
     order: 2,
   },
   optimizers,
-  {
-    slug: "weight-averaging",
-    title: "Weight Averaging",
-    subtitle: "SWA, EMA, and ensemble-like approaches",
-    category: "weight_averaging",
-    sections: [],
-    order: 4,
-  },
+  weightAveraging,
   {
     slug: "compression",
     title: "Compression",
