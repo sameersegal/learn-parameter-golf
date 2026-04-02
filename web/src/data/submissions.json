@@ -119452,5 +119452,175 @@
     "artifact_size": "14.2MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1247,
+    "title": "Proposal: Validate ASQU on the March 22 10min/16MB control line",
+    "author": "fahmitech",
+    "status": "open",
+    "val_bpb": 1.2208,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 4 KV heads in the 11-layer base stack",
+          "parameters": {
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Efficient partial XSA applied on the last 4 layers",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary position embeddings applied to a partial subset of dimensions",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer_idx+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Shared Value Embedding with dimension 128 and per-layer learned scales",
+          "parameters": {
+            "dimension": 128,
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Tight SWA",
+          "parameters": {
+            "interval": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "MLP + attention weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ASQU",
+          "description": "MLP activation x^2 for positive inputs and learned per-channel beta_i * x^2 for negative inputs",
+          "parameters": {
+            "beta_per_channel": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_momentum_start": 0.92
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "used_for": [
+              "embeddings",
+              "scalars"
+            ]
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Transfers ASQU onto the March 22 control line as a differentiated candidate for the 10-minute/16MB regime",
+      "Adds learned per-channel beta parameters for ASQU with a dedicated low learning rate",
+      "Introduces a dedicated optimizer group for ASQU beta parameters",
+      "Adds export handling intended to protect ASQU control tensors from quantization damage",
+      "Provides a stage-gated validation plan with explicit GO/KILL criteria for real 8xH100 runs"
+    ],
+    "artifact_size": "11,762,459 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
