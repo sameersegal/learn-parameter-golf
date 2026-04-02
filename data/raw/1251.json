@@ -1,0 +1,12 @@
+{
+  "number": 1251,
+  "title": "Non-record: Online Hessian GPTQ (val_bpb=1.1349)",
+  "author": "ibarrajo",
+  "body": "## Summary\n\n- **NEGATIVE RESULT**: Online Hessian GPTQ \u2014 accumulate Hessian matrix H during training to eliminate post-training GPTQ calibration\n- Hypothesis: removing GPTQ time reservation frees more steps for training\n- Reality: online Hessian overhead (112ms vs 95ms/step) costs more steps than it saves\n\n## Results\n\n| Metric | Value |\n|--------|-------|\n| val_bpb (base) | 1.1390 |\n| val_bpb (TTT) | **1.1349** |\n| Artifact size | 14.9 MB |\n| Step time | 112 ms |\n| Total steps | ~5,350 |\n| Training time | ~600s |\n\n## Key Findings (Negative Result)\n\n1. **Online Hessian adds ~17ms/step overhead**: Extra computation to accumulate H during forward pass. At 5,000+ steps, this costs ~85 seconds \u2014 more than a standard 30-40s post-training GPTQ calibration.\n2. **Quantization quality is comparable**: The online Hessian produces similar GPTQ quality to post-training calibration \u2014 no quality advantage to offset the speed cost.\n3. **Step budget is everything**: At 95ms/step you get ~6,150 steps; at 112ms you get ~5,350. Those 800 lost training steps matter more than saving 30s of GPTQ time.\n\n## Why Non-record\n\nThe core insight: in a time-constrained competition, any per-step overhead must justify itself in quality. Online Hessian GPTQ doesn't \u2014 it trades training steps for a negligible calibration time savings.\n\n## Rule Compliance\n\n- [x] Training < 600s on 8xH100\n- [x] Artifact < 16,000,000 bytes (14.9MB)\n- [x] No val tokens in artifact\n- [x] GPTQ calibration integrated in training (within budget by design)\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-02T08:10:57Z",
+  "updated_at": "2026-04-02T08:10:57Z",
+  "submission_readme": null
+}

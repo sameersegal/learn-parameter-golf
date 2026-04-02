@@ -1,0 +1,135 @@
+{
+  "pr_number": 1253,
+  "title": "[non_record_16mb] 12L dim=448 LeakyReLU^2 BGVOCAB=2048 GH200 proxy (val_bpb=1.2326)",
+  "author": "Okropniak",
+  "status": "open",
+  "val_bpb": 1.23263493,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation instead of ReLU squared.",
+        "parameters": {
+          "slope": 0.1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds bigram vocabulary and bigram embedding pathway.",
+        "parameters": {
+          "bigram_vocab_size": 2048,
+          "bigram_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in the last layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses value residual / VE layers in the last layers with dynamic placement.",
+        "parameters": {
+          "layers": "10,11"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.995
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.025,
+        "momentum": 0.947,
+        "other_params": {
+          "adam_wd": 0.0014,
+          "matrix_lr": 0.068,
+          "scalar_lr": 0.042,
+          "grad_clip_norm": 0.308,
+          "beta2": 0.986,
+          "momentum_warmup_steps": 1644
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU squared activation replacing ReLU squared",
+    "Bigram vocabulary and embedding expansion to 2048",
+    "12-layer, 448-dimension proxy-scale architecture",
+    "EMA decay calibrated to 0.995",
+    "Optuna v1 TPE hyperparameter tuning",
+    "int6 quantization with zstd-22 compression",
+    "Stride-64 evaluation on GH200 proxy hardware"
+  ],
+  "artifact_size": "15.58 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

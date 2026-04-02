@@ -1,0 +1,12 @@
+{
+  "number": 1250,
+  "title": "Non-record: Full Attention + LZMA + small BigramHash (val_bpb=1.2094)",
+  "author": "ibarrajo",
+  "body": "## Summary\n\n- **NEGATIVE RESULT**: Full attention (8 KV heads) + LZMA + BigramHash 3072x112\n- Smaller BigramHash (3072 vs 6144 in other approaches) devastated quality\n- Full attention is 2.5x slower than GQA (235ms vs 95ms/step)\n\n## Results\n\n| Metric | Value |\n|--------|-------|\n| val_bpb (base) | 1.2195 |\n| val_bpb (TTT) | **1.2094** |\n| Artifact size | 12.3 MB |\n| Step time | 235 ms |\n| Total steps | 2,490 |\n| Training time | ~585s |\n\n## Key Findings (Negative Result)\n\n1. **BigramHash size matters enormously**: Reducing from 6144 to 3072 rows caused ~0.08 BPB regression. The bigram embedding table is a critical component, not just an auxiliary feature.\n2. **Full attention is too slow at this model size**: 235ms/step means only 2,490 steps in 10 min vs 6,000+ with GQA. The quality-per-step of full attention doesn't compensate for 2.5x fewer steps.\n3. **Artifact underutilized**: Only 12.3MB of 16MB budget used \u2014 the speed bottleneck prevents using the freed space for a larger model.\n\n## Why Non-record\n\nTwo compounding issues: (1) smaller BigramHash destroys quality, (2) full attention is too slow to train enough steps. Together they yield 1.2094 \u2014 far worse than any other approach.\n\n## Rule Compliance\n\n- [x] Training < 600s on 8xH100\n- [x] Artifact < 16,000,000 bytes (12.3MB)\n- [x] No val tokens in artifact\n- [x] GPTQ calibration within training budget\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-02T08:10:48Z",
+  "updated_at": "2026-04-02T08:10:48Z",
+  "submission_readme": null
+}

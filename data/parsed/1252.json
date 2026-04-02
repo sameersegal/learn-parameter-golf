@@ -1,0 +1,193 @@
+{
+  "pr_number": 1252,
+  "title": "Record(?): WARP (Word-Aware Representation Priors) \u2014 val_bpb 1.0713 | 1xH100 10min | 13.65 MB",
+  "author": "ahmetdenizyilmaz",
+  "status": "open",
+  "val_bpb": 1.0713,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5) squared MLP activation in the base transformer stack.",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding/bucket mechanism retained in the architecture.",
+        "parameters": {
+          "buckets": 2816
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention/sequence architecture used across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate enabled in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embedding used in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "WARP-Len",
+        "description": "Word length embedding injected at layer 0 based on BPE word length.",
+        "parameters": {
+          "params": 6657
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "WARP-Pos",
+        "description": "Word position bias applied to Q and K before RoPE using within-word position embeddings.",
+        "parameters": {
+          "params": 1035
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "WARP-Type",
+        "description": "Word type logit bias module using a classifier and learned type-vocabulary bias matrix.",
+        "parameters": {
+          "params": 176128,
+          "types": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adam_split": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.0,
+          "disabled": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 2,
+          "freeze_blocks": 2,
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "SLOT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "steps": 8,
+          "context_only": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 250
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "WARP-Len: word length embeddings injected at the input layer",
+    "WARP-Pos: word position bias applied to queries and keys before RoPE",
+    "WARP-Type: word type logit bias module at the output layer",
+    "compute_word_boundary_maps() derived word boundaries from token IDs using SentencePiece leading-space conventions",
+    "Disabling EMA for short runs improved validation performance",
+    "Context-only SLOT variant that excludes new tokens from the loss"
+  ],
+  "artifact_size": "13.65 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
