@@ -120715,5 +120715,283 @@
     "artifact_size": "10.5 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1259,
+    "title": "Non-record: KNN Hidden State Retrieval — Scale Deception from Weak to Strong Models (8xH100)",
+    "author": "himanshudongre",
+    "status": "open",
+    "val_bpb": 1.1533,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses BigramHash as part of the merged leader model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared activation variant in the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Uses squared ReLU activation variant in the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA-all as part of the merged leader architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 9
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Eval-time KNN hidden state retrieval that stores hidden states and mixes nearest-neighbor token distributions with neural predictions.",
+          "parameters": {
+            "k": 8,
+            "lambda": 0.12,
+            "subsample": 4
+          }
+        }
+      }
+    ],
+    "compression": "lzma-9",
+    "novel_contributions": [
+      "Eval-time KNN hidden state retrieval with score-first causal datastore updates",
+      "Demonstration that KNN helps weak models but hurts strong competition-quality models",
+      "Vectorized KNN evaluation using torch.cdist to fit within the 600s budget",
+      "Evidence of scale deception / crossover behavior in eval-time augmentation"
+    ],
+    "artifact_size": "15,826,144 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1260,
+    "title": "Record: MuonEq-R + Depth Recurrence + Mixed Int5/Int6 GPTQ — val_bpb 1.0929 (3-seed mean)",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.0929,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6 GPTQ",
+    "optimizer": "MuonEq-R",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "variant": "MuonEq-R",
+            "row_normalization_before_ns": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Repeated layers 4 and 5 with fully shared MLP weights during recurrence.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ],
+            "repeat_count": 1,
+            "shared_mlp": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6 GPTQ",
+          "bits": null,
+          "scope": "all layers"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash token embedding.",
+          "parameters": {
+            "shape": "2816x160"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA-all-11 attention pattern.",
+          "parameters": {
+            "pattern": "all-11"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP4x",
+          "description": "4.0x MLP multiplier with sigmoid-gated activation.",
+          "parameters": {
+            "multiplier": 4
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.085
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "MuonEq-R optimizer with row normalization before Newton-Schulz orthogonalization",
+      "Depth recurrence on layers 4 and 5 with fully shared MLP weights",
+      "Mixed int5/int6 GPTQ using Hessian sensitivity ranking",
+      "3-seed mean validation score of 1.0929 bpb under the 16MB limit"
+    ],
+    "artifact_size": "~15.96 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1261,
+    "title": "Add non-record 1xH100 budget seq2048 run (val_bpb 1.3029)",
+    "author": "Aniket-pd",
+    "status": "closed",
+    "val_bpb": 1.30294738,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 2200
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings were used.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Non-record budget-constrained baseline on a single H100",
+      "Seq2048 training run",
+      "Warmdown learning-rate tuning",
+      "Int8 quantized submission compressed with zlib",
+      "Reproducible under a 600s wallclock cap"
+    ],
+    "artifact_size": "11,851,989 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
