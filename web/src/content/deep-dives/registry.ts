@@ -1,55 +1,25 @@
 import { DeepDive } from "@/lib/types";
 import { quantizationFundamentals } from "./quantization-fundamentals";
-import { testTimeTraining } from "./test-time-training";
-import { evaluationStrategies } from "./evaluation-strategies";
+import { architectureTricks } from "./architecture-tricks";
 import { optimizers } from "./optimizers";
 import { weightAveraging } from "./weight-averaging";
+import { compression } from "./compression";
+import { testTimeTraining } from "./test-time-training";
+import { learningRateSchedules } from "./learning-rate-schedules";
+import { initialization } from "./initialization";
+import { regularization } from "./regularization";
+import { evaluationStrategies } from "./evaluation-strategies";
 
 export const DEEP_DIVES: DeepDive[] = [
   quantizationFundamentals,
-  {
-    slug: "architecture-tricks",
-    title: "Architecture Tricks",
-    subtitle: "U-Net skips, BigramHash, SmearGate, and more",
-    category: "architecture_modification",
-    sections: [],
-    order: 2,
-  },
+  architectureTricks,
   optimizers,
   weightAveraging,
-  {
-    slug: "compression",
-    title: "Compression",
-    subtitle: "zstd, pruning, and artifact size optimization",
-    category: "compression",
-    sections: [],
-    order: 5,
-  },
+  compression,
   testTimeTraining,
-  {
-    slug: "learning-rate-schedules",
-    title: "Learning Rate Schedules",
-    subtitle: "Warmdown, cosine, and schedule optimization",
-    category: "lr_schedule",
-    sections: [],
-    order: 7,
-  },
-  {
-    slug: "initialization",
-    title: "Initialization",
-    subtitle: "OrthoInit and weight initialization strategies",
-    category: "initialization",
-    sections: [],
-    order: 8,
-  },
-  {
-    slug: "regularization",
-    title: "Regularization",
-    subtitle: "Weight decay, pruning, and overfitting prevention",
-    category: "regularization",
-    sections: [],
-    order: 9,
-  },
+  learningRateSchedules,
+  initialization,
+  regularization,
   evaluationStrategies,
 ];
 
