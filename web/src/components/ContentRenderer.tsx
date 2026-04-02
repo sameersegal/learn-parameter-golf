@@ -1,5 +1,14 @@
 import { DeepDiveSection } from "@/lib/types";
 import AnimationContainer from "./AnimationContainer";
+import katex from "katex";
+
+function renderMath(tex: string, displayMode: boolean): string {
+  try {
+    return katex.renderToString(tex, { displayMode, throwOnError: false });
+  } catch {
+    return tex;
+  }
+}
 
 function renderMarkdown(text: string) {
   // Simple markdown-like rendering for basic formatting
@@ -109,9 +118,28 @@ function renderMarkdown(text: string) {
 }
 
 function formatInline(text: string) {
-  // Very basic inline formatting: **bold**, `code`
-  const parts = text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g);
+  // Inline formatting: **bold**, `code`, \(...\) inline math, $$...$$ display math
+  const parts = text.split(/(\$\$[^$]+\$\$|\\\([^)]+\\\)|\*\*[^*]+\*\*|`[^`]+`)/g);
   return parts.map((part, i) => {
+    if (part.startsWith("$$") && part.endsWith("$$")) {
+      const tex = part.slice(2, -2);
+      return (
+        <span
+          key={i}
+          className="block my-3 text-center"
+          dangerouslySetInnerHTML={{ __html: renderMath(tex, true) }}
+        />
+      );
+    }
+    if (part.startsWith("\\(") && part.endsWith("\\)")) {
+      const tex = part.slice(2, -2);
+      return (
+        <span
+          key={i}
+          dangerouslySetInnerHTML={{ __html: renderMath(tex, false) }}
+        />
+      );
+    }
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={i} className="font-bold">
