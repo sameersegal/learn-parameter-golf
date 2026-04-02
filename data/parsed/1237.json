@@ -1,0 +1,156 @@
+{
+  "pr_number": 1237,
+  "title": "Non-record: Fused Triton relu^2 kernel \u2014 negative result (val_bpb=1.1198)",
+  "author": "ibarrajo",
+  "status": "open",
+  "val_bpb": 1.1198,
+  "architecture": "Transformer",
+  "quantization": "Int5 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "MLP activation uses relu(x).square() with a fused Triton kernel fallback to standard PyTorch ops.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Attention uses XSA across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embeddings are used for token representation.",
+        "parameters": {
+          "vocab": 6144,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate is included as part of the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections with learned per-dimension scaling.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "also_used": "AdamW"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 5,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50,
+          "during": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Fused Triton ReLU\u00b2 activation kernel with torch.compile fallback",
+    "Benchmark finding that torch.compile already fuses relu^2 effectively, so the custom Triton kernel gives no speedup",
+    "QK-Gain 4.0 included",
+    "Score-first TTT s_0 submission"
+  ],
+  "artifact_size": "15.1 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

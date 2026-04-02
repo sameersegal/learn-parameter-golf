@@ -1,0 +1,112 @@
+{
+  "pr_number": 1235,
+  "title": "Non-record: 21L PRP experiment",
+  "author": "maksblu",
+  "status": "open",
+  "val_bpb": 1.3527,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are enabled.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses 8 query heads and 2 KV heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "shared attention",
+        "description": "Interior transformer layers share attention modules in adjacent pairs.",
+        "parameters": {
+          "shared_pairs": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaces the baseline MLP with a PRP-based SwiGLU block.",
+        "parameters": {
+          "mlp_mult": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "PRP",
+        "description": "Parametrized random projection MLP with fixed random projection buffer and low-dimensional trainable controls.",
+        "parameters": {
+          "rank": 32
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.03,
+          "scalar_lr": 0.03,
+          "prp_lr": 0.06,
+          "tied_embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmup_steps": 2,
+          "main_scale": 0.5,
+          "min_scale": 0.05,
+          "gamma": 0.8
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "21-layer Transformer with shared attention across adjacent interior layer pairs",
+    "PRP-based SwiGLU MLP with low-dimensional trainable controls",
+    "8k SentencePiece tokenizer and 2048-token training context",
+    "Separate optimizer group for PRP vector controls",
+    "Shared-aware int8 export that deduplicates repeated storage before counting bytes"
+  ],
+  "artifact_size": "17.7 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

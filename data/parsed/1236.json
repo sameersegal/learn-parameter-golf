@@ -1,0 +1,166 @@
+{
+  "pr_number": 1236,
+  "title": "Non-record: SLOT eval-time delta optimization + QK-Gain (val_bpb=1.1179)",
+  "author": "ibarrajo",
+  "status": "open",
+  "val_bpb": 1.1179,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SLOT (Stochastic Logit Offset Tuning): eval-time additive delta optimization on logit biases per token, with delta reset per batch and no model weight updates",
+        "parameters": {
+          "steps": 8,
+          "delta_shape": "[1, 1, 512]"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-Gain",
+        "description": "Per-head learnable scalar on queries after QK-norm, initialized to 4.0",
+        "parameters": {
+          "init": 4.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate module included in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embedding component",
+        "parameters": {
+          "dimensions": "6144x128"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA-all attention component",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value Embedding component",
+        "parameters": {
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "RoPE applied to a partial subset of dimensions",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": "10%"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 1e-08,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.005,
+          "eps": 1e-05
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "SLOT eval-time delta optimization",
+    "Per-batch additive logit delta optimization without modifying model weights",
+    "QK-Gain initialization raised to 4.0",
+    "Int5 GPTQ compressed submission with score-first evaluation pipeline"
+  ],
+  "artifact_size": "15.2 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

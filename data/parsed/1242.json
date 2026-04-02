@@ -1,0 +1,148 @@
+{
+  "pr_number": 1242,
+  "title": "Record: Scylla + n-gram + legal TTT \u2014 val_bpb 1.0903 (3-seed mean)",
+  "author": "Campbellb",
+  "status": "open",
+  "val_bpb": 1.0903,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash embeddings with a 10240-token vocabulary.",
+        "parameters": {
+          "vocab_size": 10240,
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Smear gate is enabled in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "scalar_lr": 0.025,
+          "tied_embed_lr": 0.035
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization is enabled."
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "two-pass eval",
+        "parameters": {
+          "ngram_max_order": 16
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Scylla tokenizer retokenization and training with a ~998-token TokenMonster vocabulary",
+    "N-gram rescoring with orders 2-16 using a two-pass evaluation setup",
+    "Legal score-first TTT that computes BPB before adaptation",
+    "Tuned int6 quantization with clip_range=20 for stable artifact size across seeds",
+    "Parallel Muon optimization with cyclic shared blocks and BigramHash embeddings"
+  ],
+  "artifact_size": "15.4 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
