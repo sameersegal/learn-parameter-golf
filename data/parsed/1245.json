@@ -1,0 +1,185 @@
+{
+  "pr_number": 1245,
+  "title": "[Non-Record] Hymba-8L: Hybrid SSM + Sliding Window Attention with 32K Context (1.1470 BPB)",
+  "author": "mkenney2",
+  "status": "open",
+  "val_bpb": 1.147,
+  "architecture": "Hybrid",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mamba",
+        "description": "Hybrid architecture combining Mamba SSM with sliding window attention in parallel within each block.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings in the attention branch.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the embedding/architecture stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU with slope 0.9 squared in the MLP.",
+        "parameters": {
+          "slope": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Untied embeddings / separate lm_head instead of tying with token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Hybrid recurrent SSM branch with selective scan and causal convolution.",
+        "parameters": {
+          "state_dim": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 25,
+          "freeze_blocks": 0,
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 7000,
+          "shape": "cosine"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.15
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Sliding window attention with a 1024-token window.",
+        "parameters": {
+          "window": 1024
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Hybrid Mamba + sliding window attention architecture",
+    "32K training context under the same compute budget",
+    "8-layer Hymba variant with improved BPB",
+    "Expanded sliding window attention to 1024 tokens",
+    "Reduced Mamba state dimension to 4",
+    "Untied embeddings for better speed and quality",
+    "High weight decay with int8 quantization to fit under 16 MB",
+    "Long warmdown schedule and extended score-first TTT"
+  ],
+  "artifact_size": "15.7 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
