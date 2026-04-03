@@ -1,0 +1,95 @@
+{
+  "pr_number": 1295,
+  "title": "[Submission] Random LinearMaps + LoRA Adapters",
+  "author": "austinluk",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 4 KV heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened to 3x.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Adds low-rank adapters to linear layers on top of frozen random base weights.",
+        "parameters": {
+          "rank": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "random backbone",
+        "description": "Freezes most weights as deterministic pseudo-random projections regenerated from a seed.",
+        "parameters": {
+          "seed": 42,
+          "layers": 12,
+          "dim": 768
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "LoRA adapter matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "token embeddings, scalar/control parameters, norms"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Trains only small LoRA-style adapters while keeping a large random backbone frozen.",
+    "Regenerates the backbone from a deterministic seed at load time, so frozen weights cost 0 bytes in the artifact.",
+    "Serializes only trainable adapter weights plus seed, enabling a much larger effective model within the 16MB limit.",
+    "Uses a split optimizer setup with Muon for LoRA matrices and Adam for embeddings/norms/control parameters.",
+    "Applies int8 plus zlib compression to the trainable subset."
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

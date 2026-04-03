@@ -1,0 +1,98 @@
+{
+  "pr_number": 1294,
+  "title": "Submission/random linear maps lora",
+  "author": "austinluk",
+  "status": "closed",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 4 KV heads.",
+        "parameters": {
+          "heads": 12,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LoRA",
+        "description": "Adds low-rank adapters to each linear layer on top of a frozen random base weight.",
+        "parameters": {
+          "rank": 16
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "random linear maps",
+        "description": "Frozen backbone weights are deterministically generated from a seed and used as random projections."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "LoRA adapter matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings, norms, control parameters"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "trainable subset"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Uses a frozen random backbone regenerated from a deterministic seed, so the backbone costs 0 bytes in the artifact.",
+    "Trains only small LoRA-style adapters plus embeddings, norms, and control parameters.",
+    "Serializes only the trainable subset and reconstructs the full model at load time from the seed.",
+    "Applies int8 plus zlib compression to the saved trainable parameters.",
+    "Proposes a large random-feature backbone as an alternative to standard train-then-compress approaches."
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
