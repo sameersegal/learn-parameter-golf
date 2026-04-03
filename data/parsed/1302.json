@@ -1,0 +1,174 @@
+{
+  "pr_number": 1302,
+  "title": "Record: Split-LR + N-gram Agreement + Full GPTQ \u2014 val_bpb 1.1079 (3-seed mean)",
+  "author": "vlivashkin",
+  "status": "open",
+  "val_bpb": 1.1078,
+  "architecture": "Transformer",
+  "quantization": "Full GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Wider bigram hash projection used in the model.",
+        "parameters": {
+          "buckets": 2816,
+          "dimensions": 160
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU squared.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "online n-gram agreement",
+        "parameters": {
+          "experts": 3,
+          "causal": true,
+          "score_first": true,
+          "normalized": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "split-LR",
+        "parameters": {
+          "early": 0.025,
+          "late": 0.03,
+          "bank_split": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 enabled in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Split-LR training with different early and late layer learning rates",
+    "BigramHash widening to 2816 x 160",
+    "Sigmoid-gated U-Net skip connections",
+    "Soft-round QAT with alpha ramp from 1 to 16",
+    "Brotli-11 plus byte-shuffle artifact compression",
+    "Coprime-stride data loader",
+    "Online n-gram agreement evaluation with three causal experts",
+    "Properly normalized exponential tilting for probability adjustment",
+    "Full Hessian GPTQ int6 quantization"
+  ],
+  "artifact_size": "~15.86 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

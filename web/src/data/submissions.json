@@ -124593,5 +124593,478 @@
     "artifact_size": null,
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1300,
+    "title": "Non-record: 1.8184 BPB Single-step Recurrent Transformer with Q-LoRA (Windows 3090)",
+    "author": "Ribin545",
+    "status": "open",
+    "val_bpb": 1.8184,
+    "architecture": "Transformer",
+    "quantization": "Q-LoRA",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Single recurrent block reused across depth with tied weights.",
+          "parameters": {
+            "steps": 1
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Enabled bigram hash feature path in the model.",
+          "parameters": {
+            "size": 2048,
+            "scale": 0.05
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads than query heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LoRA",
+          "description": "Per-step LoRA adapters on the recurrent block, scoped to q projections.",
+          "parameters": {
+            "rank": 512,
+            "scope": "q"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "dense_matrices": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": [
+              "scalar/control",
+              "LoRA",
+              "embeddings"
+            ]
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "stride-based eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmup",
+          "parameters": {
+            "warmup_steps": 12
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization was mentioned as a toggle, but disabled in the current profile."
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Single-step recurrent Transformer regime that replaced deeper UT-style recurrence under a 10-minute wallclock constraint.",
+      "Deterministic Windows RTX 3090 reproducible setup with fixed data order and seed.",
+      "Per-step LoRA adapter routing with q-only scope in a tied recurrent block.",
+      "BigramHash feature path and architecture-aware optimizer routing.",
+      "Documented BPB progression from UT baseline to a 1.8184 BPB reproducible checkpoint."
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1302,
+    "title": "Record: Split-LR + N-gram Agreement + Full GPTQ — val_bpb 1.1079 (3-seed mean)",
+    "author": "vlivashkin",
+    "status": "open",
+    "val_bpb": 1.1078,
+    "architecture": "Transformer",
+    "quantization": "Full GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Wider bigram hash projection used in the model.",
+          "parameters": {
+            "buckets": 2816,
+            "dimensions": 160
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Sigmoid-gated U-Net style skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "MLP activation uses LeakyReLU squared.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "online n-gram agreement",
+          "parameters": {
+            "experts": 3,
+            "causal": true,
+            "score_first": true,
+            "normalized": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "split-LR",
+          "parameters": {
+            "early": 0.025,
+            "late": 0.03,
+            "bank_split": 5
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA attention used across all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "VE128 enabled in later layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      }
+    ],
+    "compression": "Brotli-11",
+    "novel_contributions": [
+      "Split-LR training with different early and late layer learning rates",
+      "BigramHash widening to 2816 x 160",
+      "Sigmoid-gated U-Net skip connections",
+      "Soft-round QAT with alpha ramp from 1 to 16",
+      "Brotli-11 plus byte-shuffle artifact compression",
+      "Coprime-stride data loader",
+      "Online n-gram agreement evaluation with three causal experts",
+      "Properly normalized exponential tilting for probability adjustment",
+      "Full Hessian GPTQ int6 quantization"
+    ],
+    "artifact_size": "~15.86 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1303,
+    "title": "Record: SLOT + QK-Gain 4.0 + XSA-11 — val_bpb 0.9462 (3-seed mean)",
+    "author": "anthony-maio",
+    "status": "open",
+    "val_bpb": 0.9462,
+    "architecture": "Transformer",
+    "quantization": "late QAT int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Per-head query scaling to improve performance.",
+          "parameters": {
+            "version": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Expanded XSA applied across all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "steps": 16,
+            "learning_rate": 0.008,
+            "min_learning_rate": 0.0008
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hashing used in the model, with reduced hash size for artifact fit.",
+          "parameters": {
+            "size": 1024
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU-based MLP activation.",
+          "parameters": {
+            "power": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embeddings.",
+          "parameters": {
+            "train_fraction": 16,
+            "total_fraction": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate component in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections in the transformer.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "SLOT-16 scored-position learned output tuning with per-sample hidden delta and logit bias",
+      "QK-Gain 4.0 per-head query scaling",
+      "XSA expanded to all 11 layers",
+      "Improved sliding-window baseline combined with test-time SLOT optimization",
+      "Artifact fitting via reduced BigramHash size and lzma compression"
+    ],
+    "artifact_size": "15.7-15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
