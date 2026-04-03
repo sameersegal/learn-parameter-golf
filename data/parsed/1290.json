@@ -1,0 +1,157 @@
+{
+  "pr_number": 1290,
+  "title": "Record: Depth Recurrence + MuonEq-R + AR Self-Gen GPTQ \u2014 val_bpb 1.1104 (3-seed mean)",
+  "author": "aryanbhosale",
+  "status": "open",
+  "val_bpb": 1.1104,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are repeated during the forward pass using the same physical parameters, creating a virtual deeper network.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "virtual_layers": 13,
+          "physical_layers": 11,
+          "start_step": 3000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "row_normalized": true,
+          "newton_schulz_steps": 5,
+          "parallel": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention is used across all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embedding/feature mechanism used in the model.",
+        "parameters": {
+          "vocab_size": 3072,
+          "dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections in the network.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "type": "selective +/-1",
+          "criterion": "reconstruction error"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "final 15% wallclock"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Depth recurrence that repeats layers 4 and 5 to create a virtual 13-layer network from an 11-layer parameter budget",
+    "MuonEq-R row-normalized Muon optimization before Newton-Schulz orthogonalization",
+    "Autoregressive self-generated full-Hessian GPTQ calibration without external data",
+    "Combination of depth recurrence, MuonEq-R, and AR self-generated GPTQ achieving 1.1104 val_bpb"
+  ],
+  "artifact_size": "~15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
