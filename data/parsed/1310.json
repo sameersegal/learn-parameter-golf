@@ -1,0 +1,127 @@
+{
+  "pr_number": 1310,
+  "title": "Non-record: Exact Sequence Matching + TTT on PR #549 (1.1177 BPB)",
+  "author": "cadenmcmann",
+  "status": "open",
+  "val_bpb": 1.1177,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "all_blocks_unfrozen": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "exact sequence matching",
+        "parameters": {
+          "min_order": 8,
+          "max_order": 12,
+          "lambda": 0.15,
+          "blend_cap": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU(0.5)^2",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than query heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention on the last 4 layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding / vocabulary component",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parameter_banking": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Exact eval-time N-gram sequence matching stacked on top of TTT",
+    "Demonstration that sequence matching and TTT are complementary",
+    "Improvement from 1.1195 BPB with TTT alone to 1.1177 BPB with sequence matching",
+    "Use of exact 8-12 token context caching to mix cached next-token predictions into model outputs"
+  ],
+  "artifact_size": "15,882,529 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
