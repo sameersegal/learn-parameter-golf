@@ -1,0 +1,158 @@
+{
+  "pr_number": 1274,
+  "title": "Record: Scylla + Parallel Residuals + Depth Recurrence + Legal TTT \u2014 val_bpb 1.0876 (3-seed mean)",
+  "author": "MatoTeziTanka",
+  "status": "closed",
+  "val_bpb": 1.0876,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the transformer MLPs.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA only to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses gated previous-token blending.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a bigram hash embedding module.",
+        "parameters": {
+          "vocab_size": 2048,
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeats layers 4 and 5 once each with untied MLPs.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Splits residual stream into parallel lanes starting from layer 7 with learned routing scalars.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "ln_scale": 1
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Scylla tokenizer integration with a 998-token TokenMonster vocabulary",
+    "Parallel residual routing starting from layer 7 with learned 4-scalar routing",
+    "Mini depth recurrence on layers 4 and 5 with untied MLPs",
+    "Legal score-first TTT applied after scoring each chunk under inference mode",
+    "Mixed INT5/INT6 per-row quantization with brotli-11 compression",
+    "Learnable lane merge for parallel residuals"
+  ],
+  "artifact_size": "15.83 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
