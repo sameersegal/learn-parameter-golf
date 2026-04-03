@@ -122370,5 +122370,782 @@
     "artifact_size": "~16 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1278,
+    "title": "WIP: Depth Recurrence via Weight-Shared Transformer Blocks",
+    "author": "GitGeeks",
+    "status": "open",
+    "val_bpb": 1.1147,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "shared weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Shares transformer block weights across multiple iterations to create more effective layers within the same parameter budget.",
+          "parameters": {
+            "layers": 4,
+            "iterations": 5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses weight-shared transformer blocks with tied parameters across recurrent depth iterations.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Adapts U-Net-style skip connections for the recurrent transformer structure.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses BigramHash as part of the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA as part of the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Retains Partial RoPE in the architecture stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Retains VE128 in the architecture stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Retains SmearGate in the architecture stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Weight-shared depth recurrence to achieve 20+ effective layers within the 16MB budget",
+      "Per-layer conditioning with layer index embeddings and learned scalar gates",
+      "Per-iteration RMSNorm for stabilizing deep recurrence",
+      "Adapted U-Net skip connections for recurrent transformer structure",
+      "Reallocation of parameter budget from unique layers to wider or more capable components"
+    ],
+    "artifact_size": "< 16 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1279,
+    "title": "Record: MuonEq-R + Depth Recurrence + N61 Mixed GPTQ — val_bpb 1.0924 (3-seed mean)",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.0924,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int5 GPTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "variant": "MuonEq-R",
+            "row_normalization_before_ns5": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Repeats layers 4 and 5 once after the initial forward pass with fully shared MLP weights.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ],
+            "repeat_count": 1
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int5",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash token embedding.",
+          "parameters": {
+            "dimensions": [
+              2816,
+              160
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses 8 attention heads with 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.085
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "MuonEq-R optimizer variant with row normalization before Newton-Schulz orthogonalization",
+      "Depth recurrence on layers 4 and 5 with fully shared MLP weights",
+      "Mixed GPTQ quantization using 61 int6 layers and 5 int5 layers",
+      "Smaller self-extracting mini runner to free artifact budget for one additional int6 layer",
+      "Three-seed verified record submission under the 16MB artifact limit"
+    ],
+    "artifact_size": "~15.98 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1280,
+    "title": "Record: AR Self-Gen GPTQ + XSA-11 + BigramHash3072x112 (mean 1.1156)",
+    "author": "aamodbhatt",
+    "status": "open",
+    "val_bpb": 1.11555015,
+    "architecture": "Transformer",
+    "quantization": "GPTQ-lite int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding component used in the model stack.",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA attention component applied to the last layers.",
+          "parameters": {
+            "last_n_layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-layer MLP block with LeakyReLU^2 activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": 16,
+            "base_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value residual component in selected layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dimension": 128
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 7
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "chunk_tokens": 32768,
+            "epochs": "2/3/4 adaptive"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "parallel": true,
+            "ns_steps": 3,
+            "momentum_warmup_start": 0.92,
+            "momentum_warmup_steps": 1500
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "warmdown_iters": 3500
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "rule": "1/sqrt(layer+1)"
+          }
+        }
+      }
+    ],
+    "compression": "lzma-7",
+    "novel_contributions": [
+      "Muon-style Newton-Schulz optimization applied to test-time training",
+      "Entropy-adaptive TTT epoch selection based on chunk NLL",
+      "Score-first legal TTT protocol with global NLL synchronization across DDP ranks",
+      "GPTQ-lite int6 quantization with lzma compression",
+      "Combined stack of BigramHash, XSA, partial RoPE, EMA, and Tight SWA"
+    ],
+    "artifact_size": "~15.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1282,
+    "title": "Slot Machine — 1.10350531 val_bpb (seed 444)",
+    "author": "newjordan",
+    "status": "open",
+    "val_bpb": 1.10350531,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "11-layer XSA-all architecture used as the base model",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Standard embedding/lm_head tying",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "naive"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "byte-shuffle compression with stride=2",
+          "parameters": {
+            "stride": 2
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "custom context-only SLOT test-time optimization",
+          "parameters": {
+            "steps": 8
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "brotli-11 compression with byte-shuffle stride=2 to reduce model size",
+      "custom context-only SLOT 8-step test-time optimization",
+      "11-layer XSA-all Rascal II training setup with parallel Muon and coprime loader",
+      "naive int6 quantization"
+    ],
+    "artifact_size": "15,536,878 B",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1283,
+    "title": "Ouroboros — 1.13727008 val_bpb (seed 444)",
+    "author": "newjordan",
+    "status": "open",
+    "val_bpb": 1.13727008,
+    "architecture": "Hybrid",
+    "quantization": "GPTQ 8-bit",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "9 unique flat transformer blocks followed by 1 shared crawler block looping 2 times with differentiated RoPE scales.",
+          "parameters": {
+            "layers": 9,
+            "crawler_layers": 1,
+            "loops": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Differentiated RoPE scales for the crawler loop.",
+          "parameters": {
+            "scales": [
+              9,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 8,
+          "scope": "block weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Uses QK gain initialization to sharpen attention gradients.",
+          "parameters": {
+            "qk_gain_init": 4
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 2000
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "window": "sliding"
+          }
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "Loop-aware GPTQ with two-phase Hessian calibration for crawler-weight quantization",
+      "Brotli compression to reduce artifact size and free headroom for GPTQ overhead",
+      "QK gain initialization at 4.0 for sharper initial attention gradients",
+      "Two-loop crawler cadence to improve throughput and increase training steps within the wallclock budget",
+      "Optimized warmdown schedule"
+    ],
+    "artifact_size": "15,034,550 B",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1284,
+    "title": "Vocab 8192 Entropy Optimized: 1.1207 BPB (3-seed mean)",
+    "author": "tyrel-beede",
+    "status": "open",
+    "val_bpb": 1.1207,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds a complementary bigram transition-statistics channel.",
+          "parameters": {
+            "buckets": 4096,
+            "dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embeddings to a subset of dimensions.",
+          "parameters": {
+            "dims": "16/64"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses a position-mixing gate.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Adds encoder-decoder style skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_interval": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "MLP/attention body"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 9
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "parameter_banking": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "parameter banks"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "values": "±1",
+            "selective": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64,
+            "seq_len": 2048
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 16
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "stride": 16
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      }
+    ],
+    "compression": "lzma-9",
+    "novel_contributions": [
+      "Increasing the BPE vocabulary from 1,024 to 8,192 tokens as an entropy-optimized scaling variable.",
+      "Using mutual-information spectrum analysis of FineWeb to guide vocabulary sizing.",
+      "Rebalancing parameters from MLP capacity into a much larger embedding table while keeping the same overall Transformer shape.",
+      "Showing that most per-layer techniques become neutral or negative at V=8192, with BigramHash as the main complementary exception.",
+      "Demonstrating that quantization precision is the main binding constraint, with int7 improving BPB but exceeding the artifact budget.",
+      "Analyzing vocabulary-size and sequence-length substitutability as a joint scaling effect."
+    ],
+    "artifact_size": "15.97 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

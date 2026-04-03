@@ -1,0 +1,206 @@
+{
+  "pr_number": 1284,
+  "title": "Vocab 8192 Entropy Optimized: 1.1207 BPB (3-seed mean)",
+  "author": "tyrel-beede",
+  "status": "open",
+  "val_bpb": 1.1207,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a complementary bigram transition-statistics channel.",
+        "parameters": {
+          "buckets": 4096,
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to a subset of dimensions.",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses a position-mixing gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds encoder-decoder style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP/attention body"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parameter_banking": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "parameter banks"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "values": "\u00b11",
+          "selective": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "stride": 16
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Increasing the BPE vocabulary from 1,024 to 8,192 tokens as an entropy-optimized scaling variable.",
+    "Using mutual-information spectrum analysis of FineWeb to guide vocabulary sizing.",
+    "Rebalancing parameters from MLP capacity into a much larger embedding table while keeping the same overall Transformer shape.",
+    "Showing that most per-layer techniques become neutral or negative at V=8192, with BigramHash as the main complementary exception.",
+    "Demonstrating that quantization precision is the main binding constraint, with int7 improving BPB but exceeding the artifact budget.",
+    "Analyzing vocabulary-size and sequence-length substitutability as a joint scaling effect."
+  ],
+  "artifact_size": "15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

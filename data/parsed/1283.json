@@ -1,0 +1,92 @@
+{
+  "pr_number": 1283,
+  "title": "Ouroboros \u2014 1.13727008 val_bpb (seed 444)",
+  "author": "newjordan",
+  "status": "open",
+  "val_bpb": 1.13727008,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ 8-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "9 unique flat transformer blocks followed by 1 shared crawler block looping 2 times with differentiated RoPE scales.",
+        "parameters": {
+          "layers": 9,
+          "crawler_layers": 1,
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Differentiated RoPE scales for the crawler loop.",
+        "parameters": {
+          "scales": [
+            9,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses QK gain initialization to sharpen attention gradients.",
+        "parameters": {
+          "qk_gain_init": 4.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window": "sliding"
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Loop-aware GPTQ with two-phase Hessian calibration for crawler-weight quantization",
+    "Brotli compression to reduce artifact size and free headroom for GPTQ overhead",
+    "QK gain initialization at 4.0 for sharper initial attention gradients",
+    "Two-loop crawler cadence to improve throughput and increase training steps within the wallclock budget",
+    "Optimized warmdown schedule"
+  ],
+  "artifact_size": "15,034,550 B",
+  "prompt_version": "v2",
+  "is_record": false
+}

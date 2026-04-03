@@ -1,0 +1,153 @@
+{
+  "pr_number": 1280,
+  "title": "Record: AR Self-Gen GPTQ + XSA-11 + BigramHash3072x112 (mean 1.1156)",
+  "author": "aamodbhatt",
+  "status": "open",
+  "val_bpb": 1.11555015,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component used in the model stack.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention component applied to the last layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP block with LeakyReLU^2 activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value residual component in selected layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 7
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "chunk_tokens": 32768,
+          "epochs": "2/3/4 adaptive"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "parallel": true,
+          "ns_steps": 3,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "rule": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "lzma-7",
+  "novel_contributions": [
+    "Muon-style Newton-Schulz optimization applied to test-time training",
+    "Entropy-adaptive TTT epoch selection based on chunk NLL",
+    "Score-first legal TTT protocol with global NLL synchronization across DDP ranks",
+    "GPTQ-lite int6 quantization with lzma compression",
+    "Combined stack of BigramHash, XSA, partial RoPE, EMA, and Tight SWA"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
