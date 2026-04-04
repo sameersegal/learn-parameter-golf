@@ -130245,5 +130245,577 @@
     "artifact_size": "15,243,770 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1354,
+    "title": "add varlen+fused mlp+ttt record",
+    "author": "samacqua",
+    "status": "open",
+    "val_bpb": 1.1092,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Adam",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention",
+          "description": "Variable-length Flash Attention 3 using flash_attn_varlen_func with packed documents and cu_seqlens so attention stays within each document.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP",
+          "description": "Fused up-projection, LeakyReLU(0.5)^2 activation, and squaring into a custom Triton kernel.",
+          "parameters": {
+            "activation": "LeakyReLU",
+            "activation_power": 2
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "chunk_size": 32,
+            "optimizer": "RMSProp via Adam beta1=0"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "model"
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Variable-length attention with Flash Attention 3 to avoid cross-document attention during training",
+      "Fused MLP Triton kernel combining up-projection, LeakyReLU(0.5)^2, and squaring",
+      "Reintroduced and optimized LoRA-based test-time training",
+      "Smaller TTT chunk size and RMSProp-style optimization for better long-context gains"
+    ],
+    "artifact_size": "~15.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1355,
+    "title": "Non-record: Mamba-3 Hybrid + Full Hessian GPTQ + Late QAT — val_bpb 1.1526",
+    "author": "mradassaad",
+    "status": "open",
+    "val_bpb": 1.1526,
+    "architecture": "Hybrid",
+    "quantization": "GPTQ 6-bit",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Mamba",
+          "description": "7-layer Mamba-3 SISO SSD blocks in an 8-layer hybrid model with one attention layer.",
+          "parameters": {
+            "layers": 7,
+            "dim": 512,
+            "d_state": 64,
+            "seq_len": 4096
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention",
+          "description": "Single attention hybrid layer inserted into the Mamba stack.",
+          "parameters": {
+            "layers": 1,
+            "position": 4,
+            "heads": "8/4"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings used in the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections in the hybrid architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash feature used in the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate component included in the architecture.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared MLP activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.025
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 32
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500,
+            "shape": "linear"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.04
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Full Hessian GPTQ replacing QAT-only quantization",
+      "Late QAT triggered only in the final low-learning-rate training phase",
+      "Linear warmdown schedule that enables late QAT to activate properly",
+      "Mamba-3 hybrid architecture with one attention layer",
+      "LZMA compression to fit the artifact under the 16MB limit",
+      "Closing the quantization gap from 174 mBPB to effectively zero"
+    ],
+    "artifact_size": "15.78MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1357,
+    "title": "Non-record: 12L Compression-Aware Training Orchestration with ProxQuant",
+    "author": "mollahasani",
+    "status": "open",
+    "val_bpb": 1.22,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Transformer",
+          "description": "12-layer transformer with 3x MLP, GQA, Partial RoPE, tied embeddings, BigramHash, LeakyReLU^2, and U-Net skip connections.",
+          "parameters": {
+            "layers": 12,
+            "model_dim": 512,
+            "attention_heads": 8,
+            "kv_heads": 4,
+            "mlp_multiplier": 3,
+            "mlp_hidden": 1536,
+            "rope_dims": "16/64",
+            "vocab_size": 1024,
+            "bigram_buckets": 1536
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "ProxQuant",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "sparsity": "15-22%",
+            "schedule": "cubic"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "initial": 0.04,
+            "final": 0.08
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "lr": 0.025
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Multi-phase training orchestration combining clean training, gradual pruning, QAT, PERP recovery, and serialization-aware neuron reordering.",
+          "parameters": {
+            "phases": 5
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "PERP recovery by retraining biases and layer norms after compression.",
+          "parameters": {
+            "steps": 200
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Neuron reordering by sorting MLP hidden neurons by L1 norm before serialization to improve lossless compression.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Multi-phase training orchestration coordinating pruning, quantization, PERP recovery, and serialization",
+      "ProxQuant progressive QAT with gradual grid annealing",
+      "Prune-before-quantize scheduling based on the Progressive Intensity Hypothesis",
+      "PERP post-compression recovery of biases and layer norms",
+      "Neuron reordering to improve lossless compression",
+      "Using a 12-layer architecture under the 16MB budget"
+    ],
+    "artifact_size": "13-17 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1359,
+    "title": "Record: 0.4188 BPB mixed quant ngram",
+    "author": "LucasErcolano",
+    "status": "closed",
+    "val_bpb": 0.418817,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": null,
+          "scope": "MLP int5; attention/embeddings int6"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Transformer MLP widened to 3.0x.",
+          "parameters": {
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "MLP activation uses LeakyReLU(0.5)^2.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate module included in the base neural stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash used in the model stack and n-gram context handling.",
+          "parameters": {
+            "size": 2048
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value-Residual Embeddings with 128 dimensions.",
+          "parameters": {
+            "dimensions": 128
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization used in the base stack."
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Complementary training that down-weights tokens easily predicted by bigram statistics.",
+          "parameters": {
+            "loss_weighting": "1 - alpha * p_bigram(token)"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Causal backoff n-gram mixer with entropy-adaptive blending.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Score-first, DDP-safe evaluation protocol with synchronization before cache updates.",
+          "parameters": {
+            "ddp_safe": true,
+            "score_first": true
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Mixed precision quantization with int5 MLP weights and int6 attention/embedding weights",
+      "Complementary training focused on tokens poorly predicted by n-grams",
+      "Strictly causal backoff n-gram mixer with entropy-adaptive blending",
+      "Score-first, DDP-safe cache update protocol for multi-GPU evaluation",
+      "Artifact compression with lzma to fit within the 16MB limit"
+    ],
+    "artifact_size": "15.66 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1360,
+    "title": "Non-record: Gaussian per-token loss reweighting — what goes wrong and why (+0.014 bpb)",
+    "author": "JulianTang2027",
+    "status": "open",
+    "val_bpb": 1.15847,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses a BigramHash(10240) component in the base model.",
+          "parameters": {
+            "size": 10240
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "decay": 0.4
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "weight_decay": 0.04
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Gaussian per-token loss reweighting centered on batch mean per-token loss, with z-score based weights and sigma-controlled downweighting of easy and hard tokens.",
+          "parameters": {
+            "sigma": 2,
+            "normalized_weights": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Gaussian per-token loss reweighting as a training-time loss shaping experiment",
+      "Negative-result analysis showing improved weighted val_loss can hide worse competition metric performance",
+      "Diagnosis that batch-relative loss reweighting optimizes a different objective than unweighted sliding-window BPB",
+      "Comparison against a PR #180 baseline with identical seed and hardware"
+    ],
+    "artifact_size": "16,050,780 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

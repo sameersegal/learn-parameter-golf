@@ -1,0 +1,147 @@
+{
+  "pr_number": 1357,
+  "title": "Non-record: 12L Compression-Aware Training Orchestration with ProxQuant",
+  "author": "mollahasani",
+  "status": "open",
+  "val_bpb": 1.22,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Transformer",
+        "description": "12-layer transformer with 3x MLP, GQA, Partial RoPE, tied embeddings, BigramHash, LeakyReLU^2, and U-Net skip connections.",
+        "parameters": {
+          "layers": 12,
+          "model_dim": 512,
+          "attention_heads": 8,
+          "kv_heads": 4,
+          "mlp_multiplier": 3,
+          "mlp_hidden": 1536,
+          "rope_dims": "16/64",
+          "vocab_size": 1024,
+          "bigram_buckets": 1536
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ProxQuant",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": "15-22%",
+          "schedule": "cubic"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "initial": 0.04,
+          "final": 0.08
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-phase training orchestration combining clean training, gradual pruning, QAT, PERP recovery, and serialization-aware neuron reordering.",
+        "parameters": {
+          "phases": 5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "PERP recovery by retraining biases and layer norms after compression.",
+        "parameters": {
+          "steps": 200
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Neuron reordering by sorting MLP hidden neurons by L1 norm before serialization to improve lossless compression.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Multi-phase training orchestration coordinating pruning, quantization, PERP recovery, and serialization",
+    "ProxQuant progressive QAT with gradual grid annealing",
+    "Prune-before-quantize scheduling based on the Progressive Intensity Hypothesis",
+    "PERP post-compression recovery of biases and layer norms",
+    "Neuron reordering to improve lossless compression",
+    "Using a 12-layer architecture under the 16MB budget"
+  ],
+  "artifact_size": "13-17 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,59 @@
+{
+  "pr_number": 1354,
+  "title": "add varlen+fused mlp+ttt record",
+  "author": "samacqua",
+  "status": "open",
+  "val_bpb": 1.1092,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention",
+        "description": "Variable-length Flash Attention 3 using flash_attn_varlen_func with packed documents and cu_seqlens so attention stays within each document.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "Fused up-projection, LeakyReLU(0.5)^2 activation, and squaring into a custom Triton kernel.",
+        "parameters": {
+          "activation": "LeakyReLU",
+          "activation_power": 2
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "chunk_size": 32,
+          "optimizer": "RMSProp via Adam beta1=0"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Variable-length attention with Flash Attention 3 to avoid cross-document attention during training",
+    "Fused MLP Triton kernel combining up-projection, LeakyReLU(0.5)^2, and squaring",
+    "Reintroduced and optimized LoRA-based test-time training",
+    "Smaller TTT chunk size and RMSProp-style optimization for better long-context gains"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

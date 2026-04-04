@@ -1,0 +1,12 @@
+{
+  "number": 1358,
+  "title": "Submission: Static-Unified Flash-Nitro (SUFN) 10-minute Baseline",
+  "author": "zeal175",
+  "body": "Optimized modded-nanogpt with a perfectly static 1024-sequence graph. Uses native is_causal=True Flash Attention (SDPA) for O(n) efficiency and a robust distributed token loader to handle phase transitions without recompilation. Validated with high-stride TTT for sub-10 minute wallclock compliance.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-04T20:50:33Z",
+  "updated_at": "2026-04-04T20:54:20Z",
+  "submission_readme": "# Static-Unified Flash-Nitro (SUFN) \ud83c\udfc6\ud83c\udfc1\n\nThis submission provides an **Optimized Systems Baseline** for the Paradox-Golf 10-minute 8x H100 challenge. Rather than pushing for raw SOTA BPB, it focuses on eliminating the common architectural and compiler bottlenecks in the \"modded-nanogpt\" lineage.\n\n## Core Systems Optimizations \ud83d\udee1\ufe0f\n\n### 1. Perfectly Static Unified Graph\nTraditional runs often trigger a 30-40 second `torch.compile` (Inductor) stall at step 520 when changing sequence lengths.\n- **Optimization:** We unified the sequence length to **1024** for the entire run. This keeps the graph perfectly static, gaining ~40 seconds of training time.\n\n### 2. Native is_causal Flash Attention \ud83c\udfce\ufe0f\nCustom SDPA wrappers often trigger OOM or \"invalid backend\" errors on H100s.\n- **Optimization:** We use standard `F.scaled_dot_product_attention` with `is_causal=True`. This leverages native Flash Attention 2 for $O(n)$ efficiency and maximum throughput.\n\n### 3. Rank-Sharded Token Loading Fix\nFixed the `RuntimeError: shape invalid for input size` by implementing rounding logic in the `DistributedTokenLoader`. This ensures multi-GPU training is stable across all rank counts.\n\n## Results\n- **Hardware:** 8x H100 GPUs\n- **Wallclock:** 550.2 seconds\n- **Final BPB:** 2.5226\n\n**This submission is intended as a high-performance blueprint for further architectural exploration.** \ud83c\udfc1\ud83d\udcc9\ud83c\udfc6\u2728\n"
+}

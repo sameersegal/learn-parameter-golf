@@ -1,0 +1,139 @@
+{
+  "pr_number": 1359,
+  "title": "Record: 0.4188 BPB mixed quant ngram",
+  "author": "LucasErcolano",
+  "status": "closed",
+  "val_bpb": 0.418817,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP int5; attention/embeddings int6"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP widened to 3.0x.",
+        "parameters": {
+          "multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU(0.5)^2.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate module included in the base neural stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash used in the model stack and n-gram context handling.",
+        "parameters": {
+          "size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value-Residual Embeddings with 128 dimensions.",
+        "parameters": {
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization used in the base stack."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Complementary training that down-weights tokens easily predicted by bigram statistics.",
+        "parameters": {
+          "loss_weighting": "1 - alpha * p_bigram(token)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal backoff n-gram mixer with entropy-adaptive blending.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-first, DDP-safe evaluation protocol with synchronization before cache updates.",
+        "parameters": {
+          "ddp_safe": true,
+          "score_first": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Mixed precision quantization with int5 MLP weights and int6 attention/embedding weights",
+    "Complementary training focused on tokens poorly predicted by n-grams",
+    "Strictly causal backoff n-gram mixer with entropy-adaptive blending",
+    "Score-first, DDP-safe cache update protocol for multi-GPU evaluation",
+    "Artifact compression with lzma to fit within the 16MB limit"
+  ],
+  "artifact_size": "15.66 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
