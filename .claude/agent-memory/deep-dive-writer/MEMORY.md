@@ -30,10 +30,15 @@
 
 ## Written Articles (as of April 2026)
 1. **quantization-fundamentals** (order 1) - 4 sections, no LaTeX
-2. **optimizers** (order 3) - 10 sections, uses LaTeX math notation (KaTeX)
-3. **weight-averaging** (order 4) - 12 sections, rewritten April 2026
-4. **test-time-training** (order 6)
-5. **evaluation-strategies** (order 10)
+2. **architecture-tricks** (order 2) - 9 sections (text, animation, code), covers BigramHash, SmearGate, U-Net skips, depth recurrence, GQA, Partial RoPE, XSA, LN Scale
+3. **optimizers** (order 3) - 10 sections, uses LaTeX math notation (KaTeX)
+4. **weight-averaging** (order 4) - 12 sections, rewritten April 2026
+5. **compression** (order 5) - 6 sections (text, code), covers zstd/zlib/lzma comparison, pruning for compressibility, weight ordering
+6. **test-time-training** (order 6)
+7. **learning-rate-schedules** (order 7) - 7 sections (text, animation, code), warmdown focus (3500 steps), cosine decay, WSD, interaction with weight averaging
+8. **initialization** (order 8) - 6 sections (text, code), OrthoInit (171 subs), spectral init, resid mix, overtone init
+9. **regularization** (order 9) - 7 sections, weight decay (266 subs), LN Scale (189 subs), magnitude pruning (52 subs), gradient clipping, logit softcapping, dual generalization+compressibility role
+10. **evaluation-strategies** (order 10)
 
 ## Writing Conventions
 - Section types: "text", "animation", "code", "computation"

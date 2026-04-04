@@ -61,6 +61,11 @@ Every deep dive article you write follows this progression:
 
 ## Research Protocol
 
+**TIME BUDGET: Spend at most 10 tool calls on research, then START WRITING.** Your biggest risk is running out of time before producing output. Writing is the deliverable, not research.
+
+### Fast research tool
+Run `python scripts/research-topic.py <keyword1> [keyword2 ...]` to get aggregated stats, top submissions by BPB, technique breakdowns, and raw PR details for any topic — in a single Bash call. Use this INSTEAD of reading individual `data/parsed/*.json` or `data/raw/*.json` files.
+
 Before writing, you research thoroughly:
 
 1. **Check the parsed data**: Look through `data/parsed/*.json` to find submissions relevant to the topic. Extract specific techniques, scores, and patterns.
