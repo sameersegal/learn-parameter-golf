@@ -126801,5 +126801,314 @@
     "artifact_size": "15.69 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1320,
+    "title": "Non-record: TTT chunk ordering does not improve BPB — negative results from 7 ordering variants",
+    "author": "jpfeiffe",
+    "status": "open",
+    "val_bpb": 1.11961,
+    "architecture": "Transformer",
+    "quantization": "INT6",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU(0.5)^2 activation in the model.",
+          "parameters": {
+            "slope": 0.5,
+            "power": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses a BigramHash embedding component.",
+          "parameters": {
+            "dimensions": 1536
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "per-row"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs_per_chunk": 3,
+            "learning_rate": 0.002,
+            "momentum": 0.9,
+            "all_gpu_per_chunk": true,
+            "full_sequence_loss": true,
+            "skip_final_chunk_training": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "per_chunk": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.9,
+          "other_params": {
+            "learning_rate": 0.002
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "full": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Document ordering by embedding similarity and clustering variants for chunk scheduling, including nearest-neighbor ordering, majority-overlap clustering, microcluster bin-packing, and contiguous shard ordering.",
+          "parameters": {
+            "variants_tested": 7
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Systematic negative-result study of whether chunk ordering improves score-first TTT BPB",
+      "Evaluation of seven ordering and clustering variants for TTT chunk scheduling",
+      "Finding that global nearest-neighbor ordering provides no meaningful improvement over sequential order",
+      "Finding that clustering and sharded execution variants are worse than the sequential baseline",
+      "Analysis showing alignment gating does not beat always-updating TTT"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1321,
+    "title": "Record: SLOT-48 — val_bpb 0.7406 (3-seed mean)",
+    "author": "anthony-maio",
+    "status": "open",
+    "val_bpb": 0.7406,
+    "architecture": "Transformer",
+    "quantization": "int6+lzma",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 96
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SLOT",
+          "description": "Per-sample test-time optimization of a hidden delta and logit bias with frozen model weights.",
+          "parameters": {
+            "hidden_delta_shape": "[bsz, 1, 512]",
+            "logit_bias_shape": "[bsz, 1, 1024]"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 1e-8,
+          "momentum": null,
+          "other_params": {
+            "steps": 48
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Leaky ReLU activation used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-layer MLP.",
+          "parameters": {
+            "layers": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value residual / value embedding enhancement with 128-dimensional setting.",
+          "parameters": {
+            "dimensions": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding with 1024 buckets.",
+          "parameters": {
+            "buckets": 1024
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied across all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embedding.",
+          "parameters": {
+            "partial": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate gating mechanism.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.04
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "start_lr": 0.012,
+            "end_lr": 0.001
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "SLOT-48 test-time optimization with 48 AdamW steps",
+      "Improved val_bpb to 0.7406 using the same model and training as PR #1313",
+      "Scaling SLOT from 24 to 48 steps produced a large BPB gain",
+      "Frozen-model evaluation with per-window throwaway hidden delta and logit bias",
+      "Scored-position masking during SLOT evaluation"
+    ],
+    "artifact_size": "15.75-15.82 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

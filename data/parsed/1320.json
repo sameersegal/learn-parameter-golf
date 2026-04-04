@@ -1,0 +1,111 @@
+{
+  "pr_number": 1320,
+  "title": "Non-record: TTT chunk ordering does not improve BPB \u2014 negative results from 7 ordering variants",
+  "author": "jpfeiffe",
+  "status": "open",
+  "val_bpb": 1.11961,
+  "architecture": "Transformer",
+  "quantization": "INT6",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 activation in the model.",
+        "parameters": {
+          "slope": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a BigramHash embedding component.",
+        "parameters": {
+          "dimensions": 1536
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "per-row"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs_per_chunk": 3,
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "all_gpu_per_chunk": true,
+          "full_sequence_loss": true,
+          "skip_final_chunk_training": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "per_chunk": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "full": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Document ordering by embedding similarity and clustering variants for chunk scheduling, including nearest-neighbor ordering, majority-overlap clustering, microcluster bin-packing, and contiguous shard ordering.",
+        "parameters": {
+          "variants_tested": 7
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Systematic negative-result study of whether chunk ordering improves score-first TTT BPB",
+    "Evaluation of seven ordering and clustering variants for TTT chunk scheduling",
+    "Finding that global nearest-neighbor ordering provides no meaningful improvement over sequential order",
+    "Finding that clustering and sharded execution variants are worse than the sequential baseline",
+    "Analysis showing alignment gating does not beat always-updating TTT"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
