@@ -1,0 +1,118 @@
+{
+  "pr_number": 1330,
+  "title": "[Non-record]: JEPA v2 \u2014JEPA v2 \u2014 Why same-sequence next-k JEPA collapses in causal LMs",
+  "author": "luciobaiocchi",
+  "status": "open",
+  "val_bpb": 1.4617,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "11-layer U-Net Transformer with encoder-decoder skip connections.",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds hashed bigram embeddings to token embeddings before the transformer.",
+        "parameters": {
+          "bigram_vocab_size": 2048,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 in the MLP instead of ReLU^2.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9999
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Diagnoses why single-step same-sequence JEPA collapses in causal language models.",
+    "Introduces a multi-step JEPA objective with offsets [1, 2, 4, 8] and weighted losses.",
+    "Identifies and fixes a gradient accumulation bug where JEPA targets were cached from the wrong micro-batch.",
+    "Adds BigramHash embeddings to inject explicit bigram statistics into the model.",
+    "Uses int6 quantization and LZMA compression to reduce artifact size.",
+    "Uses artifact EMA to smooth the final checkpoint."
+  ],
+  "artifact_size": "8.70 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

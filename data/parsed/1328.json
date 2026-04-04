@@ -1,0 +1,157 @@
+{
+  "pr_number": 1328,
+  "title": "Record: Per-Sample SLOT + TTT + LR=0.024 + Stride=96 \u2014 val_bpb 0.63614 (3-seed mean)",
+  "author": "renqianluo",
+  "status": "closed",
+  "val_bpb": 0.63614,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-sample SLOT optimization with a dedicated hidden-state delta and logit bias for each input sequence",
+        "parameters": {
+          "hidden_state_delta_shape": "[bsz,1,512]",
+          "logit_bias_shape": "[bsz,1,1024]",
+          "params_per_sequence": 1536,
+          "steps": 24
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.024,
+          "lr_min": 0.001,
+          "steps": 24
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 96
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "freeze_blocks": 10
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.024,
+          "end_lr": 0.001
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared MLP activation",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Includes SmearGate in the architecture",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses U-Net style skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE to only part of the embedding dimensions",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a bigram hash table for token interactions",
+        "parameters": {
+          "vocab": 3072,
+          "dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Adds extra self-attention across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Per-sample SLOT optimization with separate parameters for each validation sequence",
+    "Higher SLOT learning rate (0.024) to reach a better per-sequence minimum within the step budget",
+    "Stride=96 sliding window evaluation to reduce evaluation windows and fit more optimization steps",
+    "Test-time training with AdamW and freezing most transformer blocks before SLOT"
+  ],
+  "artifact_size": "15,991,012 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
