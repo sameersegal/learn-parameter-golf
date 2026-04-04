@@ -128873,5 +128873,587 @@
     "artifact_size": "~16.0 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1337,
+    "title": "[Non-Record] LegendreGPT: Legendre polynomial depth parameterization",
+    "author": "sergimichi",
+    "status": "open",
+    "val_bpb": 1.2079,
+    "architecture": "Transformer",
+    "quantization": "mixed int8/int7",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Factorized embedding and tied logit head; layer weights are generated from Legendre polynomial coefficients across depth.",
+          "parameters": {
+            "layers": 24,
+            "groups": 2,
+            "virtual_layers": 24,
+            "degree_attn": 5,
+            "degree_ffn": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "Uses ReLU squared MLP activation.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Rotary positional embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embedding and output head with ALBERT-style factorized embeddings.",
+          "parameters": {
+            "embedding_projection": [
+              1024,
+              128,
+              512
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Feed-forward network uses 3x model dimension.",
+          "parameters": {
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "all 2D weight matrices"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Adam",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings and scalars"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int8/int7",
+          "bits": null,
+          "scope": "Legendre orders and sandwich blocks"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "linear decay",
+          "parameters": {
+            "start": 0.2,
+            "end": 0,
+            "steps": 60000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "cap": 30
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Legendre polynomial depth parameterization for transformer weights",
+      "Two-group architecture to reduce gradient cancellation across layers",
+      "Mixed-precision quantization scheme using INT8 for low-order Legendre coefficients and INT7 for higher orders",
+      "Demonstration that orthogonal polynomial parameterization can work for language models",
+      "ALBERT-style factorized embeddings combined with sandwich-style independent first and last blocks"
+    ],
+    "artifact_size": "15.70 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1338,
+    "title": "Record: SP2048 + 3-Layer Recurrence + SWA + BigramHash + Legal TTT — val_bpb 1.0955 (3-seed mean)",
+    "author": "bigbag",
+    "status": "closed",
+    "val_bpb": 1.0955,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds bigram hash embeddings / n-gram side channel to logits.",
+          "parameters": {
+            "vocab": 2048,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer depth recurrence applied to layers 3, 4, and 5.",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ],
+            "start_step": 3000
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "start_frac": 0.75
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "Uses parallel residual connections starting from layer 7.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.095,
+          "momentum": null,
+          "other_params": {
+            "variant": "MuonEq-R",
+            "qk_gain": 5,
+            "matrix_lr": 0.022
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "full model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SP2048 vocabulary",
+          "description": "Uses a 2048-token SentencePiece BPE vocabulary.",
+          "parameters": {
+            "vocab_size": 2048
+          }
+        }
+      }
+    ],
+    "compression": "Brotli",
+    "novel_contributions": [
+      "First SP2048 submission combining SWA, BigramHash, 3-layer depth recurrence, and legal TTT",
+      "3-layer depth recurrence over layers 3, 4, and 5",
+      "BigramHash embeddings with a 2048-token vocabulary",
+      "Stochastic Weight Averaging starting from fraction 0.75",
+      "Legal score-first test-time training with SGD",
+      "Full GPTQ int6 plus Brotli artifact compression"
+    ],
+    "artifact_size": "~15.49 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1339,
+    "title": "Record: SP2048 + 3-Layer Recurrence + SWA + BigramHash + Legal TTT — val_bpb 1.0955 (3-seed mean)",
+    "author": "bigbag",
+    "status": "open",
+    "val_bpb": 1.0955,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Adds a bigram hash embedding side channel to the logits.",
+          "parameters": {
+            "vocab": 2048,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Uses 3-layer depth recurrence across layers 3, 4, and 5.",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ],
+            "start_step": 3000
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "start_frac": 0.75
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.002,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses SP2048 SentencePiece BPE vocabulary with tied tokenization setup implied by the canonical model family; no explicit weight tying was stated.",
+          "parameters": {
+            "vocab_size": 2048
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "Applies parallel residual connections starting from layer 7.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.095,
+          "momentum": null,
+          "other_params": {
+            "matrix_lr": 0.022,
+            "variant": "MuonEq-R",
+            "qk_gain": 5
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "full model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SP2048 vocabulary",
+          "description": "Uses a 2048-token SentencePiece BPE vocabulary.",
+          "parameters": {
+            "vocab_size": 2048
+          }
+        }
+      }
+    ],
+    "compression": "Brotli",
+    "novel_contributions": [
+      "First SP2048 submission combining SWA, BigramHash, 3-layer depth recurrence, and legal TTT",
+      "3-layer depth recurrence over layers 3, 4, and 5",
+      "BigramHash embeddings with a 2048-token vocabulary",
+      "Stochastic Weight Averaging from fraction 0.75",
+      "Legal score-first test-time training",
+      "Full GPTQ int6 quantization with Brotli compression"
+    ],
+    "artifact_size": "~15.49 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1341,
+    "title": "Non-Record: TTT and GPTQ Are Fundamentally Incompatible — Quantized Weight Structure Defeats Test-Time Adaptation",
+    "author": "himanshudongre",
+    "status": "open",
+    "val_bpb": 1.1,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "rank": 8
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.9,
+          "other_params": {
+            "epochs": 3,
+            "freeze_blocks": 2,
+            "grad_clip": 1
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "chunk_size": 32768
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LoRA",
+          "description": "Rank-8 adapters applied to Q and V projections during test-time training.",
+          "parameters": {
+            "rank": 8,
+            "targets": [
+              "Q",
+              "V"
+            ]
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 32768,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Argues that GPTQ and test-time training are fundamentally incompatible.",
+      "Aggregates evidence across multiple PRs showing TTT helps on simple int6 quantization but not on GPTQ-quantized models.",
+      "Provides a root-cause explanation based on GPTQ's compensatory weight structure being disrupted by SGD updates.",
+      "Reports a rank-8 LoRA TTT experiment on GPTQ weights with negligible BPB improvement.",
+      "Proposes possible fixes such as quantization-aware TTT, structured TTT, and higher-rank LoRA."
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1342,
+    "title": "Submission/mamba ssm byte260",
+    "author": "nicholasbailey87",
+    "status": "open",
+    "val_bpb": 1.4816,
+    "architecture": "Mamba",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder style skip connections with learned skip weights across the 12-block Mamba-2 SSD model.",
+          "parameters": {
+            "layers": 12
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input embeddings and output logits to reduce parameter count.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Mamba",
+          "description": "Modified Mamba-2 SSD architecture with an Achilles' Heel residual bypass around the convolution.",
+          "parameters": {
+            "layers": 12,
+            "d_model": 512,
+            "d_inner": 1024,
+            "d_state": 64,
+            "d_conv": 4,
+            "headdim": 64
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "matrix params"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "scalars/embeddings/SSM params"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Byte-level tokenization with vocab size 260 (4 special tokens + 256 UTF-8 bytes).",
+          "parameters": {
+            "vocab_size": 260
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Pure-PyTorch selective scan implementation without custom CUDA kernels, relying on torch.compile.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "First state-space model submission to Parameter Golf",
+      "Modified Mamba-2 SSD with Achilles' Heel residual bypass fix",
+      "Byte-level tokenization with vocab size 260 to reduce embedding overhead",
+      "U-Net skip connections in a Mamba-based architecture",
+      "Pure-PyTorch selective scan implementation"
+    ],
+    "artifact_size": "~16.6-16.9MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

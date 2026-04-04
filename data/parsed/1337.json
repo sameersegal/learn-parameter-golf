@@ -1,0 +1,145 @@
+{
+  "pr_number": 1337,
+  "title": "[Non-Record] LegendreGPT: Legendre polynomial depth parameterization",
+  "author": "sergimichi",
+  "status": "open",
+  "val_bpb": 1.2079,
+  "architecture": "Transformer",
+  "quantization": "mixed int8/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Factorized embedding and tied logit head; layer weights are generated from Legendre polynomial coefficients across depth.",
+        "parameters": {
+          "layers": 24,
+          "groups": 2,
+          "virtual_layers": 24,
+          "degree_attn": 5,
+          "degree_ffn": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses ReLU squared MLP activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding and output head with ALBERT-style factorized embeddings.",
+        "parameters": {
+          "embedding_projection": [
+            1024,
+            128,
+            512
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Feed-forward network uses 3x model dimension.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "all 2D weight matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int8/int7",
+        "bits": null,
+        "scope": "Legendre orders and sandwich blocks"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear decay",
+        "parameters": {
+          "start": 0.2,
+          "end": 0.0,
+          "steps": 60000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "cap": 30
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Legendre polynomial depth parameterization for transformer weights",
+    "Two-group architecture to reduce gradient cancellation across layers",
+    "Mixed-precision quantization scheme using INT8 for low-order Legendre coefficients and INT7 for higher orders",
+    "Demonstration that orthogonal polynomial parameterization can work for language models",
+    "ALBERT-style factorized embeddings combined with sandwich-style independent first and last blocks"
+  ],
+  "artifact_size": "15.70 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
