@@ -1,0 +1,169 @@
+{
+  "pr_number": 1322,
+  "title": "Lucky V \u2014 1.08540457 val_bpb (seed 444)",
+  "author": "newjordan",
+  "status": "open",
+  "val_bpb": 1.08540457,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "11-layer Transformer with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with 16 dimensions and base 10000",
+        "parameters": {
+          "dimensions": 16,
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU-squared custom activation",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used on all 11 layers with Flash Attention 3",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash table side channel",
+        "parameters": {
+          "dimensions": 128,
+          "vocab": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embeddings on layers 9-10",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_iterations": 7,
+          "muoneq_r": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "steps": 32,
+          "learning_rate": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "MuonEq-R row-normalized momentum before Newton-Schulz orthogonalization",
+    "Per-head QK gain initialized to 5.0",
+    "More Newton-Schulz backend iterations (7 instead of 5)",
+    "SLOT32 test-time adaptation with lr=0.04",
+    "Sliding-window evaluation with SLOT adaptation",
+    "Late QAT with fake int6 quantization",
+    "Bigram hash side channel and value embeddings"
+  ],
+  "artifact_size": "15,438,323 B",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -127110,5 +127110,753 @@
     "artifact_size": "15.75-15.82 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1322,
+    "title": "Lucky V — 1.08540457 val_bpb (seed 444)",
+    "author": "newjordan",
+    "status": "open",
+    "val_bpb": 1.08540457,
+    "architecture": "Transformer",
+    "quantization": "int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "11-layer Transformer with 8 attention heads and 4 KV heads",
+          "parameters": {
+            "layers": 11,
+            "dim": 512,
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Rotary positional embeddings with 16 dimensions and base 10000",
+          "parameters": {
+            "dimensions": 16,
+            "base": 10000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU-squared custom activation",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA attention used on all 11 layers with Flash Attention 3",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash table side channel",
+          "parameters": {
+            "dimensions": 128,
+            "vocab": 2048
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value embeddings on layers 9-10",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "dimensions": 128
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "newton_schulz_iterations": 7,
+            "muoneq_r": true
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "steps": 32,
+            "learning_rate": 0.04
+          }
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "MuonEq-R row-normalized momentum before Newton-Schulz orthogonalization",
+      "Per-head QK gain initialized to 5.0",
+      "More Newton-Schulz backend iterations (7 instead of 5)",
+      "SLOT32 test-time adaptation with lr=0.04",
+      "Sliding-window evaluation with SLOT adaptation",
+      "Late QAT with fake int6 quantization",
+      "Bigram hash side channel and value embeddings"
+    ],
+    "artifact_size": "15,438,323 B",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1323,
+    "title": "REHA-DEQ-WSE: Deep Equilibrium with Weight Synthesis for Parameter-Efficient Language Modeling",
+    "author": "sohv",
+    "status": "open",
+    "val_bpb": 1.1247,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Uses a single layer iterated to a fixed point (Deep Equilibrium) instead of stacking 11 separate layers.",
+          "parameters": {
+            "iterations": 22
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "Weight-Synthesis Engine: a tiny hypernetwork that adapts layer behavior based on input entropy to specialize for code, prose, or tables.",
+          "parameters": {
+            "extra_params": 152000,
+            "bottleneck_dim": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive Self Attention used in the baseline model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Deep Equilibrium model using one layer run repeatedly until convergence",
+      "Weight-Synthesis Engine hypernetwork for input-adaptive parameter modulation",
+      "Fits the model within the 16MB constraint while improving BPB",
+      "Reported reproducible improvement across three random seeds"
+    ],
+    "artifact_size": "6.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1324,
+    "title": "Record: val_bpb 0.8275 (3-seed mean) — SLOT-28 + VRL + QK-Gain 4.0 + XSA-11",
+    "author": "yahya010",
+    "status": "open",
+    "val_bpb": 0.8275,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Residual",
+          "description": "Adds value residual learning with sigmoid-gated interpolation.",
+          "parameters": {
+            "init": -1.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-head subtraction attention applied to all 11 layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses bigram hash embeddings.",
+          "parameters": {
+            "dimensions": [
+              1024,
+              128
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies partial rotary positional embeddings.",
+          "parameters": {
+            "train": 16,
+            "eval": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared MLP activation.",
+          "parameters": {
+            "squared": true,
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Uses VE128 on selected layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Adds U-Net style skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "slot_steps": 28
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "start": 0.012,
+            "end": 0.001
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 96
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 9
+        }
+      }
+    ],
+    "compression": "lzma-9",
+    "novel_contributions": [
+      "SLOT-28 eval-time optimization with 28 AdamW steps",
+      "Value Residual Learning with sigmoid-gated interpolation",
+      "Per-head learnable query scaling (QK-Gain 4.0)",
+      "Cross-head subtraction attention across all 11 layers",
+      "Frozen-model SLOT evaluation with per-window throwaway delta and logit bias"
+    ],
+    "artifact_size": "15.5-15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1325,
+    "title": "Record Submission: Poly5 Softcap + Z-Loss + YaRN + Zstd-22 + Stride-16 (on PR #549 stack)",
+    "author": "monisha-max",
+    "status": "open",
+    "val_bpb": 1.3868,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "type": "poly5"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "type": "z-loss",
+            "weight": 0.0001
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "YaRN positional encoding for improved frequency interpolation",
+          "parameters": {
+            "max_len": 2048
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 16
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "FA3/FA2/SDPA fallback for broader GPU compatibility",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "adaptive focal loss",
+          "parameters": {
+            "gamma": 1
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int4",
+          "bits": 6,
+          "scope": "weights"
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Residual vector quantization using int6 base plus int4 residual",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Progressive depth warmup with staged layer freezing/unfreezing during training",
+          "parameters": {
+            "stages": 3
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram vocabulary embedding component",
+          "parameters": {
+            "size": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate embedding/attention component",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style encoder-decoder skip connections with learned skip weights",
+          "parameters": {
+            "encoders": 5,
+            "decoders": 6
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared MLP activation",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross/self attention variant used in the last 4 layers",
+          "parameters": {
+            "last_layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value embeddings at later layers",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "ema_decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 3500
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": 2048
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Adaptive focal cross-entropy loss",
+      "Residual vector quantization",
+      "Progressive depth warmup",
+      "Poly5 softcap",
+      "Z-loss regularization",
+      "YaRN positional encoding",
+      "zstd-22 compression",
+      "Sliding eval stride=16",
+      "FA3/FA2/SDPA fallback"
+    ],
+    "artifact_size": "7.0 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1326,
+    "title": "Record: SP4096 + Depth Recurrence + Parallel Residuals + MuonEq-R + Legal TTT — val_bpb 1.0896 (3-seed mean)",
+    "author": "aryanbhosale",
+    "status": "open",
+    "val_bpb": 1.0896,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "MuonEq-R",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Recurrence applied to selected layers during training/inference.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "Parallel residual pathway introduced starting from a later layer.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP4x",
+          "description": "Expanded MLP width to 4x.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.09
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "MuonEq-R",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli + lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "enabled": true,
+            "learning_rate": 0.002,
+            "epochs": 3,
+            "chunk_tokens": 32768,
+            "freeze_blocks": 0
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "brotli + lzma",
+    "novel_contributions": [
+      "SP4096 setup with 4096-vocab and widened MLP",
+      "Depth recurrence on layers 4 and 5",
+      "Parallel residuals starting from layer 7",
+      "MuonEq-R optimizer",
+      "QK-Gain 5.0",
+      "Legal score-first test-time training",
+      "GPTQ int6 model compression with Brotli/LZMA wrapper"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
