@@ -1,0 +1,132 @@
+{
+  "pr_number": 1316,
+  "title": "Full-Depth MLP Megakernel + Fused Attention Preprocessing (non-record)",
+  "author": "AR6420",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention used throughout the model.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component for token representation.",
+        "parameters": {
+          "vocab_size": 3072,
+          "dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embedding applied to only part of each head dimension.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value Embeddings used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Full-depth MLP megakernel that fuses RMSNorm, gate projection, LeakyReLU^2, down projection, and residual add into one Triton kernel.",
+    "Tiled register accumulation for the 1536-dim MLP intermediate, avoiding HBM materialization.",
+    "Fused attention preprocessing for QK RMSNorm, partial RoPE, and q_gain in two Triton kernels.",
+    "Reported 41% peak memory reduction versus the baseline.",
+    "Identified that replacing large cuBLAS GEMMs with many small Triton dot calls is slower on consumer GPUs."
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,199 @@
+{
+  "pr_number": 1319,
+  "title": "Record: 11L LeakyReLU\u00b2 XSA-all GPTQ-AR SLOT64 \u2014 0.6951 BPB",
+  "author": "canivel",
+  "status": "open",
+  "val_bpb": 0.6951,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation used in the feedforward network.",
+        "parameters": {
+          "layers": 11,
+          "model_dim": 512,
+          "mlp_expansion": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used as an auxiliary architectural component.",
+        "parameters": {
+          "buckets": 3072,
+          "dimensions": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections in the model.",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP+attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.92,
+        "other_params": {
+          "lr": 0.025,
+          "momentum_schedule_end": 0.99,
+          "momentum_schedule_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "embed_lr": 0.035,
+          "scalar_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "seq_len": 2048
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "steps": 64,
+          "warmstart_alpha": 0.85,
+          "learning_rate_start": 0.01,
+          "learning_rate_end": 0.001
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "SLOT with warmstart across adjacent evaluation windows",
+    "Autoregressive self-generated GPTQ calibration tokens",
+    "Full Hessian GPTQ with Cholesky error compensation and Hessian-diagonal column reordering",
+    "Int6 MLP+attention quantization with Int8 embeddings under a 16 MB artifact budget"
+  ],
+  "artifact_size": "15.69 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

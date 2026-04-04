@@ -1,0 +1,182 @@
+{
+  "pr_number": 1318,
+  "title": "Record: TTT-AdamW + SLOT L-BFGS25 LogitDelta + GPTQ DAMP=0.005 \u2014 val_bpb 1.00955",
+  "author": "renqianluo",
+  "status": "open",
+  "val_bpb": 1.00955,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.001,
+          "epochs": 1,
+          "frozen_blocks": "0-9"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Sliding-window logit-space delta optimization with L-BFGS warm-start and focal loss on the last 128 tokens per window",
+        "parameters": {
+          "method": "L-BFGS25",
+          "history": 20,
+          "warm_start": true,
+          "delta_clip": 5,
+          "logit_space": true,
+          "focal_tokens": 128
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "delta_clip": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding/vocabulary component",
+        "parameters": {
+          "shape": "3072x112"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention",
+        "parameters": {
+          "heads": "8/4"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate gating mechanism",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections across layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 4000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window_size": 2048,
+          "focal_tokens": 128
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Test-time training with AdamW on the test sequence before scoring",
+    "Sliding-window logit-space delta optimization using L-BFGS with warm-start",
+    "Using GPTQ with reduced damping (0.005) to improve int6 quantization quality",
+    "Combining TTT, SLOT, and GPTQ into a single high-performing evaluation pipeline"
+  ],
+  "artifact_size": "~15.71 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
