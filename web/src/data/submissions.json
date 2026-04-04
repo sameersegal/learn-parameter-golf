@@ -129848,5 +129848,402 @@
     "artifact_size": "3,591,303 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1350,
+    "title": "Record: L-BFGS Causal SLOT — val_bpb 1.0046 (3-seed mean)",
+    "author": "resouer",
+    "status": "open",
+    "val_bpb": 1.0046,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Parallel Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "training": "used for base training"
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "AdamW TTT",
+          "parameters": {
+            "epochs": 6,
+            "freeze_first_blocks": 2
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "L-BFGS",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "max_iter": 25,
+            "history": 20,
+            "line_search": "strong_wolfe",
+            "space": "logit",
+            "warm_start": true,
+            "delta_clamp": 5,
+            "focal_loss_last_tokens": 128,
+            "causal": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "BigramHash 2048x128 used in the base model stack",
+          "parameters": {
+            "dimensions": "2048x128"
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "damp": 0.005
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Causal L-BFGS SLOT in logit space",
+      "Optimization restricted to already-scored context positions only",
+      "Provably causal SLOT mechanism that avoids future-token leakage",
+      "Pre-quant AdamW test-time training before GPTQ",
+      "Coprime-stride multi-shard data loader",
+      "Configuration tuning with QK_GAIN, warmdown, and GPTQ damping"
+    ],
+    "artifact_size": "~15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1351,
+    "title": "Record: Discriminative TTT — val_bpb 1.0807 (3-seed mean)",
+    "author": "resouer",
+    "status": "open",
+    "val_bpb": 1.0807,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "timing": "pre-quantization",
+            "epochs": 10,
+            "freeze": 0,
+            "per_block_lr_scaling": {
+              "start": 0.3,
+              "end": 1,
+              "interpolation": "linear"
+            }
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "phase": "pre-quant TTT"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Base model uses BigramHash 2048x128",
+          "parameters": {
+            "dimensions": 2048,
+            "width": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Base model uses XSA-all attention variant",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Base model uses grouped query attention",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "parallel": true
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Discriminative test-time training with per-block adaptive learning rates",
+      "Linear LR interpolation across transformer blocks from 0.3x to 1.0x",
+      "Freeze=0 all-block adaptation during pre-quant TTT",
+      "Coprime-stride multi-shard data loader with weighted random shard sampling",
+      "Improved configuration using QK_GAIN=5.0, WARMDOWN=4000, and GPTQ damp=0.005"
+    ],
+    "artifact_size": "~15.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1352,
+    "title": "Add non-record submission: Multi-model cross-attention with dimensional asymmetry",
+    "author": "alientony",
+    "status": "open",
+    "val_bpb": 1.245,
+    "architecture": "Hybrid",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "multi-model single representation",
+          "description": "Three different model types share a single representation and interact via cross-attention across asymmetric dimensions.",
+          "parameters": {
+            "num_models": 3,
+            "model_types": [
+              "transformer",
+              "mlp",
+              "causal_depthwise"
+            ],
+            "model_dims": [
+              468,
+              198,
+              186
+            ],
+            "shared_representation_dim": 852,
+            "cross_attention_dim": 480
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Recurrence is used to reinforce model behavior across steps.",
+          "parameters": {
+            "recurrence": 1
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Attention uses a reduced number of KV heads.",
+          "parameters": {
+            "heads": 6,
+            "kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "conv kernel",
+          "description": "Convolutional kernel size used in the architecture.",
+          "parameters": {
+            "kernel_size": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "layers",
+          "description": "Model depth used in the submission.",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Multi-model architecture with a shared representation",
+      "Cross-attention across asymmetric model dimensions",
+      "Combining transformer, MLP, and causal_depthwise models",
+      "Observation that loss curve shape is largely determined by model dimension",
+      "Improved convergence quality and stability through complementary model-type pairing"
+    ],
+    "artifact_size": "~13.6 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1353,
+    "title": "Non-record: 11L XSA-All + EMA + Legal GPTQ on 1xH100 PCIe (1.1546 bpb)",
+    "author": "Rtx09x",
+    "status": "open",
+    "val_bpb": 1.15466807,
+    "architecture": "Transformer",
+    "quantization": "GPTQ 6-bit",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "All-layer XSA architecture variant used in the submitted model.",
+          "parameters": {
+            "layers": 11,
+            "scope": "all"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "higher_than_default": true
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "11-layer XSA-all model variant",
+      "EMA during training",
+      "Legal self-generated GPTQ export",
+      "Hardened GPTQ export with Cholesky retry and damping for non-PD Hessians",
+      "Fallback to percentile int6 quantization when Hessian factorization fails",
+      "Explicit pre-quant checkpoint saved before export",
+      "Non-record unlimited-compute submission under the 16MB cap"
+    ],
+    "artifact_size": "15,243,770 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

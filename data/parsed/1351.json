@@ -1,0 +1,114 @@
+{
+  "pr_number": 1351,
+  "title": "Record: Discriminative TTT \u2014 val_bpb 1.0807 (3-seed mean)",
+  "author": "resouer",
+  "status": "open",
+  "val_bpb": 1.0807,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "timing": "pre-quantization",
+          "epochs": 10,
+          "freeze": 0,
+          "per_block_lr_scaling": {
+            "start": 0.3,
+            "end": 1.0,
+            "interpolation": "linear"
+          }
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "phase": "pre-quant TTT"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Base model uses BigramHash 2048x128",
+        "parameters": {
+          "dimensions": 2048,
+          "width": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Base model uses XSA-all attention variant",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Base model uses grouped query attention",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parallel": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Discriminative test-time training with per-block adaptive learning rates",
+    "Linear LR interpolation across transformer blocks from 0.3x to 1.0x",
+    "Freeze=0 all-block adaptation during pre-quant TTT",
+    "Coprime-stride multi-shard data loader with weighted random shard sampling",
+    "Improved configuration using QK_GAIN=5.0, WARMDOWN=4000, and GPTQ damp=0.005"
+  ],
+  "artifact_size": "~15.8 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
