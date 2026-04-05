@@ -133159,5 +133159,325 @@
     "artifact_size": "~15.88 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1385,
+    "title": "Non-record: Compressor-Aware Training (CAT), differentiable compression proxies for LZ-family compressors",
+    "author": "korentomas",
+    "status": "open",
+    "val_bpb": 1.4465,
+    "architecture": "Transformer",
+    "quantization": "int8 QAT",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Transformer uses grouped query attention with 14 attention heads and 2 KV heads.",
+          "parameters": {
+            "heads": 14,
+            "kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "4 physical transformer layers are looped 3 times for 12 effective layers.",
+          "parameters": {
+            "physical_layers": 4,
+            "loops": 3,
+            "effective_layers": 12
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LoRA",
+          "description": "Per-loop LoRA adapters are used in the recurrent transformer.",
+          "parameters": {
+            "rank": 16
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "cooldown": true
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "compression-aware regularization",
+          "parameters": {
+            "lambda_lz": 0.01,
+            "lambda_h": 0.1
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Differentiable proxy losses for LZ-family dictionary matching and entropy coding during training",
+      "Multi-lag soft autocorrelation proxy for LZ77-style dictionary matching on serialized quantized weights",
+      "Soft histogram Shannon entropy proxy for entropy coding friendliness",
+      "Compression-aware training that jointly optimizes model quality and artifact compressibility",
+      "Reported artifact size reduction from 12.32 MB to 11.48 MB on 1xH100"
+    ],
+    "artifact_size": "11.48 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1386,
+    "title": "Non-record submission: 11L XSA4 + EMA + BigramHash3072 + LZMA (1.1452 BPB)",
+    "author": "Buld1n",
+    "status": "open",
+    "val_bpb": 1.14523122,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA enabled on the last 4 transformer layers",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding used in the model",
+          "parameters": {
+            "vocab_size": 3072,
+            "dim": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embeddings applied to a subset of dimensions",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value Residual / VE enabled on selected layers",
+          "parameters": {
+            "dim": 128,
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "MLP uses lrelu2 activation with slope 0.5",
+          "parameters": {
+            "slope": 0.5,
+            "mult": 3
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "decay": 0.997,
+            "start_step": 0,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "export"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 4000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "matrix_lr": 0.025,
+            "scalar_lr": 0.025,
+            "head_lr": 0.008,
+            "tied_embed_lr": 0.035,
+            "muon_momentum_warmup_start": 0.92,
+            "muon_momentum_warmup_steps": 1500
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "11-layer XSA-based Transformer run packaged as a compliant non-record submission",
+      "BigramHash(3072, 112) configuration",
+      "EMA + SWA training setup",
+      "late QAT with int6 export",
+      "lzma artifact compression to fit under the 16MB cap",
+      "sliding-window evaluation with stride 64"
+    ],
+    "artifact_size": "15,616,435 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1387,
+    "title": "Non-record submission: Depth-Recurrent U-Net Transformer",
+    "author": "Muhammad-Ahmed-Rayyan",
+    "status": "open",
+    "val_bpb": 1.2919,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Reuses shared transformer blocks across depth instead of using independent layers.",
+          "parameters": {
+            "num_recurrences": 9
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Shares weights across repeated encoder and decoder blocks.",
+          "parameters": {
+            "shared_blocks": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Preserves the baseline U-Net encoder-decoder skip structure with unique skip weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses grouped key/value heads in the transformer configuration.",
+          "parameters": {
+            "num_heads": 16,
+            "num_kv_heads": 8
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Depth-recurrent U-Net transformer using weight-tied encoder and decoder blocks",
+      "Application of the Universal Transformer idea to the challenge baseline",
+      "Reallocation of parameter budget from depth diversity to wider representations",
+      "Preservation of U-Net skip connections with shared recurrent blocks"
+    ],
+    "artifact_size": "14.43MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
