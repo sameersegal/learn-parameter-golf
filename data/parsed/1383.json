@@ -1,0 +1,197 @@
+{
+  "pr_number": 1383,
+  "title": "Non-record: Neuromodulatory Depth-Recurrent Transformer with FiLM-only TTT (WIP, val_bpb=1.3151)",
+  "author": "nirmathur",
+  "status": "open",
+  "val_bpb": 1.3151,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shares transformer block weights across repeated virtual layers to reduce parameters while preserving depth.",
+        "parameters": {
+          "physical_blocks": 9,
+          "virtual_layers": 11,
+          "shared_blocks": [
+            "3-4",
+            "9-10"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Partial weight sharing between selected transformer blocks.",
+        "parameters": {
+          "shared_pairs": [
+            "3-4",
+            "9-10"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FiLM",
+        "description": "Per-loop scale/shift conditioning vectors used to distinguish repeated executions of shared blocks.",
+        "parameters": {
+          "pairs": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the base stack.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last virtual layers.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component in the base stack.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value enhancement module enabled on later layers.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections retained from the PR #549 stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6 QAT",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "FiLM-only TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "used_for": "FiLM parameters"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Depth-recurrent transformer with partial weight sharing across selected blocks",
+    "FiLM conditioning vectors to disambiguate repeated shared-block iterations",
+    "FiLM-only test-time training for shared blocks to avoid gradient compounding",
+    "Improved val_bpb with fewer parameters than the PR #549 baseline"
+  ],
+  "artifact_size": "12.87 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

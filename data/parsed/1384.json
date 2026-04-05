@@ -1,0 +1,147 @@
+{
+  "pr_number": 1384,
+  "title": "Progressive Depth + Hedge Mixer \u2014 val_bpb 1.1441 (3-seed mean)",
+  "author": "iverbovoy",
+  "status": "open",
+  "val_bpb": 1.1441,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 shared transformer blocks repeated across 4 repeats with cross-repeat skip connections, loop embeddings, and value embeddings.",
+        "parameters": {
+          "layers": 3,
+          "repeats": 4,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied on the last 4 effective layers to reduce attention collapse in deep recurrent models.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation used to improve gradient flow in deep/recurrent models.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared weights across repeated blocks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram-based hashed context used as part of the Hedge Mixer evaluation ensemble.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hashed trigram context used as part of the Hedge Mixer evaluation ensemble.",
+        "parameters": {
+          "buckets": 65000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "matrix_params": "Muon",
+          "scalar_params": "Adam",
+          "tied_embed_lr": 0.015
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start": "warmdown",
+          "interval_steps": 50,
+          "checkpoints_averaged": "13-16"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hedge Mixer online ensemble evaluation combining neural, unigram, bigram, trigram, and entropy experts.",
+        "parameters": {
+          "experts": 5,
+          "eta": 0.1,
+          "initial_log_weight_neural": 2.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Progressive depth training with increasing repeats over time",
+    "Depth recurrence with shared blocks, cross-repeat skip connections, loop embeddings, and value embeddings",
+    "Hedge Mixer 5-expert online ensemble for evaluation-time improvement",
+    "Clean 3-seed validation of the submission"
+  ],
+  "artifact_size": "~15.88 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
