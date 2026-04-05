@@ -1,0 +1,146 @@
+{
+  "pr_number": 1370,
+  "title": "Non-record: 10L Gated DeltaNet (PureGDN) \u2014 val_bpb 1.003028 (3-seed mean, legal TTT)",
+  "author": "Christopher-Lee-McClendon",
+  "status": "open",
+  "val_bpb": 1.003028,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated DeltaNet",
+        "description": "Replaced softmax attention with Gated DeltaNet linear attention in all 10 layers.",
+        "parameters": {
+          "layers": 10,
+          "dim": 512,
+          "heads": 1,
+          "expand_k": 1,
+          "expand_v": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Used BigramHash embeddings with trigram extension for cheap n-gram context.",
+        "parameters": {
+          "vocab": 3072,
+          "dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Added an additive trigram hash channel on top of BigramHash features.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.95,
+          "start_step": 3500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "checkpoints": 12,
+          "start_step": 6450
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "momentum": 0.9,
+          "learning_rate": 0.002,
+          "epochs_per_chunk": 3,
+          "chunk_size": 32768,
+          "freeze_first_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Replaced softmax attention with Gated DeltaNet (PureGDN) across all 10 layers.",
+    "Achieved a 1.003028 BPB 3-seed mean under the 16 MB artifact cap.",
+    "Added a trigram hash extension on top of BigramHash embeddings.",
+    "Demonstrated legal score-first TTT with SGD momentum on a linear-attention backbone.",
+    "Combined EMA, SWA, late QAT, GPTQ int6, and zstd-22 compression in one submission."
+  ],
+  "artifact_size": "15.17 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

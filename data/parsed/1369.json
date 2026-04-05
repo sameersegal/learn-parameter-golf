@@ -1,0 +1,119 @@
+{
+  "pr_number": 1369,
+  "title": "Non-record: Negative results from gated multi-order hash n-grams",
+  "author": "xiayicheng3-code",
+  "status": "open",
+  "val_bpb": 1.11959957,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Multi-order hash n-gram prior replacing or extending the baseline bigram hash embedding with 2/3/4-gram hashed features and gating.",
+        "parameters": {
+          "orders": [
+            2,
+            3,
+            4
+          ],
+          "hashes": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Earlier variant used multiple hash heads per n-gram order with hard top-1 routing / candidate-level gating.",
+        "parameters": {
+          "hashes": [
+            2,
+            2,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "selective": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "repeat penalty",
+        "parameters": {
+          "strength": "mild"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Prompt-bank autoregressive calibration source for GPTQ calibration.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Next-shard prefetch to reduce training-time and post-processing I/O stalls.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Asynchronous logging to reduce hidden runtime overhead.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Documented negative results showing that gated multi-order hash n-grams did not beat the BigramHash baseline in the 10 minute / 16 MB regime.",
+    "Showed that the best legal variant came from removing same-order hash competition with NGRAM_NUM_HASHES=1,1,1.",
+    "Found that tail-loss emphasis did not improve the roundtrip-to-sliding advantage.",
+    "Added practical experimentation improvements including prompt-bank AR calibration, printed AR calibration outputs, next-shard prefetch, async logging, and faster selective-prune search.",
+    "Argued that stable hash collisions may act as useful pseudo-identity features rather than pure noise."
+  ],
+  "artifact_size": "15,937,956 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

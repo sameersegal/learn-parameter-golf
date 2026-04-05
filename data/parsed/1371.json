@@ -1,0 +1,129 @@
+{
+  "pr_number": 1371,
+  "title": "Non-record: Olmo Hybrid (GDN + Attention) for long-context training \u2014 8k/16k/32k crossover study",
+  "author": "aarjunsrinivasan",
+  "status": "open",
+  "val_bpb": 1.4709,
+  "architecture": "Hybrid",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated DeltaNet",
+        "description": "Replaces most attention layers with Gated DeltaNet linear-recurrent layers in an Olmo Hybrid-style interleaving pattern.",
+        "parameters": {
+          "layers": 9,
+          "gdn_layers": 7,
+          "attention_layers": 2,
+          "ratio": "3:1",
+          "head_dim_ratio": 0.75,
+          "expand_v": 2.0,
+          "conv_size": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention in the attention layers.",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Retains the U-Net style skip/residual structure from the baseline transformer.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92,
+          "tied_embed_lr": 0.03,
+          "matrix_lr": 0.02,
+          "scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 158,
+          "max_wallclock_seconds": 600
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": 8192
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 16384,
+        "eval_length": 16384
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Introduces an Olmo Hybrid-style GDN + attention architecture for parameter-golf long-context training.",
+    "Shows a clear performance crossover between 8k and 16k context where the hybrid begins outperforming full attention.",
+    "Demonstrates that the hybrid avoids the baseline's 32k long-context blow-up under the same 600-second wall-clock budget.",
+    "Uses multi-seed runs to quantify variance at 16k and 32k context lengths.",
+    "Provides reproduction scripts, logs, and a detailed long-context study within the 16MB artifact limit."
+  ],
+  "artifact_size": "14.06MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

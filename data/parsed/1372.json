@@ -1,0 +1,105 @@
+{
+  "pr_number": 1372,
+  "title": "V20: Cascaded 2-Phase L-BFGS Causal SLOT (1.00497 BPB, 3-seed)",
+  "author": "Bortlesboat",
+  "status": "open",
+  "val_bpb": 1.00497477,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "L-BFGS",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component in the backbone stack.",
+        "parameters": {
+          "dimensions": 3072,
+          "window": 112
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "full Hessian model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "L-BFGS Causal SLOT",
+        "parameters": {
+          "history_size": 20,
+          "causal_mask": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "Cascaded 2-Phase L-BFGS",
+        "parameters": {
+          "phase1_iters": 5,
+          "phase1_history": 10,
+          "phase2_iters": 18,
+          "phase2_history": 20,
+          "history_reset_between_phases": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "Discriminative per-block pre-quant TTT",
+        "parameters": {
+          "graduated_lr": "0.3x->1.0x",
+          "layer_groups": 10
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 128,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal optimization mask restricted to already-scored tokens only.",
+        "parameters": {
+          "opt_mask_range": "[focal_start, s)"
+        }
+      }
+    }
+  ],
+  "compression": "brotli+lzma",
+  "novel_contributions": [
+    "Cascaded 2-phase L-BFGS with a coarse phase followed by a refinement phase",
+    "Resetting L-BFGS history between phases while warm-starting the delta tensor",
+    "Causal SLOT evaluation that only optimizes on already-scored tokens",
+    "Combining L-BFGS Causal SLOT with discriminative per-block pre-quant TTT",
+    "Reported faster eval with lower L-BFGS work than the single-phase baseline"
+  ],
+  "artifact_size": "15,854,022 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

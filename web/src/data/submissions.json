@@ -131632,5 +131632,504 @@
     "artifact_size": "13.3 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1369,
+    "title": "Non-record: Negative results from gated multi-order hash n-grams",
+    "author": "xiayicheng3-code",
+    "status": "open",
+    "val_bpb": 1.11959957,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Multi-order hash n-gram prior replacing or extending the baseline bigram hash embedding with 2/3/4-gram hashed features and gating.",
+          "parameters": {
+            "orders": [
+              2,
+              3,
+              4
+            ],
+            "hashes": [
+              1,
+              1,
+              1
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Earlier variant used multiple hash heads per n-gram order with hard top-1 routing / candidate-level gating.",
+          "parameters": {
+            "hashes": [
+              2,
+              2,
+              2
+            ]
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "magnitude pruning",
+          "parameters": {
+            "selective": true
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "repeat penalty",
+          "parameters": {
+            "strength": "mild"
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Prompt-bank autoregressive calibration source for GPTQ calibration.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Next-shard prefetch to reduce training-time and post-processing I/O stalls.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Asynchronous logging to reduce hidden runtime overhead.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Documented negative results showing that gated multi-order hash n-grams did not beat the BigramHash baseline in the 10 minute / 16 MB regime.",
+      "Showed that the best legal variant came from removing same-order hash competition with NGRAM_NUM_HASHES=1,1,1.",
+      "Found that tail-loss emphasis did not improve the roundtrip-to-sliding advantage.",
+      "Added practical experimentation improvements including prompt-bank AR calibration, printed AR calibration outputs, next-shard prefetch, async logging, and faster selective-prune search.",
+      "Argued that stable hash collisions may act as useful pseudo-identity features rather than pure noise."
+    ],
+    "artifact_size": "15,937,956 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1370,
+    "title": "Non-record: 10L Gated DeltaNet (PureGDN) — val_bpb 1.003028 (3-seed mean, legal TTT)",
+    "author": "Christopher-Lee-McClendon",
+    "status": "open",
+    "val_bpb": 1.003028,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated DeltaNet",
+          "description": "Replaced softmax attention with Gated DeltaNet linear attention in all 10 layers.",
+          "parameters": {
+            "layers": 10,
+            "dim": 512,
+            "heads": 1,
+            "expand_k": 1,
+            "expand_v": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Used BigramHash embeddings with trigram extension for cheap n-gram context.",
+          "parameters": {
+            "vocab": 3072,
+            "dim": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TrigramHash",
+          "description": "Added an additive trigram hash channel on top of BigramHash features.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.95,
+            "start_step": 3500
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "checkpoints": 12,
+            "start_step": 6450
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "momentum": 0.9,
+            "learning_rate": 0.002,
+            "epochs_per_chunk": 3,
+            "chunk_size": 32768,
+            "freeze_first_blocks": 2
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 32768
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.9,
+          "other_params": {
+            "learning_rate": 0.002
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Replaced softmax attention with Gated DeltaNet (PureGDN) across all 10 layers.",
+      "Achieved a 1.003028 BPB 3-seed mean under the 16 MB artifact cap.",
+      "Added a trigram hash extension on top of BigramHash embeddings.",
+      "Demonstrated legal score-first TTT with SGD momentum on a linear-attention backbone.",
+      "Combined EMA, SWA, late QAT, GPTQ int6, and zstd-22 compression in one submission."
+    ],
+    "artifact_size": "15.17 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1371,
+    "title": "Non-record: Olmo Hybrid (GDN + Attention) for long-context training — 8k/16k/32k crossover study",
+    "author": "aarjunsrinivasan",
+    "status": "open",
+    "val_bpb": 1.4709,
+    "architecture": "Hybrid",
+    "quantization": "int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated DeltaNet",
+          "description": "Replaces most attention layers with Gated DeltaNet linear-recurrent layers in an Olmo Hybrid-style interleaving pattern.",
+          "parameters": {
+            "layers": 9,
+            "gdn_layers": 7,
+            "attention_layers": 2,
+            "ratio": "3:1",
+            "head_dim_ratio": 0.75,
+            "expand_v": 2,
+            "conv_size": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped-query attention in the attention layers.",
+          "parameters": {
+            "q_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Retains the U-Net style skip/residual structure from the baseline transformer.",
+          "parameters": {
+            "layers": 9
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses rotary positional embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_momentum_start": 0.92,
+            "tied_embed_lr": 0.03,
+            "matrix_lr": 0.02,
+            "scalar_lr": 0.02
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmup_steps": 20,
+            "warmdown_iters": 158,
+            "max_wallclock_seconds": 600
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 8192,
+          "eval_length": 8192
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 16384,
+          "eval_length": 16384
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 32768,
+          "eval_length": 32768
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Introduces an Olmo Hybrid-style GDN + attention architecture for parameter-golf long-context training.",
+      "Shows a clear performance crossover between 8k and 16k context where the hybrid begins outperforming full attention.",
+      "Demonstrates that the hybrid avoids the baseline's 32k long-context blow-up under the same 600-second wall-clock budget.",
+      "Uses multi-seed runs to quantify variance at 16k and 32k context lengths.",
+      "Provides reproduction scripts, logs, and a detailed long-context study within the 16MB artifact limit."
+    ],
+    "artifact_size": "14.06MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1372,
+    "title": "V20: Cascaded 2-Phase L-BFGS Causal SLOT (1.00497 BPB, 3-seed)",
+    "author": "Bortlesboat",
+    "status": "open",
+    "val_bpb": 1.00497477,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "L-BFGS",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding component in the backbone stack.",
+          "parameters": {
+            "dimensions": 3072,
+            "window": 112
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "full Hessian model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "L-BFGS Causal SLOT",
+          "parameters": {
+            "history_size": 20,
+            "causal_mask": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "Cascaded 2-Phase L-BFGS",
+          "parameters": {
+            "phase1_iters": 5,
+            "phase1_history": 10,
+            "phase2_iters": 18,
+            "phase2_history": 20,
+            "history_reset_between_phases": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "Discriminative per-block pre-quant TTT",
+          "parameters": {
+            "graduated_lr": "0.3x->1.0x",
+            "layer_groups": 10
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 128,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Causal optimization mask restricted to already-scored tokens only.",
+          "parameters": {
+            "opt_mask_range": "[focal_start, s)"
+          }
+        }
+      }
+    ],
+    "compression": "brotli+lzma",
+    "novel_contributions": [
+      "Cascaded 2-phase L-BFGS with a coarse phase followed by a refinement phase",
+      "Resetting L-BFGS history between phases while warm-starting the delta tensor",
+      "Causal SLOT evaluation that only optimizes on already-scored tokens",
+      "Combining L-BFGS Causal SLOT with discriminative per-block pre-quant TTT",
+      "Reported faster eval with lower L-BFGS work than the single-phase baseline"
+    ],
+    "artifact_size": "15,854,022 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
