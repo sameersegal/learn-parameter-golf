@@ -130817,5 +130817,820 @@
     "artifact_size": "16,050,780 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1361,
+    "title": "1.1220 bpb: GPTQ + EMA + XSA-all + BigramHash3072 (11L 512dim)",
+    "author": "jorge-asenjo",
+    "status": "open",
+    "val_bpb": 1.122,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Token-pair hash embeddings for richer input representation.",
+          "parameters": {
+            "buckets": 3072,
+            "dims": 112
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Learned token-level blending with previous position.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder style skip connections across layers.",
+          "parameters": {
+            "encoder_layers": 5,
+            "decoder_layers": 6,
+            "skip_weights": 5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Embedding",
+          "description": "Shared value embedding table injected into attention values at later layers.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ],
+            "table_shape": "1024x128"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Exclusive Self-Attention applied to all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary embeddings applied to a subset of head dimensions.",
+          "parameters": {
+            "rotary_dims": 16,
+            "head_dims": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with fewer KV heads than query heads.",
+          "parameters": {
+            "query_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-times expanded MLP with LeakyReLU² activation.",
+          "parameters": {
+            "activation": "LeakyReLU²"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "MLP + attention weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 6,
+          "scope": "final warmdown phase"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 32,
+            "seq_len": 2048
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": 2048
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.99,
+          "other_params": {
+            "ns_steps": 5,
+            "lr": 0.025
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "lr_embeddings": 0.035,
+            "lr_scalars": 0.025
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmup_steps": 20,
+            "warmdown_iterations": 3200
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "rule": "1/sqrt(layer_idx+1)"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "XSA applied to all 11 layers",
+      "BigramHash token-pair embeddings with 3072 buckets",
+      "GPTQ-based Hessian quantization with late QAT",
+      "EMA-weighted final model",
+      "Value Embedding injected into later attention layers",
+      "U-Net skip connections combined with partial RoPE and SmearGate"
+    ],
+    "artifact_size": "15.1 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1364,
+    "title": "Record: Pre-quant AdamW TTT + QK-Gain 4.0 — val_bpb 1.1025 (3-seed mean)",
+    "author": "stukenov",
+    "status": "open",
+    "val_bpb": 1.1025,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 6,
+            "freeze_first_blocks": 2,
+            "learning_rate_start": 0.0005,
+            "learning_rate_end": 0.00005
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "used_for": "TTT"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "Tight SWA",
+          "parameters": {
+            "every_steps": 50
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Per-head QK gain scaling",
+          "parameters": {
+            "gain": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied to all layers",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared MLP activation",
+          "parameters": {
+            "mlp_multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention",
+          "parameters": {
+            "layers": 11,
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary positional embedding",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "rule": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "VE128 used in selected layers",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate with BigramHash embedding",
+          "parameters": {
+            "embedding_size": "2048x128"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding",
+          "parameters": {
+            "embedding_size": "2048x128"
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Pre-quantization AdamW TTT on the full-precision EMA model before GPTQ",
+      "TTT-adapted weights quantize cleanly after full Hessian GPTQ",
+      "Record val_bpb of 1.1025 with a 3-seed mean",
+      "Combination of pre-quant TTT with QK-Gain 4.0 and full Hessian GPTQ"
+    ],
+    "artifact_size": "15,985,137 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1366,
+    "title": "Non-record: EMA+SWA Tight Averaging with Fused TTT LoRA + Sliding Window (1.1371 BPB)",
+    "author": "yunoshev",
+    "status": "open",
+    "val_bpb": 1.1371,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + SWA",
+          "parameters": {
+            "decay": 0.997,
+            "tight_averaging": true,
+            "collect_from": "EMA state",
+            "qgrid_lambda": false
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "rank": 8,
+            "fused": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 256
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_start_momentum": 0.92,
+            "warmup_steps": 1500,
+            "warmdown_iters": 3500
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "MLP int5, attention int6"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "full Hessians for all tensors"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding component",
+          "parameters": {
+            "size": 4096
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Value embedding / value expansion setting",
+          "parameters": {
+            "dimensions": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA in the last layers",
+          "parameters": {
+            "layers": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embeddings",
+          "parameters": {
+            "percent": 25
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "3x MLP expansion",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 3500
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "EMA + SWA tight averaging with SWA collected from EMA state",
+      "Disabling qgrid_lambda to avoid snapping EMA weights to the quantization grid",
+      "Fused TTT LoRA with sliding window evaluation in a single pass",
+      "Muon optimizer momentum tuning with warmup and warmdown",
+      "Full GPTQ Hessians for all tensors including attention projection and MLP down-projection"
+    ],
+    "artifact_size": "15.88 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1367,
+    "title": "Non-Record: 10L Spatio-Temporal SNN (BPB: 1.3319)",
+    "author": "ieuko",
+    "status": "open",
+    "val_bpb": 1.3319,
+    "architecture": "Transformer",
+    "quantization": "int8 PTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Spiking-MLP",
+          "description": "Replaced the standard MLP with a spiking MLP using discrete leaky integrate-and-fire simulation.",
+          "parameters": {
+            "layers": 10,
+            "dim": 768,
+            "heads": 12,
+            "kv_heads": 4,
+            "T_sim": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RBF",
+          "description": "Parameter-free radial basis function temporal encoding converts token embeddings into spike trains.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with 4 KV heads.",
+          "parameters": {
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ArcTan surrogate gradients",
+          "description": "Uses ArcTan surrogate derivatives to enable backpropagation through binary spike functions.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "homeostatic threshold adaptation",
+          "description": "Dynamic threshold adaptation maintains neuron firing rates around 5%.",
+          "parameters": {
+            "target_firing_rate": 0.05
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Spatio-temporal spiking neural network for autoregressive language modeling",
+      "Spiking-MLP replacing the standard Transformer MLP",
+      "RBF temporal encoding into spike trains",
+      "ArcTan surrogate gradients for BPTT through binary spikes",
+      "Homeostatic threshold adaptation to stabilize firing rates",
+      "Int8 post-training quantization and zlib compression to fit the artifact limit"
+    ],
+    "artifact_size": "15.79 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1368,
+    "title": "non-record submission: mean-delta warm start + depth recurrence for SLOT (0.8503 BPB)",
+    "author": "JKSNS",
+    "status": "open",
+    "val_bpb": 0.8503,
+    "architecture": "Transformer",
+    "quantization": "int6 GPTQ",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Layers 4 and 5 are executed twice per forward pass, creating 13 virtual layers from 11 physical layers with learned per-iteration conditioning.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ],
+            "virtual_layers": 13,
+            "physical_layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "iter_embed",
+          "description": "Learned per-iteration conditioning signal used for repeated layer passes.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "iter_gate",
+          "description": "Learned gate controlling repeated layer passes, initialized to -2.0.",
+          "parameters": {
+            "init": -2
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "label smoothing",
+          "parameters": {
+            "value": 0.1
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+          "parameters": {
+            "query_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA used in all layers.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embeddings.",
+          "parameters": {
+            "vocab": 1024,
+            "dim": 128
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "RoPE applied to a subset of dimensions.",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "U-Net style skip connections with learned gates.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-times wider MLP with 1536 hidden units.",
+          "parameters": {
+            "hidden": 1536
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU activation with squared application.",
+          "parameters": {
+            "slope": 0.5,
+            "squared": true
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 96
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Mean-delta SLOT warm start that carries the decayed mean of previous batch deltas forward to initialize the next batch's SLOT optimization.",
+          "parameters": {
+            "alpha": 0.9,
+            "steps": 32
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Mean-delta warm start for SLOT using the decayed mean of previous batch deltas",
+      "Depth recurrence by repeating layers 4 and 5 to create 13 virtual layers from 11 physical layers",
+      "Learned per-iteration conditioning with iter_embed and iter_gate",
+      "Identification of a label smoothing configuration error that degraded short-horizon training"
+    ],
+    "artifact_size": "13.3 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

@@ -1,0 +1,12 @@
+{
+  "number": 1363,
+  "title": "Add shared compile-cache sweep helper and exploratory byte260 evidence",
+  "author": "divyaprakash0426",
+  "body": "## Summary\n- add `nca_sweep_cluster.py`, a cluster sweep helper that propagates shared `TORCHINDUCTOR_CACHE_DIR` and `TRITON_CACHE_DIR` into each `torchrun` subprocess\n- add `data/tokenizer_specs.byte260_only.json` for byte260-only rebuilds without unnecessary SentencePiece work\n- update `data/README.md` with the byte-only export path\n- include the current `train_gpt.py` snapshot and the completed remote H100 exploratory log used during this setup work\n\n## Experiment evidence included in this PR\nThis PR now includes the actual exploratory RunPod log at `logs/runpod_lossy_byte260_h100.txt` so the remote execution is visible in the PR itself.\n\n- hardware: 1x H100 SXM on RunPod\n- training config: 10 iterations, `NUCLEAR_TTT=1`, `TRAIN_BATCH_TOKENS=16384`, `VAL_BATCH_SIZE=524288`\n- pre-quant metric: `step:10/10 val_bpb:5.9911`\n- final roundtrip metric: `final_int8_zlib_roundtrip_exact val_bpb:5.99546883`\n- compressed model bytes: `12,385,322`\n- total bytes with code: `12,467,666`\n\n## Why this helps\nThese changes are enabling infrastructure for later challenge-valid byte260 runs on H100s.\nThe sweep helper avoids recompiling the same model in every subprocess, and the byte260-only tokenizer config trims setup cost when the goal is a pure byte export.\n\nIncluding the exact `train_gpt.py` snapshot and exploratory log makes the PR self-contained: reviewers can see both the code path and the remote run that validated cache population, export, and end-to-end execution.\n\nBecause `train_gpt.py` keeps per-rank batch shapes constant via `grad_accum_steps = 8 / world_size`, warmed Triton/Inductor caches from 1xH100 should transfer well to 8xH100 when the same global batch settings are used.\n\n## Notes\n- this PR is not a leaderboard claim and does not add a `/records` submission folder\n- the attached H100 log is exploratory evidence only\n- this specific exploratory run used a temporary lossy `sp1024 -> byte260` staging path; the later record attempt will use the official challenge-valid byte260 data pipeline\n- the PR intentionally excludes the broader `documentation/` tree and research notes file\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-04T23:12:15Z",
+  "updated_at": "2026-04-04T23:31:37Z",
+  "submission_readme": null
+}

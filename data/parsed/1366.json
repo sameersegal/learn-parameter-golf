@@ -1,0 +1,147 @@
+{
+  "pr_number": 1366,
+  "title": "Non-record: EMA+SWA Tight Averaging with Fused TTT LoRA + Sliding Window (1.1371 BPB)",
+  "author": "yunoshev",
+  "status": "open",
+  "val_bpb": 1.1371,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "decay": 0.997,
+          "tight_averaging": true,
+          "collect_from": "EMA state",
+          "qgrid_lambda": false
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "fused": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start_momentum": 0.92,
+          "warmup_steps": 1500,
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "MLP int5, attention int6"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "full Hessians for all tensors"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component",
+        "parameters": {
+          "size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding / value expansion setting",
+        "parameters": {
+          "dimensions": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last layers",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "percent": 25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3x MLP expansion",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "EMA + SWA tight averaging with SWA collected from EMA state",
+    "Disabling qgrid_lambda to avoid snapping EMA weights to the quantization grid",
+    "Fused TTT LoRA with sliding window evaluation in a single pass",
+    "Muon optimizer momentum tuning with warmup and warmdown",
+    "Full GPTQ Hessians for all tensors including attention projection and MLP down-projection"
+  ],
+  "artifact_size": "15.88 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

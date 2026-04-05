@@ -1,0 +1,168 @@
+{
+  "pr_number": 1368,
+  "title": "non-record submission: mean-delta warm start + depth recurrence for SLOT (0.8503 BPB)",
+  "author": "JKSNS",
+  "status": "open",
+  "val_bpb": 0.8503,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are executed twice per forward pass, creating 13 virtual layers from 11 physical layers with learned per-iteration conditioning.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "virtual_layers": 13,
+          "physical_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "iter_embed",
+        "description": "Learned per-iteration conditioning signal used for repeated layer passes.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "iter_gate",
+        "description": "Learned gate controlling repeated layer passes, initialized to -2.0.",
+        "parameters": {
+          "init": -2.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "value": 0.1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in all layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embeddings.",
+        "parameters": {
+          "vocab": 1024,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "RoPE applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections with learned gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-times wider MLP with 1536 hidden units.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with squared application.",
+        "parameters": {
+          "slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 96
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Mean-delta SLOT warm start that carries the decayed mean of previous batch deltas forward to initialize the next batch's SLOT optimization.",
+        "parameters": {
+          "alpha": 0.9,
+          "steps": 32
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Mean-delta warm start for SLOT using the decayed mean of previous batch deltas",
+    "Depth recurrence by repeating layers 4 and 5 to create 13 virtual layers from 11 physical layers",
+    "Learned per-iteration conditioning with iter_embed and iter_gate",
+    "Identification of a label smoothing configuration error that degraded short-horizon training"
+  ],
+  "artifact_size": "13.3 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
