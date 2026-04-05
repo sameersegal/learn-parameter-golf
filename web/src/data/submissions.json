@@ -133479,5 +133479,608 @@
     "artifact_size": "14.43MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1389,
+    "title": "Non-record: GPTQ-lite Scale Clamp Fix + 6-bit Packing + Depth Recurrence on Stack B",
+    "author": "Rome-1",
+    "status": "open",
+    "val_bpb": 1.727,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Shared MLP weights across recurrent layers to reuse parameters.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared activation used in the MLP.",
+          "parameters": {
+            "squared": true,
+            "alpha": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary positional embedding applied to a subset of dimensions.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied across all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.085,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ-lite",
+          "bits": 6,
+          "scope": "all int6 tensors"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": null,
+          "scope": "shared layers int8, others int6"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Fixed GPTQ-lite scale clamp for int6 quantization by changing the minimum scale clamp to 1e-7",
+      "Packed 4 int6 values into 3 bytes to reduce artifact size",
+      "Forced int8 quantization for depth-recurrence shared layers to reduce compounded quantization error"
+    ],
+    "artifact_size": null,
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1390,
+    "title": "Non-record: LeakyReLU + Sliding Window Eval + Zstd compression",
+    "author": "NICOH-YAY",
+    "status": "open",
+    "val_bpb": 1.2634,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Changed MLP activation from ReLU² to LeakyReLU(0.5)²",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 256
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "LeakyReLU(0.5)² activation in the MLP",
+      "Sliding window evaluation with stride 256",
+      "Zstd compression at level 22"
+    ],
+    "artifact_size": "15.77MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1391,
+    "title": "[Submission] SwiGLU MLP (under 16MB)",
+    "author": "Abhinav-Avasarala",
+    "status": "closed",
+    "val_bpb": 1.4716,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SwiGLU",
+          "description": "Replaced the baseline ReLU² MLP with a SwiGLU-based MLP using SiLU gating.",
+          "parameters": {
+            "MLP_MULT": 1
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Replaced ReLU² MLP with a SwiGLU-based MLP",
+      "Reduced MLP width to fit under the 16MB limit",
+      "Added gradient clipping for training stability and quantization robustness",
+      "Used int8 quantization with zlib compression to achieve a ~13.6MB artifact"
+    ],
+    "artifact_size": "~13.6MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1392,
+    "title": "Add record: SP4096 + Depth Recurrence + Parallel Residuals + QK-Gain + Brotli (1.1020 BPB)",
+    "author": "Its-Just-Crump",
+    "status": "open",
+    "val_bpb": 1.102,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "Parallel Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SentencePiece 4096",
+          "description": "Uses a 4096-token SentencePiece tokenizer instead of the baseline SP1024.",
+          "parameters": {
+            "vocab_size": 4096
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP4x",
+          "description": "Increases MLP width to 4x capacity with LeakyReLU squared activation.",
+          "parameters": {
+            "multiplier": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Re-executes layers 4 and 5 starting at step 3000 to add logical depth without adding parameters.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ],
+            "start_step": 3000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Parallel Residuals",
+          "description": "Merges MLP and attention outputs with learned lane_merge and resid_mix_mlp parameters from layer 7 onward.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Initializes query and key projections with 5x scale.",
+          "parameters": {
+            "gain": 5
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.09,
+          "momentum": null,
+          "other_params": {
+            "parallel": true,
+            "muon_eq_r": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.09,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA + Tight SWA",
+          "parameters": {
+            "ema_decay": 0.997,
+            "swa_every": 50
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "adam_wd": 0.09,
+            "muon_wd": 0.09
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "LN scale",
+          "parameters": {
+            "scale": "1/sqrt(layer+1)"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses partial rotary positional embeddings.",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE128",
+          "description": "Applies VE128 in layers 9-10.",
+          "parameters": {
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Uses a position-mixing gate.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Adds encoder-decoder skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Uses XSA attention on all layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      }
+    ],
+    "compression": "Brotli",
+    "novel_contributions": [
+      "SP4096-native architecture replacing SP1024 + BigramHash",
+      "Depth recurrence on layers 4-5 starting at step 3000",
+      "Parallel residuals with learned merge from layer 7 onward",
+      "QK-Gain 5.0 initialization",
+      "MuonEq-R optimizer variant",
+      "GPTQ calibration with 128 batches",
+      "Brotli compression for SP4096 int6 weights",
+      "Removal of BigramHash, TrigramHash, and TTT from the prior stack"
+    ],
+    "artifact_size": "~15.88 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1393,
+    "title": "[Submission] SwiGLU MLP (under 16MB)",
+    "author": "Abhinav-Avasarala",
+    "status": "open",
+    "val_bpb": 1.4716,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SwiGLU",
+          "description": "Replaced the baseline ReLU² MLP with a SwiGLU-based MLP.",
+          "parameters": {
+            "mlp_mult": 1
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Replaced ReLU² MLP with SwiGLU",
+      "Reduced MLP width to MLP_MULT=1 to fit under the 16MB limit",
+      "Added gradient clipping for training stability and quantization robustness",
+      "Used int8 quantization with zlib compression to achieve a ~13.6MB artifact"
+    ],
+    "artifact_size": "~13.6MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1394,
+    "title": "Record: SP8192 + GPTQ Embeddings + Depth Recurrence + MuonEq-R + SDClip  — val_bpb 1.08563 (5 seed mean)",
+    "author": "clarkkev",
+    "status": "open",
+    "val_bpb": 1.08563,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "matrix parameters"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Loop layers 4-5 twice while sharing parameters.",
+          "parameters": {
+            "layers": [
+              4,
+              5
+            ],
+            "loops": 2
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "row_normalized": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 8192,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Increase vocabulary size to 8192 using SP8192 tokenizer/data.",
+          "parameters": {
+            "vocab_size": 8192
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Use standard-deviation-based clipping for quantization thresholds (SDClip).",
+          "parameters": {
+            "clip_scale_k": 12.85,
+            "embedding_clip_scale_k": 20
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Replace coprime-stride loader with a simpler ShuffledSequenceLoader.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Remove value embeddings.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Increased vocabulary size from 4096 to 8192 (SP8192).",
+      "GPTQ-quantized the embedding matrix instead of round-to-nearest quantization.",
+      "Removed value embeddings.",
+      "Replaced the coprime-stride loader with a simpler ShuffledSequenceLoader.",
+      "Applied depth recurrence by looping layers 4-5 twice with shared parameters.",
+      "Used row-normalized Muon.",
+      "Introduced standard-deviation-based clipping for quantization thresholds (SDClip)."
+    ],
+    "artifact_size": "15,985,678 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

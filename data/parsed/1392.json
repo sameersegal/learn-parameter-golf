@@ -1,0 +1,213 @@
+{
+  "pr_number": 1392,
+  "title": "Add record: SP4096 + Depth Recurrence + Parallel Residuals + QK-Gain + Brotli (1.1020 BPB)",
+  "author": "Its-Just-Crump",
+  "status": "open",
+  "val_bpb": 1.102,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SentencePiece 4096",
+        "description": "Uses a 4096-token SentencePiece tokenizer instead of the baseline SP1024.",
+        "parameters": {
+          "vocab_size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP4x",
+        "description": "Increases MLP width to 4x capacity with LeakyReLU squared activation.",
+        "parameters": {
+          "multiplier": 4.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Re-executes layers 4 and 5 starting at step 3000 to add logical depth without adding parameters.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "start_step": 3000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Merges MLP and attention outputs with learned lane_merge and resid_mix_mlp parameters from layer 7 onward.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-Gain",
+        "description": "Initializes query and key projections with 5x scale.",
+        "parameters": {
+          "gain": 5.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.09,
+        "momentum": null,
+        "other_params": {
+          "parallel": true,
+          "muon_eq_r": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.09,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "adam_wd": 0.09,
+          "muon_wd": 0.09
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Applies VE128 in layers 9-10.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses a position-mixing gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds encoder-decoder skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention on all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "SP4096-native architecture replacing SP1024 + BigramHash",
+    "Depth recurrence on layers 4-5 starting at step 3000",
+    "Parallel residuals with learned merge from layer 7 onward",
+    "QK-Gain 5.0 initialization",
+    "MuonEq-R optimizer variant",
+    "GPTQ calibration with 128 batches",
+    "Brotli compression for SP4096 int6 weights",
+    "Removal of BigramHash, TrigramHash, and TTT from the prior stack"
+  ],
+  "artifact_size": "~15.88 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
