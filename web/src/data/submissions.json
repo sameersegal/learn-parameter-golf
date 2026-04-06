@@ -136659,5 +136659,234 @@
     "artifact_size": "~14.75 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1416,
+    "title": "Record: SP8192 + Pre-Quant TTT — val_bpb 1.07948 (3-seed mean)",
+    "author": "erichroepke",
+    "status": "open",
+    "val_bpb": 1.07948,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "embeddings and weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Loops layers 4-5 twice to increase effective depth without increasing parameter count.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Removes self-attention redundancy via projection across all layers.",
+          "parameters": {
+            "layers": "all"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Learned gating on skip connections.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "variant": "MuonEq-R"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "optimizer": "AdamW",
+            "epochs": 6,
+            "timing": "pre-quant"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "SDClip quantization clipping using threshold = k × std(row) instead of grid search.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "SP8192 tokenizer / vocabulary.",
+          "parameters": {
+            "vocab_size": 8192
+          }
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "Combined SP8192 base architecture with pre-quant AdamW TTT.",
+      "Showed that pre-quant TTT and the SP8192 + SDClip + GPTQ pipeline stack without interfering.",
+      "Achieved a new record val_bpb of 1.07948 using a 3-seed mean.",
+      "Applied TTT before quantization so the adapted full-precision weights compress cleanly."
+    ],
+    "artifact_size": "15.12 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1417,
+    "title": "Mixed INT5/INT6 QAT from step 1 (1.3039 bpb)",
+    "author": "BruhTheMomentum",
+    "status": "open",
+    "val_bpb": 1.3039,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": 5,
+          "scope": "MLP weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": 6,
+          "scope": "attention weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "QAT",
+          "bits": null,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": null,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": 22
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Adds U-Net style skip connections to the model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Ties input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses a 3x MLP expansion.",
+          "parameters": {
+            "expansion": 3
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "Adam_for": "embeddings/scalars"
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.04
+          }
+        }
+      }
+    ],
+    "compression": "zstd-22",
+    "novel_contributions": [
+      "Mixed INT5/INT6 quantization with INT5 for MLP weights and INT6 for attention weights",
+      "Quantization-aware training from step 1 using fake-quantized forward passes and STE",
+      "Entropy-aware compression perspective showing QAT reduces weight entropy and improves compressibility",
+      "Demonstrated that early QAT substantially outperforms late QAT for post-quantization quality"
+    ],
+    "artifact_size": "15.4MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
