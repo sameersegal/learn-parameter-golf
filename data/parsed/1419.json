@@ -1,0 +1,160 @@
+{
+  "pr_number": 1419,
+  "title": "Runpod ar selfgen nextsteps",
+  "author": "windy-schmieder",
+  "status": "closed",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "AttnRes",
+        "description": "Full attention residuals that replace the single global residual with learned softmax depth-attention over all preceding layer outputs.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self attention applied to the last layers.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value enhancement module enabled on selected layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "decay": 0.997,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "schedule": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "enabled": true,
+          "lr": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Full Attention Residuals (AttnRes) over all preceding layer outputs",
+    "Zero-initialized per-layer depth-attention weights for gradual learning of residual mixing",
+    "Integration of AttnRes with existing resid_mix block mixing",
+    "Combination of AttnRes with Parallel Muon, full TTT, and LeakyReLU\u00b2"
+  ],
+  "artifact_size": "~16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

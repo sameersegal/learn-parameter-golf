@@ -1,0 +1,166 @@
+{
+  "pr_number": 1420,
+  "title": "Record: Triple Loop + Fused Kernels + Parallel Residuals + N-gram Tilt; val_bpb 1.08014 (5-seed mean)",
+  "author": "abaybektursun",
+  "status": "open",
+  "val_bpb": 1.08014,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Added an extra loop pass through layers 4-5, increasing virtual depth from the prior configuration.",
+        "parameters": {
+          "num_loops": 3,
+          "virtual_layers": 17,
+          "loop_layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Used GPT-J style parallel attention and MLP residual branches for layers 7-10.",
+        "parameters": {
+          "start_layer": 7,
+          "end_layer": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Used LeakyReLU(0.5) squared activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int8",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.667,
+          "final_lr": 0.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "n-gram tilt",
+        "parameters": {
+          "token_orders": [
+            8,
+            16
+          ],
+          "within_word_orders": [
+            1,
+            3
+          ],
+          "word_start_bigrams": true,
+          "base_beta": 2.0,
+          "within_beta": 0.92,
+          "agree_bonus": 0.1
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fused MLP kernels using Triton TMA forward and CUTLASS EVT backward to improve throughput and fit more training steps in the time budget.",
+        "parameters": {
+          "forward": "Triton TMA",
+          "backward": "CUTLASS EVT"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Double-buffered async data prefetch with pinned memory and a separate CUDA stream.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Triple loop recurrence through layers 4-5 with earlier loop activation",
+    "Fused MLP kernels using Triton TMA forward and CUTLASS EVT backward",
+    "Parallel residuals for later layers",
+    "Eval-time causal n-gram tilt with one-token exponential boosting",
+    "Double-buffered async data prefetch",
+    "PyTorch/Inductor-related platform fixes to recover training throughput"
+  ],
+  "artifact_size": "19,811 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,143 @@
+{
+  "pr_number": 1422,
+  "title": "Non-record: Depth Recurrence + GPTQ + SGD TTT (1.1172, 1xH100)",
+  "author": "swapp1990",
+  "status": "open",
+  "val_bpb": 1.1172,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Shares middle transformer blocks across multiple layers to create 13 effective layers from 7 unique blocks.",
+        "parameters": {
+          "layers": 13,
+          "unique_blocks": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sample attention applied to all unique blocks.",
+        "parameters": {
+          "blocks": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate used in the SwiGLU MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections added to the transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with SwiGLU.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.04,
+          "scalar_lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "during": "warmdown phase"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int8",
+        "bits": null,
+        "scope": "MLP, attention, embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "chunk_size": 2048,
+          "all_weights": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Depth recurrence with a 7-block shared-layer schedule to create 13 effective layers",
+    "GPTQ post-training quantization with Hessian-compensated rounding",
+    "Mixed-bit quantization across MLP, attention, and embeddings",
+    "SGD all-weights test-time training on 2048-token chunks",
+    "Combination of GPTQ and TTT that preserves gains when stacked",
+    "Use of XSA, SmearGate, and U-Net skip connections in a compact Transformer"
+  ],
+  "artifact_size": "15.38 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
