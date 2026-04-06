@@ -1,0 +1,153 @@
+{
+  "pr_number": 1424,
+  "title": "Non-record: Extended Compute Scaling Analysis (50K steps, 1.0858 BPB, 3 seeds (each run ~12 hours on 4xA100MIG))",
+  "author": "OnlyJundong",
+  "status": "open",
+  "val_bpb": 1.0858,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA to the last 4 layers.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding / residual component with dimension 128.",
+        "parameters": {
+          "dimension": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 0,
+          "momentum": 0.9,
+          "batch_seqs": 32,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 7800,
+          "iterations": 20000,
+          "muon_momentum_warmup_steps": 3340
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.92,
+          "muon_momentum_warmup_steps": 3340
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Extended the record-track architecture to 50K training steps under unlimited compute.",
+    "Showed that post-TTT BPB improves from 1.0960 at 20K steps to 1.0858 at 50K steps.",
+    "Demonstrated non-monotonic artifact size behavior: mid-training checkpoints exceed 16MB, but the final warmdown-completed model fits under budget.",
+    "Analyzed scaling across 3 seeds and compared 20K vs 50K compute regimes.",
+    "Observed that warmdown restores compressibility and enables the final model to remain sub-16MB."
+  ],
+  "artifact_size": "14.30 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
