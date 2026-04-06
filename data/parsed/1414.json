@@ -1,0 +1,196 @@
+{
+  "pr_number": 1414,
+  "title": "Non-record: Discriminative TTT + SLOT-24, 3-seed verified (8xH100 SXM)",
+  "author": "Abhishek8108",
+  "status": "open",
+  "val_bpb": 0.70926,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "variant": "Discriminative TTT",
+          "per_block_adaptive_lr": true,
+          "pre_quantization": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SLOT-24 per-sample evaluation-time delta optimization with hidden-state delta plus logit bias",
+        "parameters": {
+          "steps": 24
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.2,
+          "every": 50
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation",
+        "parameters": {
+          "squared": true,
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Last 4 layers use XSA",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings",
+        "parameters": {
+          "dimensions": 16,
+          "base": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN Scale",
+        "description": "LayerNorm scale modification",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding",
+        "parameters": {
+          "vocab_size": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": null
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Combining discriminative TTT with SLOT-24 and verifying the result across 3 seeds",
+    "Demonstrating that SLOT dominates and that pre-SLOT model improvements have diminishing returns",
+    "Introducing quantization noise annealing (QNA) to train for quantization robustness",
+    "Introducing stochastic quantized weight averaging (SQWA) to average quantize-dequantize snapshots in the quantization-friendly subspace",
+    "Showing that QNA and SQWA reduce quantization gap but do not improve leaderboard BPB"
+  ],
+  "artifact_size": "16.15 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
