@@ -1,0 +1,184 @@
+{
+  "pr_number": 1406,
+  "title": "Record: 11L Depth Recurrence + Discriminative Pre-Quant TTT (8xH100) \u2014 val_bpb 1.0887 (3-seed mean)",
+  "author": "aamodbhatt",
+  "status": "open",
+  "val_bpb": 1.08874,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Blocks 4 and 5 are run twice in the forward pass, increasing effective depth without adding parameters.",
+        "parameters": {
+          "layers": 11,
+          "recurrent_layers": [
+            4,
+            5
+          ],
+          "effective_passes": 13
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "epochs": 10,
+          "freeze_blocks": 0,
+          "cosine_decay": true,
+          "pre_quant": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "pre_quant_adaptation": true,
+          "discriminative_lr_scaling": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a bigram vocabulary/hash component in the model.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in the last layers of the model.",
+        "parameters": {
+          "last_n_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Adds value residual enhancement with 128-dimensional VE in selected layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ],
+          "dimension": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU^2 activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "applied_to": "TTT"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 7
+      }
+    }
+  ],
+  "compression": "lzma-7",
+  "novel_contributions": [
+    "Depth recurrence: blocks 4 and 5 are executed twice for zero-parameter effective depth increase.",
+    "Discriminative pre-quant TTT with per-block learning-rate scaling before GPTQ quantization.",
+    "Muon-style test-time adaptation using Newton-Schulz orthogonalized updates instead of SGD.",
+    "Entropy-adaptive TTT epochs selected per chunk based on chunk NLL.",
+    "Score-first TTT protocol with frozen model at evaluation time."
+  ],
+  "artifact_size": "15,926,365 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
