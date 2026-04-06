@@ -1,0 +1,168 @@
+{
+  "pr_number": 1410,
+  "title": "Record: 11L LatentMask TTT + GPTQ + Product-Key Bigram + Brotli \u2014 val_bpb 1.1158 (3-seed mean)",
+  "author": "izlley",
+  "status": "open",
+  "val_bpb": 1.1158,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.0008,
+          "chunk_size": 65536,
+          "epochs": 4,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP/attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Product-key bigram embedding using factored previous/current embeddings with no hash collisions and no projection layer.",
+        "parameters": {
+          "prev_dim": 1024,
+          "cur_dim": 1024,
+          "embed_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "GatedAttention applied on alternating layers while standard attention is used on the remaining layers.",
+        "parameters": {
+          "layers": [
+            0,
+            2,
+            4,
+            6,
+            8,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention used throughout the model.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style encoder-decoder skip connections in the transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Adjacent token mixing via SmearGate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LatentMask TTT with per-channel sigmoid masks and biases trained per chunk at evaluation time using a sign-based Muon-lite optimizer.",
+        "parameters": {
+          "score_first": true
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "LatentMask TTT with per-channel sigmoid masks and biases trained at evaluation time",
+    "Product-Key Bigram embedding replacing hash-based bigram embeddings",
+    "Alternating GatedAttention layers to reduce parameters while improving bpb",
+    "Brotli-11 custom serialization with uint8 log-scale quantization for artifact compression",
+    "Full Hessian GPTQ with Cholesky error compensation and column reordering"
+  ],
+  "artifact_size": "15,989,386 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
