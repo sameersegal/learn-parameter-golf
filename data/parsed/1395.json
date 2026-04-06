@@ -1,0 +1,198 @@
+{
+  "pr_number": 1395,
+  "title": "Record: SP4096 + Linear LR + Depth Recurrence -- val_bpb=1.0924 (3-seed mean)",
+  "author": "dttdrv",
+  "status": "open",
+  "val_bpb": 1.0924,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SP4096",
+        "description": "SentencePiece BPE vocabulary of size 4096 with 11-layer, 512-dim transformer backbone.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512,
+          "vocab_size": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU(0.5)^2 activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4 and 5 are repeated starting from step 3000.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "start_step": 3000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Gated encoder-decoder style skip connections are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self Attention applied to all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-Gain",
+        "description": "Attention QK gain set to 5.0.",
+        "parameters": {
+          "value": 5.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.09,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.02,
+          "adamw_scalars_embeddings": true,
+          "adam_weight_decay": 0.02,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "every_step": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all attention + MLP weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 10
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.667,
+          "final_lr": 0.0,
+          "type": "linear"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_wd": 0.09,
+          "adam_wd": 0.02
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "factor": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "Brotli-10",
+  "novel_contributions": [
+    "Linear warmdown to zero instead of cosine decay with a non-zero floor",
+    "Reduced selective pruning factor from 8x excess to 4x excess",
+    "Improved quantization gap and compression enough to achieve a new record val_bpb",
+    "Depth recurrence combined with SP4096 architecture and MuonEq-R training"
+  ],
+  "artifact_size": "15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
