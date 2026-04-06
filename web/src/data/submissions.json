@@ -136022,5 +136022,213 @@
     "artifact_size": "15,989,386 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1411,
+    "title": "Non-record: Blueprint Stack + ProgSeq + Multi-scale RoPE + ByteEmbed — val_bpb 1.5568 (1xRTX 3080)",
+    "author": "Blakethefn",
+    "status": "open",
+    "val_bpb": 1.5568,
+    "architecture": "Transformer",
+    "quantization": "mixed int5/int6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Three-layer MLP stack with ReLU² activation.",
+          "parameters": {
+            "mlp_layers": 3,
+            "activation": "ReLU²"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Skip connections inspired by U-Net added to the transformer stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "matrix parameters"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Adam",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings/scalars"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Multi-scale RoPE applied by KV group with different context scales.",
+          "parameters": {
+            "bases": [
+              1000,
+              10000,
+              100000,
+              1000000
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "Byte-level token embeddings using a 64-dim UTF-8 byte side channel.",
+          "parameters": {
+            "dimension": 64
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int5/int6",
+          "bits": 5,
+          "scope": "MLP/attention/bigram/byte weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zstd",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zstd",
+    "novel_contributions": [
+      "Progressive sequence length schedule",
+      "Multi-scale RoPE by KV group",
+      "Byte-level token embeddings from UTF-8 bytes",
+      "Mixed-bit quantization export with zstd roundtrip",
+      "Combined blueprint stack on a single RTX 3080",
+      "Systematic ablation of leaderboard techniques under a 10-minute wallclock cap"
+    ],
+    "artifact_size": "15.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1412,
+    "title": "Non-record: Parallel Residuals + Hessian-Aware SDClip (3-seed mean 1.08354 BPB)",
+    "author": "Robby955",
+    "status": "open",
+    "val_bpb": 1.08354,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Depth recurrence with two-phase loop scheduling; first loop enabled at 50% of training and second at 65%.",
+          "parameters": {
+            "phase1_at": 0.5,
+            "phase2_at": 0.65
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "GPT-J style parallel attention and MLP residual path for the last 4 layers, with both branches reading from the same normalized input.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "SDClip",
+          "parameters": {
+            "hessian_aware": true,
+            "lambda": 0.175
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Parallel residual connections in the last four layers to reduce attention/MLP interference during GPTQ calibration",
+      "Hessian-aware SDClip with row-wise threshold modulation using GPTQ Hessian diagonal importance",
+      "Progressive recurrence with staggered loop activation at 50% and 65% of training",
+      "Cross-seed Hessian analysis showing stable group-level traces but noisy per-row importance"
+    ],
+    "artifact_size": "15,978,121",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
