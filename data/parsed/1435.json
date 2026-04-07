@@ -1,0 +1,235 @@
+{
+  "pr_number": 1435,
+  "title": "Record: 11L Depth Recurrence + BigramHash + EMA 0.9965 \u2014 val_bpb 1.0980 (3-seed mean)",
+  "author": "AbhayAnandUCSD",
+  "status": "open",
+  "val_bpb": 1.098,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "11 physical layers with layers 4 and 5 repeated once to create 13 virtual layers; recurrence activated at step 3000.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 13,
+          "repeat_layers": [
+            4,
+            5
+          ],
+          "activate_step": 3000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding added on top of the recurrence base with SmearGate.",
+        "parameters": {
+          "buckets": 1536,
+          "dim": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gating mechanism used with BigramHash.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Learnable residual gating on skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Attention and MLP are run in parallel lanes in later layers.",
+        "parameters": {
+          "layers": "7+"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embedding",
+        "description": "Value embedding added in later layers.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.09,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.02,
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.008,
+          "role": "head"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.09,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.6,
+          "role": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.02,
+          "role": "scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.667
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "Depth recurrence with layers 4 and 5 repeated once to create 13 virtual layers",
+    "BigramHash(1536, dim 112) with SmearGate added on top of the recurrence base",
+    "EMA decay 0.9965 tuning",
+    "Combination of skip gates, parallel residuals, and MuonEq-R in the stack",
+    "GPTQ int6 quantization with Brotli compression to fit the artifact budget"
+  ],
+  "artifact_size": "~14.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
