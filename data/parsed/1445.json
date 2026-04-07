@@ -1,0 +1,202 @@
+{
+  "pr_number": 1445,
+  "title": "[Record] 3-Layer Depth Recurrence + EMA 0.9965 + WD 0.095 \u2014 val_bpb 1.0889",
+  "author": "X-Abhishek-X",
+  "status": "open",
+  "val_bpb": 1.0889,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeats layers 3, 4, and 5 as a 3-layer recurrence, creating 14 virtual layers from 11 physical layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "virtual_layers": 14,
+          "physical_layers": 11,
+          "start_step": 2000
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.022,
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.008,
+          "fused": true,
+          "role": "head"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.6,
+          "fused": true,
+          "role": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.02,
+          "fused": true,
+          "role": "scalars"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.095
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Shared Value Embedding used in layers 9 and 10.",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip gates and parallel residual connections from layer 7.",
+        "parameters": {
+          "from_layer": 7
+        }
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "3-layer depth recurrence over layers 3, 4, and 5",
+    "Earlier recurrence activation at step 2000",
+    "Higher weight decay and matrix learning rate tuning for better GPTQ quantization",
+    "EMA decay tuned to 0.9965",
+    "Extended warmdown fraction to 72%",
+    "Record low val_bpb of 1.0889 with all artifacts under 16MB"
+  ],
+  "artifact_size": "~15.89 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

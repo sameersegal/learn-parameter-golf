@@ -1,0 +1,191 @@
+{
+  "pr_number": 1446,
+  "title": "Non-record: 11L gated Krylov + AR GPTQ int6 + lzma, 1.09596 BPB",
+  "author": "LauraGomezjurado",
+  "status": "open",
+  "val_bpb": 1.0959632,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "gated_krylov_correction": true,
+          "alpha": 0.05,
+          "eta_threshold": 0.03,
+          "warmup_steps": 1000,
+          "decision_every": 100,
+          "every": 2,
+          "hutchinson_samples": 2,
+          "rank_max": 4,
+          "rank_scale": 1.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash embedding component",
+        "parameters": {
+          "dimension": 112,
+          "size": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Position-mixing gate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "VE128 used in layers 9-10",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "RoPE applied to a subset of dimensions",
+        "parameters": {
+          "dims": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Three-layer MLP",
+        "parameters": {
+          "width": 1536
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 4000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "pruning",
+        "parameters": {
+          "type": "selective \u00b11",
+          "criterion": "reconstruction error"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Gated Krylov residual correction added selectively on top of Muon",
+    "Hutchinson-based nonnormality detection using the commutator W^T W - W W^T",
+    "Adaptive Krylov rank correction blended into the Muon direction",
+    "Autoregressive self-generated full-Hessian GPTQ int6 calibration",
+    "Selective \u00b11 pruning to fit the 16MB artifact cap",
+    "Strong 11-layer SentencePiece GPT stack with XSA, BigramHash, SmearGate, VE128, partial RoPE, and U-Net skips"
+  ],
+  "artifact_size": "15,925,099 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
