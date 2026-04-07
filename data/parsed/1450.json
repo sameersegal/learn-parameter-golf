@@ -1,0 +1,149 @@
+{
+  "pr_number": 1450,
+  "title": "Record: TMA Megakernel + Triple Loop + Parallel Residuals \u2014 val_bpb 1.08480",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "val_bpb": 1.0848,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4-5 are looped multiple times to create virtual layers from fewer physical layers.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "loops": 3,
+          "virtual_layers": 17
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Attention and MLP branches read from the same pre-residual input and are summed in parallel.",
+        "parameters": {
+          "layers": [
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses leaky ReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention across all layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses gated skip connections in a U-Net-like pattern.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Triton TMA fused MLP forward megakernel for Hopper GPUs",
+    "Avoids materializing the 2048-wide MLP intermediate activation",
+    "Reported +10.5% training throughput improvement",
+    "Triple depth recurrence with NUM_LOOPS=3",
+    "GPT-J style parallel residuals in layers 7-10",
+    "Combined frontier techniques to reach val_bpb 1.08480"
+  ],
+  "artifact_size": "15,750,593",
+  "prompt_version": "v2",
+  "is_record": false
+}
