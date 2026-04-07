@@ -1,0 +1,104 @@
+{
+  "pr_number": 1430,
+  "title": "Record: Per-Sample SLOT + N-gram Order-22 + TTT + LR=0.432 \u2014 val_bpb 0.39642 (3-seed mean)",
+  "author": "renqianluo",
+  "status": "open",
+  "val_bpb": 0.39642,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Causal backoff n-gram mixer using hashed n-gram probabilities up to order 22.",
+        "parameters": {
+          "order": 22,
+          "buckets": 4000000
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "steps": 24,
+          "lr_start": 0.432,
+          "lr_end": 0.001,
+          "beta1": 0.6,
+          "beta2": 0.5,
+          "batch_size": 128
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "lr_start": 0.432,
+          "lr_end": 0.001
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "AdamW",
+          "epochs": 1,
+          "learning_rate": 0.001,
+          "freeze_blocks": "0-9",
+          "second_pass_fraction": 0.1,
+          "floor_lr": 0.0001
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-sample SLOT optimization with sequence-specific hidden delta and logit bias.",
+        "parameters": {
+          "hidden_delta_shape": "[bsz,1,512]",
+          "logit_bias_shape": "[bsz,1,1024]",
+          "params": 1536
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-token prediction with 2 heads and auxiliary loss.",
+        "parameters": {
+          "heads": 2,
+          "loss_weight": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Per-sample SLOT with sequence-specific hidden delta and logit bias",
+    "Causal backoff n-gram mixer with entropy-adaptive blending",
+    "Order-22 hashed n-gram table within artifact budget",
+    "Test-time training with a second pass over the first 10% of chunks",
+    "GPTQ int6 quantization with damp=0.005",
+    "Multi-token prediction with two heads"
+  ],
+  "artifact_size": "15.90MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
