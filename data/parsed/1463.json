@@ -1,0 +1,121 @@
+{
+  "pr_number": 1463,
+  "title": "Non-record: 1xH100 Budget Run \u2014 SmearGate + BigramHash + MLP3x (1.2774 BPB)",
+  "author": "tsubasagit",
+  "status": "open",
+  "val_bpb": 1.2774,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned gate blending each token embedding with the previous token embedding to add lightweight bigram context.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hashes consecutive token pairs into a 4096-bucket embedding table projected to model dimension.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion in the Transformer block.",
+        "parameters": {
+          "hidden": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections from first-half layer outputs to second-half layers with learned scaling.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_frac": 0.7,
+          "every": 100
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled output projections."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 800
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Single-GPU 1xH100 budget run targeting the Parameter Golf challenge",
+    "Retuning PR #162 techniques for a much smaller training budget",
+    "Demonstration that increasing training shards from 1 to 20 substantially improved BPB",
+    "Use of SmearGate, BigramHash, MLP3x, U-Net skip connections, and SWA in a budget-constrained setup",
+    "Sliding-window evaluation with stride 64 and post-training int6+zlib artifact packaging"
+  ],
+  "artifact_size": "16,374,104 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
