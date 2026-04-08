@@ -1,0 +1,131 @@
+{
+  "pr_number": 1472,
+  "title": "Add 1.2066 record: 8L Depth Recurrence by trhgbao",
+  "author": "trhgbao",
+  "status": "open",
+  "val_bpb": 1.2066,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "8 physical layers are looped twice to form 16 logical layers.",
+        "parameters": {
+          "physical_layers": 8,
+          "loops": 2,
+          "logical_layers": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 instead of standard ReLU^2 to improve gradient flow for negative pre-activations.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary positional embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Untied input and output embeddings for greater expressivity.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth embeddings",
+        "description": "Learned embeddings are added at each logical depth step to provide depth awareness.",
+        "parameters": {
+          "logical_layers": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer state aggregation with zero-initialized skip connections across logical layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "muon_momentum_warmup_start": 0.9,
+          "muon_momentum_warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 15.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 3500,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Depth recurrence with 8 physical layers looped into 16 logical layers",
+    "LeakyReLU(0.5)^2 activation to improve gradient flow",
+    "Partial RoPE on 1/4 of head dimensions",
+    "Untied input and output embeddings",
+    "Depth embeddings for logical layer awareness",
+    "Cross-layer state aggregation with zero-initialized skips",
+    "Muon optimization with hardware-aligned MLP multiplier",
+    "Int8 quantization plus zlib compression to fit the 16MB track"
+  ],
+  "artifact_size": "15.73 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
