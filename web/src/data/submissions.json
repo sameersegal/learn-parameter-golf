@@ -143198,5 +143198,287 @@
     "artifact_size": "15.99MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1477,
+    "title": "Record: SP8192 + Parallel Residuals + Score-First TTT — val_bpb 1.0822 (3-seed mean)",
+    "author": "aryanbhosale",
+    "status": "open",
+    "val_bpb": 1.0822,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Uses recurrent looping over layers 4-5 to increase effective depth.",
+          "parameters": {
+            "loop_start": 4,
+            "loop_end": 5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP4x",
+          "description": "Uses a 4x-expanded MLP.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "From layer 7 onward, attention and MLP operate on separate residual lanes with a learned merge scalar.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "epochs": 3,
+            "learning_rate": 0.005
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "Combines SP8192 with parallel residuals and score-first TTT.",
+      "Adds parallel residuals from layer 7 to the SP8192 + score-first TTT stack.",
+      "Achieves a new record val_bpb of 1.0822 as a 3-seed mean, improving over prior separate approaches."
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1478,
+    "title": "Shallow Blue: BOS-Reset Exact Memory Probe",
+    "author": "jxgod",
+    "status": "open",
+    "val_bpb": 1.19948112,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Standard backbone uses tied embeddings / tied weights as part of the baseline SP-1024 model.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "BOS-reset non-overlap eval",
+          "parameters": {
+            "window": 1024,
+            "stride": 1024
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "stride-based eval",
+          "parameters": {
+            "stride": 1024
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Document-local exact-memory scorer that builds causal local memory from already-scored tokens and routes scoring through a compact probe.",
+          "parameters": {
+            "exact_causal_3gram": true,
+            "bounded_exact_local_repeat": true,
+            "repeat_match_length": "4-8",
+            "top_k": 3,
+            "min_support": 2,
+            "alpha": 0.3
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Exact-memory probe layered on top of a standard 9L/512d SP-1024 backbone",
+      "Causal document-local 3-gram memory with bounded exact repeat memory",
+      "Compact two-level uplift probe that decides when to trust memory over the neural model",
+      "BOS-reset non-overlap evaluation regime",
+      "Artifact-backed alpha sweep selecting alpha=0.30",
+      "Improved performance concentrated on long documents"
+    ],
+    "artifact_size": "15,933,037 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1479,
+    "title": "Non-record: GDN Hybrid (E2E TTT / State-Space Model) — val_bpb 1.14502",
+    "author": "andrewbaggio1",
+    "status": "open",
+    "val_bpb": 1.14502,
+    "architecture": "Hybrid",
+    "quantization": "GPTQ int6/int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated DeltaNet",
+          "description": "Replaces 8 of 10 attention layers with Gated DeltaNet linear/state-space layers in a hybrid model.",
+          "parameters": {
+            "layers": 8
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention in the remaining attention layers.",
+          "parameters": {
+            "q_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Applies partial rotary positional embeddings in attention layers.",
+          "parameters": {
+            "dimensions": 16
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Uses a 3x MLP expansion with LeakyReLU activation.",
+          "parameters": {
+            "activation": "LeakyReLU",
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Ties input and output embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Uses Gated DeltaNet as an end-to-end test-time-training / state-space model via the delta-rule update equivalent to one SGD step on a reconstruction loss.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "Hybrid model replacing most attention layers with Gated DeltaNet",
+      "Interprets Gated DeltaNet as equivalent to E2E TTT-Linear with MSE loss",
+      "Targets both E2E TTT and state-space model bounty items",
+      "Demonstrates stable training and working GPTQ quantization",
+      "Uses a compact 13.83 MB artifact"
+    ],
+    "artifact_size": "13.83 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

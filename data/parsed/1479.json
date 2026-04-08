@@ -1,0 +1,112 @@
+{
+  "pr_number": 1479,
+  "title": "Non-record: GDN Hybrid (E2E TTT / State-Space Model) \u2014 val_bpb 1.14502",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "val_bpb": 1.14502,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated DeltaNet",
+        "description": "Replaces 8 of 10 attention layers with Gated DeltaNet linear/state-space layers in a hybrid model.",
+        "parameters": {
+          "layers": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention in the remaining attention layers.",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applies partial rotary positional embeddings in attention layers.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion with LeakyReLU activation.",
+        "parameters": {
+          "activation": "LeakyReLU",
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Ties input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses Gated DeltaNet as an end-to-end test-time-training / state-space model via the delta-rule update equivalent to one SGD step on a reconstruction loss.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Hybrid model replacing most attention layers with Gated DeltaNet",
+    "Interprets Gated DeltaNet as equivalent to E2E TTT-Linear with MSE loss",
+    "Targets both E2E TTT and state-space model bounty items",
+    "Demonstrates stable training and working GPTQ quantization",
+    "Uses a compact 13.83 MB artifact"
+  ],
+  "artifact_size": "13.83 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
