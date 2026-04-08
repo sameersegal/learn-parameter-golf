@@ -1,0 +1,164 @@
+{
+  "pr_number": 1452,
+  "title": "Non-record: TurboQuant + N-gram Hybrid Eval + TTT (1xH100 NVL)",
+  "author": "bsisduck",
+  "status": "closed",
+  "val_bpb": 0.3509,
+  "architecture": "Transformer",
+  "quantization": "int5 TurboQuant",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int5",
+        "bits": 5,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Gated attention used in all layers.",
+        "parameters": {
+          "layers": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used on the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash component used for hybrid n-gram modeling.",
+        "parameters": {
+          "size": 1536
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Value residual connections used across early layers.",
+        "parameters": {
+          "layers": "1-8"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Position-mixing gate used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 384
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8,
+          "learning_rate": 0.005,
+          "polyak_decay": 0.995,
+          "temperature": 1.1
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "complementary training",
+        "parameters": {
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-adaptive order-9 n-gram backoff cache mixed with neural probabilities during evaluation.",
+        "parameters": {
+          "order": 9,
+          "min_count": 1
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "TurboQuant random-rotation int5 quantization",
+    "Entropy-adaptive order-9 n-gram backoff cache",
+    "Complementary training with alpha=0.5",
+    "LoRA test-time training with tuned temperature and Polyak averaging",
+    "Hybrid neural + n-gram evaluation"
+  ],
+  "artifact_size": "14.92 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

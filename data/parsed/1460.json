@@ -1,0 +1,131 @@
+{
+  "pr_number": 1460,
+  "title": "Record: SP8192 + TTT + Eval-Time Hash Embedding \u2014 val_bpb 1.08269 (3-seed mean)",
+  "author": "resouer",
+  "status": "open",
+  "val_bpb": 1.08269,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Zero-initialized eval-time embedding keyed by a bigram hash is added to token embeddings before RMSNorm and trained during TTT.",
+        "parameters": {
+          "vocab_size": 16384,
+          "embedding_dim": 512,
+          "hash_mod": 16384,
+          "hash_multiplier": 2039
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs_per_chunk": 3,
+          "chunk_size": 32000,
+          "freeze": 0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 4-5 use a recurrent loop applied twice.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "repeats": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped key/value heads in the SP8192 stack.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA across all layers in the SP8192 architecture.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residual / skip-gated connections are used in the architecture.",
+        "parameters": {
+          "layers": [
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "lr": 0.005
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma+base85",
+  "novel_contributions": [
+    "Eval-time hash embedding trained from zeros during score-first TTT",
+    "Bigram-hash residual memory added before RMSNorm",
+    "Record 3-seed mean val_bpb of 1.08269",
+    "SP8192 stack combining parallel residuals, depth recurrence, skip gates, and compressed artifact packaging"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,146 @@
+{
+  "pr_number": 1453,
+  "title": "Non-record: Depth Recurrence + Int7 Mixed Quant \u2014 val_bpb 1.1324 (3-seed mean)",
+  "author": "iverbovoy",
+  "status": "open",
+  "val_bpb": 1.1324,
+  "architecture": "Transformer",
+  "quantization": "mixed int7/int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3 shared transformer blocks repeated 4 times for 12 effective layers with cross-repeat skip and loop embeddings.",
+        "parameters": {
+          "layers": 3,
+          "repeats": 4,
+          "effective_layers": 12
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int7/int5",
+        "bits": 7,
+        "scope": "attention and MLP"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Wider 3x MLP configuration used to increase model capacity.",
+        "parameters": {
+          "multiplier": 3,
+          "hidden_dim": 2640
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive self-attention applied on the last 4 effective layers to prevent attention collapse.",
+        "parameters": {
+          "last_n": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation used for better gradient flow in deep recurrent models.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 30,
+          "start_frac": 0.6
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.018,
+          "scalar_lr": 0.018,
+          "tied_embed_lr": 0.021
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "hedge mixer",
+        "parameters": {
+          "experts": 5,
+          "parallel_gpus": 8
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Int7 attention with Int5 MLP mixed quantization to fit a wider model within the 16 MB budget",
+    "Depth recurrence with 3 shared blocks repeated 4 times for 12 effective layers",
+    "Parallelized hedge mixer evaluation across 8 GPUs to reduce eval time",
+    "Wider MLP 3x model enabled by saved quantization budget",
+    "Progressive depth training with earlier phase transitions and SWA"
+  ],
+  "artifact_size": "~15.40 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

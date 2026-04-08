@@ -1,0 +1,203 @@
+{
+  "pr_number": 1456,
+  "title": "Non-Record: HybridQuantGPT v6.1 H100 + Aggressive SLOT (steps=100, 3-seed 1.146523)",
+  "author": "sisegod",
+  "status": "open",
+  "val_bpb": 1.146523,
+  "architecture": "Hybrid",
+  "quantization": "mixed precision",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5/int4/fp16",
+        "bits": null,
+        "scope": "Q/K 6-bit, V/O 5-bit, MLP up ~2.3-bit, MLP down 4-bit, embeddings fp16"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder Transformer with learned skip connections",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Self Attention removing self-value projection from attention output",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "First-layer value propagated to later layers via learned lambda",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Blends each token with the previous token via a learned gate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding",
+        "parameters": {
+          "vocab": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Token identity re-injection at later layers",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional encoding applied to only part of head dimensions",
+        "parameters": {
+          "rope_dims": 16,
+          "head_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale_rule": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 15
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "warmup_from": 0.85,
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "snapshots": 7,
+          "start_step": 9700,
+          "end_step": 10000,
+          "interval": 50
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "type": "HMA"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "batch_seqs": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_ratio": 0.175
+        }
+      }
+    }
+  ],
+  "compression": "custom rANS",
+  "novel_contributions": [
+    "Increased SLOT optimization steps from 20 to 100 via a one-line default change",
+    "Showed that SLOT performance improves monotonically up to 100 steps under full stride-64 evaluation",
+    "Re-evaluated prior diminishing-returns conclusions using full evaluation instead of stride-256 quick eval",
+    "Verified the improvement across three seeds and multiple slot step counts",
+    "Reused the exact same training artifacts and rANS checkpoint, changing only the evaluation recipe"
+  ],
+  "artifact_size": "15.13 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
