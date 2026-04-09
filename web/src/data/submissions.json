@@ -144523,5 +144523,539 @@
     "artifact_size": "13.87 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1490,
+    "title": "Non-record: Faithful Conditional Memory",
+    "author": "wisebreadloaf",
+    "status": "open",
+    "val_bpb": 1.61095535,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Uses tokenizer-normalized compressed lookup identities with multi-hash n-gram memory tables for conditional memory.",
+          "parameters": {
+            "ngrams": [
+              2,
+              3
+            ],
+            "hash_heads": 4,
+            "vocab_sizes": [
+              2048,
+              2048
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Gated Attention",
+          "description": "Projects memory embeddings into contextual keys and values and gates them back into the transformer.",
+          "parameters": {
+            "layers": [
+              1,
+              3
+            ],
+            "kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "KV head count",
+          "description": "Uses reduced key/value head count for the transformer.",
+          "parameters": {
+            "num_heads": 4,
+            "num_kv_heads": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "Internal-layer memory injection of learned memory features into selected transformer layers.",
+          "parameters": {
+            "layers": [
+              1,
+              3
+            ]
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.01
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 256,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Faithful standalone conditional-memory architecture",
+      "Tokenizer-normalized compressed lookup identities",
+      "Multi-hash n-gram memory tables",
+      "Contextual key/value projections",
+      "Internal-layer memory injection",
+      "Non-record 16MB submission with strong local signs of life but weaker cloud transfer"
+    ],
+    "artifact_size": "2,773,498 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1491,
+    "title": "Non-record: Faithful mHC-lite",
+    "author": "wisebreadloaf",
+    "status": "open",
+    "val_bpb": 1.69236985,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Hybrid",
+          "description": "Faithful standalone mHC-lite branch with explicit residual-stream expansion and reduction, plus hyper-connected attention and MLP branches in a compact GPT-style model.",
+          "parameters": {
+            "layers": 4,
+            "model_dim": 256,
+            "num_heads": 4,
+            "num_kv_heads": 4,
+            "num_streams": 4,
+            "num_fracs": 1
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 256,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "dropout",
+          "parameters": {
+            "rate": 0
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Faithful standalone mHC-lite architecture",
+      "Residual-stream expansion and reduction",
+      "Hyper-connected attention and MLP branches",
+      "Compact GPT-style integration of MHCLite",
+      "Bundled local copy of hyper_conn/mhc_lite.py for standalone execution",
+      "Non-record methodological / negative-result submission"
+    ],
+    "artifact_size": "2,290,235 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1492,
+    "title": "Record: SP8192 + 3-Layer Recurrence + Parallel Residuals + QK-Gain 5.25 + Legal TTT — val_bpb 1.0810 (3-seed mean)",
+    "author": "bigbag",
+    "status": "closed",
+    "val_bpb": 1.081,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8 GPTQ",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attention/MLP matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer recurrence over layers 3-5 to create more virtual layers from fewer physical layers.",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ],
+            "virtual_layers": 17,
+            "physical_layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "GPT-J style parallel residual connections where attention and MLP read from the same pre-residual input.",
+          "parameters": {
+            "layers": "7+"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU activation used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary position embeddings applied to only part of the head dimensions.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Expanded MLP width relative to the base transformer.",
+          "parameters": {
+            "multiplier": 4
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "layerwise LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": null,
+          "momentum": 0.9,
+          "other_params": {
+            "learning_rate": 0.005,
+            "epochs": 3,
+            "gradient_clipping": 1
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.095,
+          "momentum": null,
+          "other_params": {
+            "mlr": 0.022
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.005,
+            "epochs": 3,
+            "chunk_size": 32000
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown": 0.72
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 8192,
+          "eval_length": 32000
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "SP8192 with GPTQ SDClip quantization and selective pruning",
+      "3-layer depth recurrence producing 17 virtual layers from 11 physical layers",
+      "Parallel residual connections in later layers",
+      "QK-Gain 5.25 with monotonic improvement over lower gains",
+      "Legal score-first test-time training under Issue #1017 compliance",
+      "Artifact compression via LZMA code wrapper to fit under the size limit"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1493,
+    "title": "Record: SP8192 + 3-Layer Recurrence + Parallel Residuals + QK-Gain 5.25 + Legal TTT — val_bpb 1.0810 (3-seed mean)",
+    "author": "bigbag",
+    "status": "open",
+    "val_bpb": 1.081,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8 GPTQ",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attention/MLP matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer recurrence over layers 3-5, creating virtual layers from physical layers.",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ],
+            "virtual_layers": 17,
+            "physical_layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "GPT-J style parallel residual pathway where attention and MLP read from the same input.",
+          "parameters": {
+            "layers": "7+"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings are used.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU activation used in the MLP.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Skip gates / U-Net-style skip connections are used.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": 0.095,
+          "momentum": 0.9,
+          "other_params": {
+            "learning_rate": 0.005
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.005,
+            "epochs": 3
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown": 0.72
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "SP8192 with GPTQ SDClip quantization",
+      "3-layer depth recurrence over layers 3-5",
+      "Parallel residuals from layer 7 onward",
+      "QK-Gain 5.25",
+      "Legal score-first test-time training under Issue #1017 constraints",
+      "Mixed int6/int8 model compression with LZMA code wrapper"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
