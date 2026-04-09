@@ -1,0 +1,115 @@
+{
+  "pr_number": 1498,
+  "title": "Non-record: Pre-Quant TTT 11ep + Val-Calibrated GPTQ + SLOT-24 \u2014 quad-stack synthesis (validation pending compute)",
+  "author": "owizdom",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 11,
+          "freeze_blocks": 0,
+          "scope": "pre-quant"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 96
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "enabled_by_default": false
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "slot_steps": 24,
+          "slot_lr_start": 0.012,
+          "slot_lr_end": 0.001
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "hidden delta",
+        "description": "Adds a per-window optimized hidden-state delta and logit bias on the frozen post-quant model for SLOT.",
+        "parameters": {
+          "delta_shape": "[bsz,1,dim]",
+          "logit_bias_shape": "[bsz,1,vocab]"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "val-calibrated"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "steps": 24
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Pre-quantization AdamW TTT with 11 epochs and freeze_blocks=0 before quantization",
+    "Val-calibrated GPTQ using validation activations to compute the Hessian for quantization",
+    "SLOT-24 per-window optimization of hidden delta and logit bias on the frozen post-quant model",
+    "Optional fallback score-first TTT path disabled by default",
+    "Quad-stack synthesis combining multiple validation-data adaptations"
+  ],
+  "artifact_size": "<16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
