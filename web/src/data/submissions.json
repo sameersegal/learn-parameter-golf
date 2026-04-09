@@ -146657,5 +146657,323 @@
     "artifact_size": "~15.68 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1509,
+    "title": "Non-record: DepthScale — Parameter-Shared Iterative Transformer (1.1962 BPB)",
+    "author": "Lumi-node",
+    "status": "open",
+    "val_bpb": 1.1962,
+    "architecture": "Transformer",
+    "quantization": "int8",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Reuses the same 5 physical transformer layers across multiple iterations to create 10 effective layers of depth with shared weights.",
+          "parameters": {
+            "layers": 5,
+            "iterations": 2,
+            "effective_depth": 10
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Iteration-aware RoPE shifts positional frequencies by an iteration-dependent offset so repeated passes can learn distinct attention patterns.",
+          "parameters": {
+            "epsilon": 0.1
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 4,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": null,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Parameter-shared iterative transformer that reuses 5 physical layers across multiple passes",
+      "Iteration-aware RoPE to distinguish different iterations of the shared-depth model",
+      "Demonstration of 10 effective layers of depth at constant parameter cost",
+      "3-seed reproducibility result of 1.1962 BPB on 8×H100 SXM",
+      "Quantization-aware training with 4-bit STE for robustness to extreme quantization"
+    ],
+    "artifact_size": "30MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1512,
+    "title": "Record: Bank QAT + seq4096 + SWA w=256 + QK-Gain 2.5 + PKO — val_bpb 1.1117 (3-seed mean)",
+    "author": "Itssshikhar",
+    "status": "open",
+    "val_bpb": 1.1117,
+    "architecture": "Transformer",
+    "quantization": "int6 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 4096,
+          "eval_length": 4096
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 6,
+          "scope": "all F.linear params"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Higher initial gain for QK-normalization",
+          "parameters": {
+            "gain": 2.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Shift stationary RoPE dimensions of K forward by 1 position",
+          "parameters": {
+            "offset": 1
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SWA",
+          "description": "Sliding window attention on lower layers, full attention on upper layers",
+          "parameters": {
+            "window_size": 256,
+            "full_attention_layers": 5
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all weights"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": 9
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "window_size": 256
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.99,
+          "other_params": {
+            "warmup_start_momentum": 0.92
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "learning_rate": 0.025
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonal initialization with muP-scaled output projections"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Bigram hash embedding",
+          "parameters": {
+            "buckets": 3072,
+            "dim": 112
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_steps": 4000
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder skip connections",
+          "parameters": {
+            "encoder": 5,
+            "decoder": 6
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate module",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "ReLU²",
+          "description": "relu-squared activation",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma-9",
+    "novel_contributions": [
+      "seq4096 training",
+      "bank-weight QAT on all F.linear parameters",
+      "QK-Gain 2.5",
+      "partial key offset for stationary RoPE dimensions",
+      "SWA with window size 256",
+      "full Hessian GPTQ calibration",
+      "lzma compression"
+    ],
+    "artifact_size": "16,116,257 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1513,
+    "title": "Non-record JEPA submission: VRS (Void Rescue System)",
+    "author": "ikermoel",
+    "status": "open",
+    "val_bpb": 1.8658,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "JEPA-style regression transformer",
+          "description": "Causal transformer trained to predict next-token embeddings with an MSE objective instead of direct token classification.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP",
+          "description": "Small auxiliary rescuer decoder that maps raw regression latents v_void to corrected latents v_rescued before final decoding.",
+          "parameters": {
+            "parameters": 524288
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "JEPA-style regression language model for the Parameter Golf challenge",
+      "Auxiliary rescuer decoder that corrects regression latents before token decoding",
+      "Regression-only training with MSE against target token embeddings",
+      "Three-seed stability evidence under the 10-minute 8xH100 budget",
+      "Comparison against standalone regression-only baselines"
+    ],
+    "artifact_size": "15,980,840 bytes",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
