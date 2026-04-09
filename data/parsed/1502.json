@@ -1,0 +1,219 @@
+{
+  "pr_number": 1502,
+  "title": "[Non Record] Learn to Learn: Meta-Learning-TTT Redesign \u2014 Cross-Chunk FOMAML + Delta-Loss + MetaSGD",
+  "author": "SPThole",
+  "status": "open",
+  "val_bpb": 1.11469,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "11-layer U-Net GPT with encoder-decoder skip connections.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 query heads and 4 key-value heads.",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied token embedding and output head weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Position-conditional bigram hash table with word-start/within-word bucket split.",
+        "parameters": {
+          "table_size": "4096x64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-layer shared attention with banked Q/K/V/O and MLP weights adapted during TTT.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE",
+        "description": "Value embeddings added on the last 4 layers.",
+        "parameters": {
+          "layers": [
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_with": "AdamW for embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.998
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50,
+          "phase": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "phase": "warmdown"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attn+MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "lr_schedule": "cosine decay",
+          "momentum": 0.9,
+          "epochs": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Cross-chunk FOMAML meta-learning split inner-loop adaptation and outer-loop evaluation across different chunks/documents.",
+        "parameters": {
+          "every_n_steps": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Delta-loss outer objective that rewards improvement from adaptation by combining post-adaptation loss with a pre/post loss difference term.",
+        "parameters": {
+          "loss_weight": 0.5,
+          "delta_weight": 0.3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MetaSGD with learned per-bank-per-layer learning-rate scales for inner-loop adaptation.",
+        "parameters": {
+          "total_parameters": 66
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Cross-chunk FOMAML meta-TTT split using different documents for inner and outer loops",
+    "Delta-loss outer objective that explicitly rewards adaptation improvement",
+    "MetaSGD per-bank-per-layer learned learning-rate scales",
+    "Finding that TTT delta is invariant across no-meta, original FOMAML, and redesigned meta-TTT variants",
+    "Evidence that the TTT ceiling is architecture-limited rather than initialization-limited",
+    "Strict-load hotfix for exported checkpoints with excluded MetaSGD parameters"
+  ],
+  "artifact_size": "15.14 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

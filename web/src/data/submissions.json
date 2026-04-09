@@ -133481,6 +133481,193 @@
     "is_record": false
   },
   {
+    "pr_number": 1388,
+    "title": "[Notable Non-Record Submission] Everything Everywhere All in One Bit: XNOR-mally I'd use floats - 118M XNOR-Net - 1.539 BPB - 10-Min and Unconstrained Runs",
+    "author": "CiprianFlorin-Ifrim",
+    "status": "open",
+    "val_bpb": 1.539,
+    "architecture": "Transformer",
+    "quantization": "XNOR-Net",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Transformer split into encoder/decoder halves with learnable skip connections between corresponding layers.",
+          "parameters": {
+            "layers": 10,
+            "model_dim": 1024,
+            "heads": 8,
+            "kv_heads": 4,
+            "mlp_mult": 4,
+            "embed_dim": 384
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input embeddings and output head are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Uses YaRN-scaled rotary positional embeddings.",
+          "parameters": {
+            "base": 5000,
+            "max_len": 2048
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "signsq",
+          "description": "Activation function defined as x * abs(x) to preserve signed information under activation binarization.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "Smear module was explored as an architectural variant, but not used in the final config.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": null,
+          "scope": "weights and activations"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "FP8",
+          "bits": 8,
+          "scope": "FP parameters and scales"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "BF16 scales",
+          "bits": 16,
+          "scope": "group scales"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "activation binarization",
+          "bits": 1,
+          "scope": "activations"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.04,
+          "momentum": 0.8,
+          "other_params": {
+            "backend_steps": 3
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "start_step": 0
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 16
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 10
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "gradient clipping",
+          "parameters": {
+            "norm": 1
+          }
+        }
+      }
+    ],
+    "compression": "brotli-11",
+    "novel_contributions": [
+      "Full XNOR-Net language model with both weight and activation binarization",
+      "Mode 2 activation binarization that skips the MLP down projection to avoid the full-XNOR quality ceiling",
+      "signsq activation to preserve signed information under activation binarization",
+      "Scale QAT to eliminate long-run roundtrip degradation from FP8 scale quantization",
+      "Custom Triton XNOR+popcount kernel for true 1-bit matrix multiplication",
+      "Sequence length scheduling from short to long contexts during training",
+      "Low-momentum Muon optimization tuned for binary STE training",
+      "U-Net skip connections as an alternative to attention residuals for binary transformers"
+    ],
+    "artifact_size": "15.91MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
     "pr_number": 1389,
     "title": "Non-record: GPTQ-lite Scale Clamp Fix + 6-bit Packing + Depth Recurrence on Stack B",
     "author": "Rome-1",
@@ -145646,6 +145833,429 @@
       "14.09MB compressed artifact under the competition limit"
     ],
     "artifact_size": "14.09MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1501,
+    "title": "[Non Record] Learn to Learn: Position-Conditional Bigram Hashing + Meta-Learning + TTT Ablation",
+    "author": "SPThole",
+    "status": "open",
+    "val_bpb": 1.11588,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-layer shared attention with banked Q/O and KV weights shared across all 11 layers.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Hash-based bigram embedding table with position-conditional splitting of buckets by word-start vs within-word tokens.",
+          "parameters": {
+            "table_shape": "4096x64",
+            "split_buckets": 2047
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "TrigramHash",
+          "description": "Adds trigram lookup reusing the same hash embedding table.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary position embeddings applied to only part of each attention head.",
+          "parameters": {
+            "dimensions": 16,
+            "of_total": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "11-layer U-Net GPT with encoder-decoder skip connections.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped-query attention with 8 query heads and 4 key-value heads.",
+          "parameters": {
+            "q_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input token embeddings are tied to the output head weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "matrix weights"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings and scalar parameters"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.998
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "interval": 50,
+            "start_phase": "warmdown"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attention + MLP weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": 8,
+          "scope": "model"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "chunk_tokens": 65536
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "momentum": 0.9,
+            "learning_rate": 0.004,
+            "epochs": 4
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "warmdown_start_step": 2200
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "FOMAML-style meta-TTT during training, enabled every 4 steps in the parent experiment and ablated off in exp105a.",
+          "parameters": {
+            "every": 4,
+            "enabled_in_this_pr": false
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Position-conditional bigram hashing that splits hash buckets by word-start vs within-word tokens",
+      "Trigram lookup added without extra parameters by reusing the same hash table",
+      "Controlled ablation showing inherited FOMAML meta-TTT contributes only noise-level improvement",
+      "Analysis that same-batch FOMAML meta-TTT is misaligned with score-first-then-adapt TTT",
+      "Weight-space/subspace analysis showing Muon can rotate weights while preserving function"
+    ],
+    "artifact_size": "15.08 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1502,
+    "title": "[Non Record] Learn to Learn: Meta-Learning-TTT Redesign — Cross-Chunk FOMAML + Delta-Loss + MetaSGD",
+    "author": "SPThole",
+    "status": "open",
+    "val_bpb": 1.11469,
+    "architecture": "Transformer",
+    "quantization": "GPTQ 6-bit",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "11-layer U-Net GPT with encoder-decoder skip connections.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped-query attention with 8 query heads and 4 key-value heads.",
+          "parameters": {
+            "q_heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied token embedding and output head weights.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "BigramHash",
+          "description": "Position-conditional bigram hash table with word-start/within-word bucket split.",
+          "parameters": {
+            "table_size": "4096x64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Partial rotary position embeddings applied to a subset of head dimensions.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-layer shared attention with banked Q/K/V/O and MLP weights adapted during TTT.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "VE",
+          "description": "Value embeddings added on the last 4 layers.",
+          "parameters": {
+            "layers": [
+              7,
+              8,
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_with": "AdamW for embeddings/scalars"
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings and scalars"
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.998
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "SWA",
+          "parameters": {
+            "interval": 50,
+            "phase": "warmdown"
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "phase": "warmdown"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attn+MLP"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "late QAT",
+          "bits": null,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "lr_schedule": "cosine decay",
+            "momentum": 0.9,
+            "epochs": 4
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Cross-chunk FOMAML meta-learning split inner-loop adaptation and outer-loop evaluation across different chunks/documents.",
+          "parameters": {
+            "every_n_steps": 4
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Delta-loss outer objective that rewards improvement from adaptation by combining post-adaptation loss with a pre/post loss difference term.",
+          "parameters": {
+            "loss_weight": 0.5,
+            "delta_weight": 0.3
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "MetaSGD with learned per-bank-per-layer learning-rate scales for inner-loop adaptation.",
+          "parameters": {
+            "total_parameters": 66
+          }
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Cross-chunk FOMAML meta-TTT split using different documents for inner and outer loops",
+      "Delta-loss outer objective that explicitly rewards adaptation improvement",
+      "MetaSGD per-bank-per-layer learned learning-rate scales",
+      "Finding that TTT delta is invariant across no-meta, original FOMAML, and redesigned meta-TTT variants",
+      "Evidence that the TTT ceiling is architecture-limited rather than initialization-limited",
+      "Strict-load hotfix for exported checkpoints with excluded MetaSGD parameters"
+    ],
+    "artifact_size": "15.14 MB",
     "prompt_version": "v2",
     "is_record": false
   }

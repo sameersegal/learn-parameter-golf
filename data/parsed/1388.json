@@ -1,0 +1,187 @@
+{
+  "pr_number": 1388,
+  "title": "[Notable Non-Record Submission] Everything Everywhere All in One Bit: XNOR-mally I'd use floats - 118M XNOR-Net - 1.539 BPB - 10-Min and Unconstrained Runs",
+  "author": "CiprianFlorin-Ifrim",
+  "status": "open",
+  "val_bpb": 1.539,
+  "architecture": "Transformer",
+  "quantization": "XNOR-Net",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Transformer split into encoder/decoder halves with learnable skip connections between corresponding layers.",
+        "parameters": {
+          "layers": 10,
+          "model_dim": 1024,
+          "heads": 8,
+          "kv_heads": 4,
+          "mlp_mult": 4,
+          "embed_dim": 384
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input embeddings and output head are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses YaRN-scaled rotary positional embeddings.",
+        "parameters": {
+          "base": 5000,
+          "max_len": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "signsq",
+        "description": "Activation function defined as x * abs(x) to preserve signed information under activation binarization.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Smear module was explored as an architectural variant, but not used in the final config.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "weights and activations"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "FP8",
+        "bits": 8,
+        "scope": "FP parameters and scales"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "BF16 scales",
+        "bits": 16,
+        "scope": "group scales"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "activation binarization",
+        "bits": 1,
+        "scope": "activations"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.8,
+        "other_params": {
+          "backend_steps": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "start_step": 0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 10.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 1.0
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Full XNOR-Net language model with both weight and activation binarization",
+    "Mode 2 activation binarization that skips the MLP down projection to avoid the full-XNOR quality ceiling",
+    "signsq activation to preserve signed information under activation binarization",
+    "Scale QAT to eliminate long-run roundtrip degradation from FP8 scale quantization",
+    "Custom Triton XNOR+popcount kernel for true 1-bit matrix multiplication",
+    "Sequence length scheduling from short to long contexts during training",
+    "Low-momentum Muon optimization tuned for binary STE training",
+    "U-Net skip connections as an alternative to attention residuals for binary transformers"
+  ],
+  "artifact_size": "15.91MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
