@@ -143525,5 +143525,667 @@
     "artifact_size": "135MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1481,
+    "title": "Non-record: ALBERT-Style Low-Rank Embedding Factorisation (ablation study, 1×H100)",
+    "author": "Cayton-Tech",
+    "status": "open",
+    "val_bpb": 1.344,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Uses tied input/output embeddings with a low-rank embedding bottleneck and projection layers to factorize the token embedding matrix.",
+          "parameters": {
+            "vocab_size": 1024,
+            "model_dim": 512,
+            "bottleneck_ranks": [
+              64,
+              128
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "ALBERT-style low-rank embedding factorisation replacing a full embedding table with embedding bottleneck plus linear projection.",
+          "parameters": {
+            "ranks_tested": [
+              64,
+              128
+            ]
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Ablation study of ALBERT-style low-rank embedding factorisation at a 1024-token vocabulary scale",
+      "Comparison of rank-64 and rank-128 embedding bottlenecks against an unmodified baseline",
+      "Identification that low-rank embedding factorisation does not improve BPB for this small vocabulary",
+      "Implementation and explanation of the tied-embedding dimension mismatch fix for factorized embeddings"
+    ],
+    "artifact_size": "14.09 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1482,
+    "title": "Record: SP8192 + Pre-Quant TTT (QK 5.25, 8ep, freeze-1) — val_bpb 1.0787 (3-seed mean)",
+    "author": "aamodbhatt",
+    "status": "open",
+    "val_bpb": 1.07873723,
+    "architecture": "Transformer",
+    "quantization": "GPTQ",
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": null,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Uses the SP8192 recurrence pipeline as part of the model stack.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 8,
+            "learning_rate": 0.00045,
+            "freeze_blocks": 1
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "SP8192 pre-quant TTT lane with tuned QK gain initialization",
+      "Test-time training with 8 epochs, learning rate 0.00045, and freezing 1 block",
+      "3-seed confirmation of improved sliding-window validation bpb",
+      "Use of sliding window evaluation with stride 64"
+    ],
+    "artifact_size": "16,000,000 bytes",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1484,
+    "title": "Non-Record: U-Net Transformer + Int8 QAT + LeakyReLU² + Muon — 1.6656 BPB (DGX Spark)",
+    "author": "AlirezaAlampour",
+    "status": "closed",
+    "val_bpb": 1.6656,
+    "architecture": "Transformer",
+    "quantization": "int8 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder style skip connections with learned skip weights and per-block residual mixing from input embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "layers": 9,
+            "dim": 512,
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Leaky ReLU squared activation in the MLP.",
+          "parameters": {
+            "negative_slope": 0.5,
+            "squared": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "newton_schulz_orthogonalization": true
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Adam",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings"
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "all weight matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 8,
+          "scope": "forward pass"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": 9
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "cap": 30,
+            "activation": "tanh"
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "wallclock_based": true
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "U-Net skip connections in a Transformer language model",
+      "LeakyReLU squared activation",
+      "Muon optimizer with Newton-Schulz orthogonalization",
+      "Int8 per-row QAT with straight-through estimator",
+      "EMA weight averaging",
+      "zlib-compressed serialized checkpoint",
+      "Training and evaluation on a single NVIDIA DGX Spark consumer Blackwell GPU"
+    ],
+    "artifact_size": "~8.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1485,
+    "title": "Record: SP8192 + 3-Layer Depth Recurrence + Parallel Residuals + EMA + QK5 + Pre-Quant AdamW TTT — val_bpb 1.0679 (3-seed mean)",
+    "author": "ndokutovich",
+    "status": "open",
+    "val_bpb": 1.0679,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6",
+    "optimizer": "MuonEq-R",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer recurrence with layers 3, 4, and 5 repeated to create 13 virtual layers from 11 physical layers.",
+          "parameters": {
+            "layers": 3,
+            "physical_layers": 11,
+            "virtual_layers": 13,
+            "repeat_layers": [
+              3,
+              4,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "GPT-J style parallel residual pathway starting from layer 7.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Learnable per-head QK gain applied to Q only.",
+          "parameters": {
+            "gain": 5
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "AdamW TTT",
+          "parameters": {
+            "epochs": 6,
+            "learning_rate": 0.0005,
+            "freeze_blocks": 2,
+            "schedule": "cosine decay",
+            "pre_quant": true
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "MuonEq-R",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "row_normalized_newton_schulz": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Squared LeakyReLU activation with slope 0.5.",
+          "parameters": {
+            "slope": 0.5,
+            "squared": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Sigmoid-gated U-Net style skip connections.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "First submission combining depth recurrence, parallel residuals, EMA, QK-Gain, pre-quant AdamW TTT, and SDClip GPTQ int6 in one stack.",
+      "3-layer depth recurrence with layers 3, 4, and 5 repeated to expand 11 physical layers into 13 virtual layers.",
+      "GPT-J style parallel residuals starting from layer 7.",
+      "Pre-quant AdamW test-time training on validation data before quantization, baked into the final artifact.",
+      "SDClip GPTQ int6 with int8 embeddings and brotli compression.",
+      "Achieved a 3-seed mean val_bpb of 1.0679."
+    ],
+    "artifact_size": "~15.95 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1486,
+    "title": "Non-Record: U-Net Transformer + Int8 QAT + LeakyReLU² + Muon — 1.6656 BPB (DGX Spark)",
+    "author": "AlirezaAlampour",
+    "status": "open",
+    "val_bpb": 1.6656,
+    "architecture": "Transformer",
+    "quantization": "int8 QAT",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Encoder-decoder style skip connections with learned skip weights and per-block residual mixing.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+          "parameters": {
+            "layers": 9,
+            "heads": 8,
+            "kv_heads": 4,
+            "dim": 512
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Leaky ReLU squared MLP activation.",
+          "parameters": {
+            "negative_slope": 0.5,
+            "squared": true
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Input and output embeddings are tied.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RoPE",
+          "description": "Rotary positional embeddings used for attention.",
+          "parameters": {
+            "base": 10000
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 8,
+          "scope": "all weight matrices"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "newton_schulz_orthogonalization": true,
+            "adam_for_embeddings": true
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": null
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": 9
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "cap": 30,
+            "activation": "tanh"
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "wallclock_based": true
+          }
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": 1024
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "U-Net style skip connections in a Transformer language model",
+      "LeakyReLU squared activation",
+      "Muon optimizer with Newton-Schulz orthogonalization",
+      "Int8 per-row QAT with straight-through estimator",
+      "EMA weight averaging combined with zlib-compressed serialized checkpoint",
+      "Demonstration of competitive training on a single DGX Spark consumer Blackwell GPU"
+    ],
+    "artifact_size": "~8.8 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1487,
+    "title": "Record: SP8192 + Recur345 + Par7 + EMA + QK5.25 + Pre-Quant TTT 10ep — val_bpb 1.0600 (3-seed mean)",
+    "author": "ndokutovich",
+    "status": "open",
+    "val_bpb": 1.06,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6/int8",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer depth recurrence in an 11L/13 virtual-layer Transformer with parallel residuals.",
+          "parameters": {
+            "layers": 3,
+            "virtual_layers": 13
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Parallel residual/skip connections starting from layer 7.",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "weights + embeddings"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": null,
+          "scope": "weights and embeddings"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "prequant_ttt": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 10,
+            "learning_rate": 0.00045,
+            "freeze_blocks": 1,
+            "schedule": "cosine"
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "QK gain tuning with QK_GAIN_INIT set to 5.25.",
+          "parameters": {
+            "qk_gain_init": 5.25
+          }
+        }
+      }
+    ],
+    "compression": "brotli",
+    "novel_contributions": [
+      "Pre-quantization TTT on validation data baked into the artifact",
+      "Hyperparameter tuning of pre-quant TTT (QK gain, epochs, freeze blocks, learning rate)",
+      "3-seed mean record result with very low variance",
+      "Mixed GPTQ quantization with int6 weights and int8 embeddings",
+      "EMA-based full-stack submission with depth recurrence and parallel residuals"
+    ],
+    "artifact_size": "~15.95 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
