@@ -1,0 +1,166 @@
+{
+  "pr_number": 1489,
+  "title": "Record: SP1024 + Pre-quant TTT + Parallel Residuals \u2014 1.0736 BPB (beats 1.1147 by 3.66%)",
+  "author": "joshkmartinez",
+  "status": "open",
+  "val_bpb": 1.07357,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "epochs": 6,
+          "freeze_blocks": 2,
+          "batch_seqs": 32,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "NTK-aware RoPE used for attention positional encoding.",
+        "parameters": {
+          "base": 10000,
+          "train_seq": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Looping over layers 4-5 for two loops.",
+        "parameters": {
+          "loops": 2,
+          "start_layer": 4,
+          "end_layer": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Parallel residual connections added from deeper layers onward.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.085,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_momentum_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "prequant_ttt_lr": 0.0005,
+          "prequant_ttt_epochs": 6
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "ETLB (Enhanced Token-Level Blending) used during evaluation to improve val_bpb.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.085
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Pre-quantization test-time training before GPTQ quantization",
+    "SP1024 custom tokenizer with 1024 vocabulary",
+    "Parallel residual connections from layer 7 onward",
+    "Higher QK-Gain setting of 5.0",
+    "High-decay EMA stabilization"
+  ],
+  "artifact_size": "13.87 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
