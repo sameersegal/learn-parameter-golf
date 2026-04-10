@@ -1,0 +1,141 @@
+{
+  "pr_number": 1523,
+  "title": "Record: SP8192 + Triple Recurrence + Banking + Fused MLP + Muon 0.97 \u2014 val_bpb 1.0778 (3-seed mean)",
+  "author": "EthanYangTW",
+  "status": "open",
+  "val_bpb": 1.0778,
+  "architecture": "Transformer",
+  "quantization": "int6/int8 GPTQ",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Triple depth recurrence with 17 virtual layers from 11 physical layers; layers 3, 4, and 5 looped multiple times and enabled partway through training.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17,
+          "loop_layers": [
+            3,
+            4,
+            5
+          ],
+          "activation_start": 35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Eval-time hash embedding using a bigram hash over prefix tokens, with a zero-initialized learned embedding trained during TTT.",
+        "parameters": {
+          "vocab_size": 16384,
+          "embedding_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Fused MLP uses LeakyReLU with squared activation in the MLP path.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.97,
+        "other_params": {
+          "lr": 0.022
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.01
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 66.7
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Parameter banking with parallel Muon across 4 contiguous banks",
+    "Batched Newton-Schulz optimizer step for faster training",
+    "Fused MLP Triton TMA kernel combining fc, LeakyReLU, and square",
+    "Muon momentum reduced to 0.97",
+    "Triple depth recurrence with 17 virtual layers",
+    "Eval-time BigramHash embedding trained during TTT",
+    "TTT learning rate tuned to 0.01",
+    "Score-first TTT compliance"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
