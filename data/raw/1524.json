@@ -1,0 +1,12 @@
+{
+  "number": 1524,
+  "title": "Non-Record : Hybrid XSA-SSM",
+  "author": "Jash-Vora",
+  "body": "",
+  "state": "closed",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-10T13:03:31Z",
+  "updated_at": "2026-04-10T13:05:19Z",
+  "submission_readme": "# Hybrid XSA-SSM \u2014 Non-Record 16 MB Track\n\n**val_bpb: 1.255216** (post-quantization) | **1.2146 pre-quantization** | 14,915,938 bytes | Stopped at step 3723 (600s wallclock cap)\n\nBuilt on PR #549. 8\u00d7H100 SXM | PyTorch 2.4.0-py3.11-cuda12.4.1\n\n---\n\n## SSM Hybrid Layer\n\nThe core novelty of this submission is replacing the middle transformer layer (layer 5, i.e. `num_layers // 2`) with a [Mamba](https://github.com/state-spaces/mamba) SSM block instead of a standard attention block:\n\n```python\nmamba = Mamba(d_model=512, d_state=64, d_conv=4, expand=2)\n```\n\nIt is inserted as a residual contribution:\n\n```python\nif isinstance(block, Mamba):\n    x_out = x + run_mamba(block, x.to(torch.bfloat16)).to(x.dtype)\n```\n\nPlacing it at the midpoint of the U-Net-style encoder\u2013decoder stack lets the SSM act as a bottleneck that compresses long-range sequence state before the decoder layers unpack it. The surrounding transformer layers handle local attention patterns as usual.\n\nThe Mamba block's internal parameters (`A_log`, `dt_bias`, `D`) are routed to the AdamW scalar optimizer rather than Muon, since they don't benefit from Newton-Schulz orthogonalization. The SSM block contributes ~1.84M of the model's ~25.95M total parameters.\n\n`@torch._dynamo.disable` is applied to the Mamba forward call to avoid TorchDynamo tracing issues with the SSM's custom CUDA kernels.\n\n---\n\n## Results\n\n| Metric | Value |\n|---|---|\n| Pre-quantization val_bpb | 1.2146 |\n| Post-quantization val_bpb | 1.255216 |\n| val_loss (nats) | 2.119375 |\n| Steps completed | 3723 / 20000 |\n| Wallclock | 600s |\n| Artifact size | 14,915,938 bytes |"
+}
