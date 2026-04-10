@@ -1,0 +1,154 @@
+{
+  "pr_number": 1517,
+  "title": "Record: Depth Recurrence + Banked Muon + Pre-Quant TTT (18ep) \u2014 val_bpb 1.0632 (3-seed mean)",
+  "author": "RulinShao",
+  "status": "open",
+  "val_bpb": 1.0632,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses layers 3, 4, and 5 once to create 14 virtual layers from 11 physical layers, activated after step 2000.",
+        "parameters": {
+          "layers": 3,
+          "start_step": 2000,
+          "physical_layers": 11,
+          "virtual_layers": 14
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "banked": true,
+          "parallel": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 18,
+          "learning_rate": 0.0003,
+          "freeze_blocks": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA enabled in all layers.",
+        "parameters": {
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned token blending gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Leaky ReLU squared MLP activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "ttt": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Depth recurrence integrated into a parameter-banked Parallel Muon architecture",
+    "Reuse of layers 3, 4, and 5 to create 14 virtual layers from 11 physical layers with zero extra parameters",
+    "Pre-quantization test-time training with AdamW for 18 epochs before quantization",
+    "Combination of depth recurrence, banked Muon, and SDClip GPTQ quantization into a single record submission"
+  ],
+  "artifact_size": "~15.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

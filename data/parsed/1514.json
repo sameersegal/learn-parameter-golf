@@ -1,0 +1,148 @@
+{
+  "pr_number": 1514,
+  "title": "Record: SP8192 + Muon 0.97 + Legal Score-First TTT \u2014 val_bpb 1.07983 (3-seed mean)",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.07983,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.085,
+        "momentum": 0.97,
+        "other_params": {
+          "warmup_start": 0.92,
+          "warmup_end": 0.97,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 twice during training.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "repeats": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU^2 activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "freeze_blocks": 0,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal token n-gram tilt using a prefix-only token expert; within-word and word-start experts disabled for legality.",
+        "parameters": {
+          "base_beta": 2.0,
+          "agree_bonus": 0.1,
+          "within_beta": 0.0,
+          "word_beta": 0.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Muon momentum reduced to 0.97, improving validation BPB over the default 0.99 setting.",
+    "Legal score-first test-time training where each chunk is scored before any gradient update.",
+    "Causal token n-gram tilt using only the prefix-only token expert with within-word and word-start experts disabled.",
+    "Combined SP8192 baseline with legal TTT and causal n-gram tilt to reach a new 3-seed mean record."
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
