@@ -1,0 +1,166 @@
+{
+  "pr_number": 1552,
+  "title": "RecurLoRA v2: Pass Index Embeddings + Low-Rank Adapters on SP8192 Depth Recurrence",
+  "author": "Tanush1912",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence where layers 3-5 are executed repeatedly across passes.",
+        "parameters": {
+          "layers": 3,
+          "looped_layers": [
+            3,
+            4,
+            5
+          ],
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used across all layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Attention and MLP read from the same input in layers 7+.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "pass index embeddings",
+        "description": "Learned per-pass embeddings added to hidden states before repeated layer execution.",
+        "parameters": {
+          "params": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RecurLoRA",
+        "description": "Rank-2 LoRA corrections on Q, K, V, O attention projections for repeated passes.",
+        "parameters": {
+          "rank": 2,
+          "projections": [
+            "Q",
+            "K",
+            "V",
+            "O"
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "matrices and embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "parallel": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Pass index embeddings to distinguish recurrence iteration for shared layers",
+    "Rank-2 RecurLoRA attention adapters on repeated passes",
+    "Combined per-pass specialization with negligible overhead on the SP8192 depth recurrence stack",
+    "Adaptation of the current frontier stack with recurrence-aware shared-layer conditioning"
+  ],
+  "artifact_size": "~16.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
