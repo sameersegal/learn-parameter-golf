@@ -1,0 +1,12 @@
+{
+  "number": 1543,
+  "title": "PTQ int6-attn + int5-mlp, 20L\u00d7256d, mlp=5 \u2014 val_bpb 1.3286",
+  "author": "PavelPaha",
+  "body": "20-layer GPT (dim=256, MLP\u00d75, GQA 8/4) with post-training quantization:\r\nint6 for attention weights, int5 for MLP weights.\r\nMuon+Adam optimizer, trapezoid LR, ~4500 steps in 10 min.\r\n\r\n- val_bpb (full precision): 1.2827\r\n- val_bpb (quantized roundtrip): 1.3286\r\n- Compressed model size: 15 MB (int8+zlib)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-11T14:17:04Z",
+  "updated_at": "2026-04-11T15:04:11Z",
+  "submission_readme": "# Report: PTQ int6-attn + int5-mlp, L=20, mlp=5\n\n## Approach\n\n- **Architecture**: GPT-like model with 20 layers (`num_layers=20`), `model_dim=256`, MLP multiplier 5, GQA (8 heads, 4 KV-heads), tied embeddings, vocab_size=1024\n- **Quantization (PTQ)**: post-training quantization \u2014 int6 for attention weights, int5 for MLP weights. QAT was not used (`qat_bits=0`)\n- **Optimizer**: Muon + Adam (`muon_adam`) with trapezoid LR schedule, warmup 20 steps, warmdown 1200 iterations\n- **Learning rates**: embed_lr=0.6, head_lr=0.008, matrix_lr=0.04, scalar_lr=0.04, tied_embed_lr=0.05\n- **Data**: FineWeb 10B, SentencePiece tokenizer (1024 tokens), batch 524288 tokens, seq_len=1024\n- **Training**: 8\u00d7GPU (distributed), wallclock limit 600 seconds (10 minutes), ~4500 iterations completed\n- **Compilation**: `torch.compile` enabled for both model and Muon optimizer\n- **FlashAttention**: not used (flash-attn package unavailable, fallback to torch SDPA)\n- **Serialization**: int8 quantization + zlib compression for the final checkpoint\n\n## Results\n\n### Validation (final, after int8 zlib roundtrip)\n\n| Metric | Value |\n|--------|-------|\n| **val_loss (full precision)** | 2.1657 |\n| **val_bpb (full precision)** | 1.2827 |\n| **val_loss (quantized model)** | 2.2432 |\n| **val_bpb (quantized model)** | 1.3286 |\n\n### Model Size\n\n| Artifact | Size |\n|----------|------|\n| FP32 checkpoint (`final_model.pt`) | **66 MB** (68,848,491 bytes) |\n| Int8 + zlib (`final_model.int8.ptz`) | **15 MB** (15,416,793 bytes) |\n| Int8 payload (before compression) | **21 MB** (21,389,952 bytes) |\n| Code (`train_gpt_lib/` + `train_gpt.py` + `main.py`) | **~92 KB** (94,353 bytes) |\n| **Total (compressed model + code)** | **~15.1 MB** |\n"
+}

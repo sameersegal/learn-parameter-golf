@@ -150051,5 +150051,138 @@
     "artifact_size": "~15.99 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1542,
+    "title": "Submission: Recursive Layer Sharing | 13.9 MB | 1.53 BPB",
+    "author": "negrurv",
+    "status": "open",
+    "val_bpb": 1.5363,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Removed the standard encoder/decoder split and recursively passed data through the same Block of weights 9 times during the forward pass.",
+          "parameters": {
+            "layers": 1,
+            "repeats": 9
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Single shared block reused recursively across multiple passes.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RMSNorm",
+          "description": "Used a weightless RMSNorm variant (RMSNormNoWeight) to reduce parameter count.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Recursive Transformer with a single shared Block reused 9 times",
+      "Removal of the standard encoder/decoder split",
+      "Weightless RMSNorm variant to reduce parameters"
+    ],
+    "artifact_size": "13.9 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1543,
+    "title": "PTQ int6-attn + int5-mlp, 20L×256d, mlp=5 — val_bpb 1.3286",
+    "author": "PavelPaha",
+    "status": "open",
+    "val_bpb": 1.3286,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int5",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input embeddings and output head embeddings.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int5",
+          "bits": null,
+          "scope": "attention weights and MLP weights"
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "adam": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmup_steps": 20,
+            "warmdown_iterations": 1200,
+            "shape": "trapezoid"
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 1024,
+          "eval_length": null
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Post-training quantization with int6 attention weights and int5 MLP weights",
+      "Muon+Adam optimization with trapezoid learning-rate schedule",
+      "Grouped query attention with tied embeddings in a 20-layer GPT-like model",
+      "Int8 plus zlib compression to fit the final artifact within the size limit"
+    ],
+    "artifact_size": "15 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
