@@ -1,0 +1,60 @@
+{
+  "pr_number": 1529,
+  "title": "Record: ImprovedParallelResiduals, 1.0744 BPB / 2.7752 nats, -0.0034 BPB /   -0.0088 nats vs PR #1523",
+  "author": "msisovic",
+  "status": "open",
+  "val_bpb": 1.07438392,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Decoder U-Net skips are written only into lane0 to preserve a cheaper and more stable skip path.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Parallel residual split-lane decoder where attention and MLP read from different lanes and both outputs are accumulated into both lanes at the end of the block.",
+        "parameters": {
+          "parallel_residual_start": 8
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "enabled": true,
+          "learning_rate": 0.01
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Reintroduced fuller parallel residual routing into the split-lane decoder",
+    "Kept GPT-J-style parallel-in-time updates while restoring richer learned routing between attention and MLP lanes",
+    "Preserved the cheaper and more stable decoder U-Net skip path by writing skips only into lane0",
+    "Moved PARALLEL_RESIDUAL_START from 7 to 8",
+    "Required cutlass_evt_fusion to recover full throughput under the wallclock cap"
+  ],
+  "artifact_size": "~15.96 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

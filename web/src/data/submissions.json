@@ -148488,5 +148488,314 @@
     "artifact_size": "16,040,603 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1529,
+    "title": "Record: ImprovedParallelResiduals, 1.0744 BPB / 2.7752 nats, -0.0034 BPB /   -0.0088 nats vs PR #1523",
+    "author": "msisovic",
+    "status": "open",
+    "val_bpb": 1.07438392,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Decoder U-Net skips are written only into lane0 to preserve a cheaper and more stable skip path.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "other",
+          "description": "Parallel residual split-lane decoder where attention and MLP read from different lanes and both outputs are accumulated into both lanes at the end of the block.",
+          "parameters": {
+            "parallel_residual_start": 8
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "enabled": true,
+            "learning_rate": 0.01
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.97,
+          "other_params": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Reintroduced fuller parallel residual routing into the split-lane decoder",
+      "Kept GPT-J-style parallel-in-time updates while restoring richer learned routing between attention and MLP lanes",
+      "Preserved the cheaper and more stable decoder U-Net skip path by writing skips only into lane0",
+      "Moved PARALLEL_RESIDUAL_START from 7 to 8",
+      "Required cutlass_evt_fusion to recover full throughput under the wallclock cap"
+    ],
+    "artifact_size": "~15.96 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1530,
+    "title": "Record: Varlen attention + fused MLP + doc-independent TTT (1.07643)",
+    "author": "samacqua",
+    "status": "open",
+    "val_bpb": 1.07643,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": null,
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention modification",
+          "description": "Replaced dense causal attention with Flash Attention 3 variable-length attention so tokens only attend within each packed document.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Fused MLP uses LeakyReLU(0.5) squared inside a custom Triton kernel.",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "scope": "per-document",
+            "independent_sequences": true
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "batched_loras": true
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Variable-length attention with packed documents to avoid cross-document attention and reduce FLOPs",
+      "Fused MLP kernel combining up-projection, LeakyReLU(0.5)^2, and squaring",
+      "Grouping many small parameters into a single all-reduce to reduce communication overhead",
+      "Document-independent LoRA test-time training applied separately to each validation sequence",
+      "Faster TTT implementation enabling smaller chunk sizes and better performance"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1531,
+    "title": "Add V22 Int6 fast-converging 16MB model (~8min on RTX 4090)",
+    "author": "mini-sarami",
+    "status": "open",
+    "val_bpb": 1.4537,
+    "architecture": "Transformer",
+    "quantization": "INT6",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int6",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "V22",
+          "description": "Custom V22 architecture with efficient parameter usage",
+          "parameters": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "tuned": true
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": 9
+        }
+      }
+    ],
+    "compression": "zlib-9",
+    "novel_contributions": [
+      "INT6 quantization for aggressive compression",
+      "V22 architecture with efficient parameter usage",
+      "Fast convergence under strict compute and size constraints",
+      "Use of zlib compression to fit the artifact within the size limit",
+      "Single RTX 4090 training setup"
+    ],
+    "artifact_size": "11.38MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1532,
+    "title": "Record: SP8192 + 3-Layer Recurrence + Parallel Residuals + QK-Gain 5.25 + Legal TTT + Asynchronous Data Loader - val_bpb 1.0803",
+    "author": "nogakeren",
+    "status": "open",
+    "val_bpb": 1.0803,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "SGD",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer recurrence applied to layers 3, 4, and 5, creating virtual layers from physical layers.",
+          "parameters": {
+            "layers": 3,
+            "activate_at_frac": 0.35,
+            "virtual_layers": 17,
+            "physical_layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "GPT-J style parallel residual connections where attention and MLP read from the same input.",
+          "parameters": {
+            "layers": "7+"
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "QK-Gain",
+          "description": "Learnable per-head query scaling.",
+          "parameters": {
+            "gain": 5.25
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.005,
+            "epochs": 3,
+            "momentum": 0.9
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "SGD",
+          "weight_decay": 0.095,
+          "momentum": 0.9,
+          "other_params": {
+            "lr": 0.005
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "warmdown": 0.72
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "lzma",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Asynchronous multi-threaded data loader with producer-consumer queue, batch prefetching, and pinned-memory transfer to hide CPU-to-GPU latency.",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "lzma",
+    "novel_contributions": [
+      "Migrated ShuffledSequenceLoader next_batch logic to numpy to reduce redundant copies and aten::copy_ overhead.",
+      "Implemented a multi-threaded asynchronous producer-consumer batch loader with prefetching and pinned-memory transfers.",
+      "Combined SP8192 with 3-layer recurrence, parallel residuals, QK-Gain 5.25, and legal score-first TTT.",
+      "Achieved val_bpb 1.0803 with a 3-seed mean under the 16MB artifact limit."
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]

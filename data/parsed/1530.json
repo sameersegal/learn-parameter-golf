@@ -1,0 +1,67 @@
+{
+  "pr_number": 1530,
+  "title": "Record: Varlen attention + fused MLP + doc-independent TTT (1.07643)",
+  "author": "samacqua",
+  "status": "open",
+  "val_bpb": 1.07643,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention modification",
+        "description": "Replaced dense causal attention with Flash Attention 3 variable-length attention so tokens only attend within each packed document.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Fused MLP uses LeakyReLU(0.5) squared inside a custom Triton kernel.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "scope": "per-document",
+          "independent_sequences": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "batched_loras": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Variable-length attention with packed documents to avoid cross-document attention and reduce FLOPs",
+    "Fused MLP kernel combining up-projection, LeakyReLU(0.5)^2, and squaring",
+    "Grouping many small parameters into a single all-reduce to reduce communication overhead",
+    "Document-independent LoRA test-time training applied separately to each validation sequence",
+    "Faster TTT implementation enabling smaller chunk sizes and better performance"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
