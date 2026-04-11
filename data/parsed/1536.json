@@ -1,0 +1,182 @@
+{
+  "pr_number": 1536,
+  "title": "Record: SP8192 + VarLen Attention + Doc-Independent LoRA TTT + Banking + Muon 0.97 \u2014 val_bpb 1.07747 (3-seed mean)",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.07747,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention",
+        "description": "VarLen flash attention restricted to within-document boundaries using per-document cu_seqlens.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 96,
+          "learning_rate": 0.0001,
+          "beta2": 0.999,
+          "weight_decay": 0.5,
+          "chunk_size": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Parameter banking / layer reuse with triple-depth recurrence, creating virtual layers from fewer physical layers.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17,
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP uses 4x expansion with SiLU gating and a PyTorch fallback implementation.",
+        "parameters": {
+          "expansion": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip gates / U-Net-style skip connections are included.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Parallel residuals and skip-gated connections are used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "newton_schulz_steps": 5,
+          "variant": "MuonEq-R"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.667
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": 8192
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "VarLen flash attention restricted to within-document boundaries",
+    "Doc-independent LoRA test-time training with score-before-update behavior",
+    "Parameter banking with triple-depth recurrence",
+    "PyTorch MLP fallback replacing Triton/CUTLASS dependency",
+    "Muon momentum 0.97 with MuonEq-R optimizer variant",
+    "Mixed int6/int8 GPTQ quantization with SDClip"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
