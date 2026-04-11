@@ -1,0 +1,12 @@
+{
+  "number": 1538,
+  "title": "records: David Ghazaryan \u2014 MoE + BigramHash4096 (val_bpb 1.11799)",
+  "author": "davie2009kh",
+  "body": "## Results\r\n| Seed | val_bpb | Artifact (bytes) |\r\n|------|---------|-----------------|\r\n| 1337 | 1.11764880 | 15,873,596 |\r\n| 42   | 1.11891002 | 15,893,104 |\r\n| 2025 | 1.11742168 | 15,908,116 |\r\n| **mean** | **1.11799350** | 15,891,605 |\r\n\r\n## Novel Contributions\r\n1. **BigramHash4096** \u2014 expanded from SOTA's 3072 to 4096 buckets\r\n2. **MoE MLP** \u2014 first Mixture-of-Experts exploration in this repo (4 experts, top-2 routing)\r\n\r\n## Hardware\r\n8\u00d7 H100 80GB HBM3 (YSU HPC Cluster)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-11T09:14:10Z",
+  "updated_at": "2026-04-11T09:14:10Z",
+  "submission_readme": "# [10min/16mb] David Ghazaryan \u2014 MoE + BigramHash4096\n\n**val_bpb: 1.1180** (3-seed mean) | 8\u00d7H100 SXM | 600s\n\n## Results\n\n| Seed | val_bpb | Artifact (bytes) |\n|------|---------|-----------------|\n| 1337 | 1.11764880 | 15,873,596 |\n| 42   | 1.11891002 | 15,893,104 |\n| 2025 | 1.11742168 | 15,908,116 |\n| **mean** | **1.11799350** | 15,891,605 |\n\n## Novel Contributions\n\n### 1. BigramHash 4096\nExpanded bigram hash table from SOTA's 3072 to 4096 buckets.\nProvides richer local context signal at the embedding stage.\n\n### 2. Mixture-of-Experts MLP (first in this repo)\nReplaces standard MLP with 4 experts + top-2 routing.\nSame active parameters but adds expert specialisation.\n\n## Architecture\n\n| Component | Setting | Introduced by |\n|-----------|---------|---------------|\n| Layers | 11 (512d, 8 heads, 4 KV) | Baseline |\n| MLP | 3x LeakyReLU(0.5)\u00b2 | PR #493 |\n| XSA | All 11 layers | PR #478 |\n| EMA | decay=0.997 | PR #374 |\n| Partial RoPE | 16/64 dims | PR #315 |\n| LN Scale | 1/\u221a(layer+1) | PR #315 |\n| GPTQ | Full Hessian AR self-gen | PR #1019 |\n| BigramHash | 4096 buckets dim=96 | This PR |\n| MoE MLP | 4 experts top-2 | This PR |\n| Compression | int6 + lzma | PR #414 |\n\n## Requirements\n\n```bash\npip install sentencepiece zstandard\npip install flash_attn_3 --find-links \\\n  https://windreamer.github.io/flash-attention3-wheels/cu128_torch291\n```\n\n## Run Command\n\n```bash\nBIGRAM_VOCAB_SIZE=4096 BIGRAM_DIM=96 WARMDOWN_ITERS=4000 TARGET_MB=15.9 SEED=1337 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## Hardware\n8\u00d7 H100 80GB HBM3 (YSU HPC Cluster, YerevaNN/Eleveight AI Program)\n"
+}

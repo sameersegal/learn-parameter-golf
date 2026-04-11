@@ -1,0 +1,165 @@
+{
+  "pr_number": 1537,
+  "title": "Non-Record: CAT, Sparsity (Structured and Hessian-Guided), MoE, KAN Negative Results",
+  "author": "pireylow",
+  "status": "open",
+  "val_bpb": 1.3971,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrence loop enabled across layers with a wider loop range in some runs.",
+        "parameters": {
+          "loop_start": 3,
+          "loop_end": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Parallel residuals / GPT-J style residual routing from layer 7+.",
+        "parameters": {
+          "layer_start": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU squared.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "pattern": "2:4 structured sparsity",
+          "scope": "MLP weight matrices"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "pattern": "2:4 structured sparsity",
+          "scope": "MLP weight matrices",
+          "importance": "Hessian-guided"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Compressor-aware training with a differentiable proxy loss encouraging weights near quantization grid points.",
+        "parameters": {
+          "cat_every": 50,
+          "cat_weight": 0.001
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Mixture of Experts with 4 experts per MLP and top-2 routing plus load-balancing loss.",
+        "parameters": {
+          "experts": 4,
+          "top_k": 2,
+          "alpha": 0.01
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "KAN layers using spline-parameterized activations instead of standard MLPs.",
+        "parameters": {
+          "grid_size": 5,
+          "order": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.022
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Compressor-aware training (CAT) for compression-friendly weights",
+    "2:4 structured sparsity for artifact-size reduction",
+    "Hessian-guided structured sparsity using GPTQ Hessians",
+    "Mixture of Experts exploration under the 16MB constraint",
+    "KAN exploration under the 16MB constraint",
+    "Systematic negative-results comparison against a strong baseline"
+  ],
+  "artifact_size": "16,076,488 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
