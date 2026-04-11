@@ -1,0 +1,154 @@
+{
+  "pr_number": 1541,
+  "title": "Record: SP8192 + Improved Parallel Residuals + Muon 0.97 + LR 0.03 + Legal TTT \u2014 val_bpb 1.07785 (3-seed mean)",
+  "author": "bigbag",
+  "status": "open",
+  "val_bpb": 1.07785,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Cross-lane routing where attention and MLP outputs route to both lanes via learned scalars; final output uses the MLP lane.",
+        "parameters": {
+          "start_layer": 7,
+          "new_scalar_params": 66
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.97,
+        "other_params": {
+          "matrix_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Virtual layer recurrence reuses layers to create a deeper effective network.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "prefix_only": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Improved parallel residuals with learned cross-lane routing",
+    "Muon momentum reduced to 0.97 with retuned matrix learning rate 0.03",
+    "Legal score-first test-time training under Track B compliance",
+    "SP8192 with GPTQ SDClip and mixed int6/int8 artifact compression",
+    "3-layer depth recurrence and tuned QK gain"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

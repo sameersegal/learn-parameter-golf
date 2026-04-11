@@ -149542,5 +149542,514 @@
     "artifact_size": "15,891,605 bytes",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1539,
+    "title": "Record: SP8192 + Pre-Quant AdamW TTT + Compiled TTT — val_bpb 1.0587 (3-seed mean)",
+    "author": "translatingthename",
+    "status": "open",
+    "val_bpb": 1.0587,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attention/MLP matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer recurrence with repeated layers to create virtual depth",
+          "parameters": {
+            "layers": 3,
+            "virtual_layers": 14,
+            "physical_layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Parallel Residuals",
+          "description": "GPT-J style two-lane residual path where attention and MLP operate independently and are merged later",
+          "parameters": {
+            "start_layer": 7
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "XSA applied across all layers for efficient GQA-aware attention",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Rotary position embeddings applied to only part of the head dimensions",
+          "parameters": {
+            "dimensions": 16,
+            "total_dimensions": 64
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied input and output embeddings",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU squared MLP activation",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "SmearGate",
+          "description": "SmearGate mechanism included in the architecture",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "U-Net skip connections",
+          "description": "Sigmoid-gated U-Net style skip connections",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Grouped query attention with 8 attention heads and 4 KV heads",
+          "parameters": {
+            "heads": 8,
+            "kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Value Embeddings",
+          "description": "Value embeddings added to the model",
+          "parameters": {
+            "dimension": 44,
+            "layers": [
+              9,
+              10
+            ]
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.095,
+          "momentum": null,
+          "other_params": {
+            "variant": "MuonEq-R",
+            "newton_schulz_steps": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.095,
+          "momentum": null,
+          "other_params": {
+            "used_for": "embeddings and scalars",
+            "embedding_lr": 0.03,
+            "scalar_lr": 0.02
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": 11
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 64
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "full TTT",
+          "parameters": {
+            "epochs": 6,
+            "learning_rate": 0.0005,
+            "freeze_blocks": 2,
+            "compiled": true
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "cosine decay",
+          "parameters": {
+            "final_lr_factor": 0.1
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_fraction": 0.72
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "value": 0.095
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "layerwise LN scale",
+          "parameters": {
+            "scale_rule": "1/sqrt(layer+1)"
+          }
+        }
+      }
+    ],
+    "compression": "Brotli-11",
+    "novel_contributions": [
+      "Pre-quant AdamW test-time training baked into the final artifact",
+      "Compiled TTT with torch.compile for faster validation fine-tuning",
+      "SP8192 with GPTQ SDClip quantization using mixed int6/int8 precision",
+      "3-layer depth recurrence producing 14 virtual layers from 11 physical layers",
+      "Parallel residual architecture with GPT-J style two-lane merging",
+      "Combined MuonEq-R training with EMA, warmdown, and tuned QK gain"
+    ],
+    "artifact_size": "~15.5 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1540,
+    "title": "Record: SP8192 + VarLen Attention + LoRA TTT + Fused MLP — val_bpb 1.0777 (3-seed mean)",
+    "author": "aryanbhosale",
+    "status": "open",
+    "val_bpb": 1.0777,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 8192,
+          "eval_length": 8192
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention",
+          "description": "VarLen attention with within-document boundaries only",
+          "parameters": null
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "rank": 96
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Fused MLP uses fc -> LeakyReLU(0.5) -> square in one Triton kernel",
+          "parameters": {
+            "negative_slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Triple depth recurrence with parallel residuals",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "muon_scale": 0.97
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "qk_gain": 5.25,
+            "sdclip": true
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Importlib-based code loader writes decompressed Triton code to a temp file and loads it as __main__ to satisfy inspect.getsourcelines() for JIT compilation",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": "Brotli",
+    "novel_contributions": [
+      "Importlib-based wrapper that enables Triton JIT compilation from compressed submission code",
+      "Integration of fused Triton TMA MLP into the VarLen + LoRA TTT stack",
+      "Doc-independent score-first LoRA TTT",
+      "VarLen attention with within-document boundaries",
+      "Triple depth recurrence with parallel residuals"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1541,
+    "title": "Record: SP8192 + Improved Parallel Residuals + Muon 0.97 + LR 0.03 + Legal TTT — val_bpb 1.07785 (3-seed mean)",
+    "author": "bigbag",
+    "status": "open",
+    "val_bpb": 1.07785,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "parallel residuals",
+          "description": "Cross-lane routing where attention and MLP outputs route to both lanes via learned scalars; final output uses the MLP lane.",
+          "parameters": {
+            "start_layer": 7,
+            "new_scalar_params": 66
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": 0.095,
+          "momentum": 0.97,
+          "other_params": {
+            "matrix_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "Virtual layer recurrence reuses layers to create a deeper effective network.",
+          "parameters": {
+            "physical_layers": 11,
+            "virtual_layers": 17
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "layerwise LN scale",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "Uses LeakyReLU squared activation in the MLP.",
+          "parameters": {
+            "slope": 0.5,
+            "power": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embeddings to only part of the head dimensions.",
+          "parameters": {
+            "dimensions": "16/64"
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "learning_rate": 0.005,
+            "epochs": 3,
+            "momentum": 0.9
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "matrices"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.9965
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown": 0.72
+          }
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "prefix_only": true
+          }
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": 11
+        }
+      }
+    ],
+    "compression": "Brotli-11",
+    "novel_contributions": [
+      "Improved parallel residuals with learned cross-lane routing",
+      "Muon momentum reduced to 0.97 with retuned matrix learning rate 0.03",
+      "Legal score-first test-time training under Track B compliance",
+      "SP8192 with GPTQ SDClip and mixed int6/int8 artifact compression",
+      "3-layer depth recurrence and tuned QK gain"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
