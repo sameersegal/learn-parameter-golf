@@ -1,0 +1,153 @@
+{
+  "pr_number": 1544,
+  "title": "Record: GDN-Hybrid (Gated DeltaNet + SWA) \u2014 val_bpb 1.028308 (3-seed cold-cache mean)",
+  "author": "Abhishek8108",
+  "status": "closed",
+  "val_bpb": 1.028308,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Replaces the transformer backbone with a delta-rule linear recurrence model for long-range memory.",
+        "parameters": {
+          "layers": 10,
+          "head_dim": 64,
+          "use_short_conv": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SWA",
+        "description": "Adds sliding window attention layers for local context.",
+        "parameters": {
+          "window": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "shared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses hashed bigram embeddings as an auxiliary token representation.",
+        "parameters": {
+          "dimensions": [
+            3072,
+            112
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Uses trigram hash embeddings as an auxiliary token representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applies a smear gate on token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares weights across both SWA layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window": 512,
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmup_steps": 100
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Cold-cache 3-seed training on fresh pods with Triton JIT overhead explicitly accounted for.",
+        "parameters": {
+          "seeds": 3
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "First non-transformer architecture in the 10-minute record track",
+    "Hybrid Gated DeltaNet + Sliding Window Attention backbone",
+    "3-seed cold-cache mean record result",
+    "Weight-shared SWA layers combined with recurrent delta-rule memory",
+    "Full-Hessian int6 GPTQ quantization with zstd compression"
+  ],
+  "artifact_size": "14.48\u201314.70 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,151 @@
+{
+  "pr_number": 1546,
+  "title": "[non record] Investigating the Tied-Embedding Bottleneck: Why Boundary Blocks Underperform and What It Means for 16MB Models",
+  "author": "SPThole",
+  "status": "open",
+  "val_bpb": 1.085,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output classifier weights; submission investigates decoupling this bottleneck.",
+        "parameters": {
+          "embed_dim": 416,
+          "model_dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent reuse of transformer blocks to create virtual layers.",
+        "parameters": {
+          "layers": 3,
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated skip connections between encoder and decoder halves.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses squared LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residual routing",
+        "description": "Two-lane parallel residual routing extended to later blocks.",
+        "parameters": {
+          "parallel_start": 7
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Weight analysis showing a symmetric V-shaped capacity profile with weak boundary blocks",
+    "Identification of tied embeddings as a bottleneck for first and last transformer blocks",
+    "Embedding decoupling experiments that activate boundary blocks via learned projection layers",
+    "Observation that the learned projections are near-orthogonal rotations rather than true dimensional compression",
+    "Analysis of rate-distortion tradeoffs showing tighter clipping can worsen artifact size",
+    "Proposal of residual low-rank projection as a cheaper basis-rotation alternative"
+  ],
+  "artifact_size": "16.44 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
