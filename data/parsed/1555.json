@@ -1,0 +1,211 @@
+{
+  "pr_number": 1555,
+  "title": "Record: TMA Megakernel + Improved Parallel Residuals + Tap-In min_match=1 \u2014 val_bpb 1.07636 (3-seed mean)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "val_bpb": 1.07636,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "MLP nonlinearity includes square activation after LeakyReLU.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops selected layers multiple times to create virtual depth.",
+        "parameters": {
+          "layers": "3-5",
+          "repeats": 2,
+          "virtual_layers": 17,
+          "physical_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses skip connections with gated U-Net-style routing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP4x",
+        "description": "Uses a 4x MLP expansion.",
+        "parameters": {
+          "multiplier": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs_per_chunk": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Tap-In unigram matching with min_match=1 and cross-window matching.",
+        "parameters": {
+          "min_match": 1,
+          "top_k": 1000,
+          "cross_window_weight": 0.06
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Eval-time hash embedding trained through the TTT loop.",
+        "parameters": {
+          "size": "16384x512"
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "TMA Megakernel fused MLP forward kernel with async transfers, improving throughput and enabling more training steps within the time budget.",
+    "Tap-In min_match=1 unigram matching, lowering the retrieval threshold from 3 tokens to 1 token.",
+    "Improved parallel residuals ported from PR #1529."
+  ],
+  "artifact_size": "~15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

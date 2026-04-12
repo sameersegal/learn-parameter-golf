@@ -1,0 +1,160 @@
+{
+  "pr_number": 1553,
+  "title": "Non-record: GDN-Hybrid (Gated DeltaNet + SWA) \u2014 val_bpb 1.209735",
+  "author": "Abhishek8108",
+  "status": "open",
+  "val_bpb": 1.209735,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated DeltaNet",
+        "description": "Replaces the transformer backbone with a delta-rule linear recurrence memory module.",
+        "parameters": {
+          "layers": 10,
+          "head_dim": 64,
+          "expand_v": 1,
+          "use_short_conv": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SWA",
+        "description": "Uses sliding window attention layers for local context.",
+        "parameters": {
+          "layers": 2,
+          "window": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "shared_weights": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds bigram hash embeddings to the token representation.",
+        "parameters": {
+          "dimensions": 3072,
+          "hash_size": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Adds trigram hash embeddings to the token representation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applies a smear gate on token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses learnable per-head QK gain scaling in attention.",
+        "parameters": {
+          "qk_gain": 5.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_steps": 5,
+          "adamw_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997,
+          "applied_at_end": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "linear layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 512,
+          "window": 512
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmup_steps": 100,
+          "constant_after_warmup": true
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "GDN-Hybrid architecture combining Gated DeltaNet with Sliding Window Attention",
+    "Correction of a BPB evaluation bug caused by double-counting leading-space bytes",
+    "Post-hoc rescoring of three saved artifacts with the corrected BPB formula",
+    "Use of shared-weight SWA layers in a Griffin-style hybrid layout",
+    "GPTQ calibration on model-generated synthetic sequences only"
+  ],
+  "artifact_size": "14.48\u201314.70 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
