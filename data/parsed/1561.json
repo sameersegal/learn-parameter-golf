@@ -1,0 +1,200 @@
+{
+  "pr_number": 1561,
+  "title": "Record: SP8192 + Triple Recurrence + Banking + Fused MLP + Muon 0.97 \u2014 val_bpb 1.0783 (3-seed mean)",
+  "author": "EthanYangTW",
+  "status": "open",
+  "val_bpb": 1.0783,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Triple-depth recurrence with 11 physical and 17 virtual layers.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight banking",
+        "description": "Parameter banking / banking-based parameter sharing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Fused MLP with 4x expansion (2048 hidden) and Triton/CUTLASS kernel fusion.",
+        "parameters": {
+          "hidden_dim": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA enabled across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residual / skip-gated connections in later layers.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "hash embedding",
+        "description": "Eval-time hash embedding trained during TTT.",
+        "parameters": {
+          "dimensions": [
+            16384,
+            512
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.97,
+        "other_params": {
+          "lr": 0.022
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "lr": 0.01
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.01,
+          "epochs": 3,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.667
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32000,
+        "eval_length": 8192
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "SP8192 tokenizer",
+    "Triple-depth recurrence with parameter banking",
+    "Parallel Muon optimization",
+    "Fused MLP Triton/CUTLASS kernel fusion",
+    "Score-first TTT compliance under no_grad() before updates",
+    "Eval-time hash embedding trained during TTT",
+    "GPTQ int6 with int8 embeddings and brotli compression",
+    "Fixed LZMA decompression wrapper from prior submission"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
