@@ -1,0 +1,149 @@
+{
+  "pr_number": 1559,
+  "title": "Single H100 10 min 16mb< 1.24 bpb",
+  "author": "adityasasidhar",
+  "status": "open",
+  "val_bpb": 1.2498,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 QAT",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings only to the first part of each head.",
+        "parameters": {
+          "dimensions": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Enables XSA on the final layers of the model.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Increases MLP expansion from 2x to 3x.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonally initializes large linear layers and scales projection weights by depth."
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "muon_wd": 0.02,
+          "embed_lr": 0.04,
+          "matrix_lr": 0.032,
+          "scalar_lr": 0.032
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200,
+          "warmdown_last_frac": 0.2,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "selected CastedLinear weights"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128,
+          "eval_batch_seqs": 32
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "adam_wd": 0.04,
+          "muon_wd": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Single-H100 run with sliding-window validation to improve measured bpb",
+    "Mixed-precision int6/int8 export format to fit under the 16MB limit",
+    "STE QAT applied late in training for selected weights",
+    "Partial RoPE with rope_dims=32",
+    "XSA enabled only on the final layers",
+    "OrthoInit-style initialization with depth-scaled projection weights",
+    "Warmdown driven by wallclock fraction",
+    "Sliding-window evaluation via reusable forward_logits path"
+  ],
+  "artifact_size": "15.2 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

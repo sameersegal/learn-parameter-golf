@@ -1,0 +1,98 @@
+{
+  "pr_number": 1558,
+  "title": "[Architectural Proof-of-Concept] Saliency-Boosted GPTQ & High-Entropy Routing",
+  "author": "Subramanyam6",
+  "status": "open",
+  "val_bpb": 1.45,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-Sequence Attention layers used in the model stack.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention modifications",
+        "description": "High-Entropy Routing via aggressive QK gain to saturate softmax and force sharp attention distributions.",
+        "parameters": {
+          "qk_gain": 4.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RMSNorm",
+        "description": "Dedicated global SLOT bias inserted immediately before final RMSNorm.",
+        "parameters": {
+          "slot_parameters": 512
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "v_t_saliency": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Saliency-Boosted GPTQ using AdamW second-moment buffer (v_t) to bias GPTQ Hessian diagonal toward high-saliency columns.",
+        "parameters": {
+          "hessian_diagonal_boost": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Custom Latent-PABU CUDA kernel proposed to handle dynamic outlier clamping during quantization export.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Throughput recovery effort to restore Flash Attention 3 and increase training step count under the 600s budget.",
+        "parameters": {
+          "step_count_current": 700,
+          "step_count_sota": 6922
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Saliency-Boosted GPTQ using AdamW v_t as a saliency signal",
+    "High-Entropy Routing with QK-Gain 4.0",
+    "Dedicated SLOT bias before final RMSNorm",
+    "Latent-PABU CUDA kernel for dynamic outlier clamping",
+    "Throughput-starvation diagnosis and corrected BPB accounting"
+  ],
+  "artifact_size": "8.15 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

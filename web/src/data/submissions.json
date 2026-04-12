@@ -151783,5 +151783,480 @@
     "artifact_size": "9.90 MB",
     "prompt_version": "v2",
     "is_record": false
+  },
+  {
+    "pr_number": 1557,
+    "title": "Record: SP8192 + Improved Parallel Residuals + Muon 0.97 + TTT 5ep + N-gram Tilt + Hessian SDClip — val_bpb 1.07730",
+    "author": "ndokutovich",
+    "status": "open",
+    "val_bpb": 1.0773,
+    "architecture": "Transformer",
+    "quantization": "GPTQ int6/int8",
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "depth recurrence",
+          "description": "3-layer depth recurrence applied in layers 3-5.",
+          "parameters": {
+            "layers": [
+              3,
+              4,
+              5
+            ]
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "11-layer Transformer with 512d hidden size, 8 attention heads, 4 KV heads, and 4x MLP; improved parallel residuals.",
+          "parameters": {
+            "layers": 11,
+            "dimensions": 512,
+            "heads": 8,
+            "kv_heads": 4,
+            "mlp_multiplier": 4
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.97,
+          "other_params": {
+            "row_normalized": true,
+            "matrix_lr": 0.03
+          }
+        }
+      },
+      {
+        "category": "weight_averaging",
+        "data": {
+          "method": "EMA",
+          "parameters": {
+            "decay": 0.997
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "attn+MLP"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "int8",
+          "bits": 8,
+          "scope": "embeddings"
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "Hessian-Aware SDClip",
+          "parameters": {
+            "lambda": 0.175
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "score-first TTT",
+          "parameters": {
+            "optimizer": "SGD",
+            "epochs": 5,
+            "learning_rate": 0.005
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Causal n-gram tilt applied during evaluation with prefix-only normalization and agreement weighting.",
+          "parameters": {
+            "beta": 2,
+            "agree": 0.1
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "Brotli",
+          "level": 11
+        }
+      }
+    ],
+    "compression": "Brotli-11",
+    "novel_contributions": [
+      "Improved parallel residuals",
+      "Score-first TTT",
+      "Causal n-gram tilt",
+      "Hessian-Aware SDClip",
+      "Muon 0.97 with matrix learning rate tuning",
+      "GPTQ int6 with int8 embedding quantization"
+    ],
+    "artifact_size": "~15.97 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1558,
+    "title": "[Architectural Proof-of-Concept] Saliency-Boosted GPTQ & High-Entropy Routing",
+    "author": "Subramanyam6",
+    "status": "open",
+    "val_bpb": 1.45,
+    "architecture": "Transformer",
+    "quantization": "GPTQ 6-bit",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "quantization",
+        "data": {
+          "method": "GPTQ",
+          "bits": 6,
+          "scope": "all"
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Cross-Sequence Attention layers used in the model stack.",
+          "parameters": {
+            "layers": 11
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention modifications",
+          "description": "High-Entropy Routing via aggressive QK gain to saturate softmax and force sharp attention distributions.",
+          "parameters": {
+            "qk_gain": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "RMSNorm",
+          "description": "Dedicated global SLOT bias inserted immediately before final RMSNorm.",
+          "parameters": {
+            "slot_parameters": 512
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": null,
+          "momentum": null,
+          "other_params": {
+            "v_t_saliency": true
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Saliency-Boosted GPTQ using AdamW second-moment buffer (v_t) to bias GPTQ Hessian diagonal toward high-saliency columns.",
+          "parameters": {
+            "hessian_diagonal_boost": 0.1
+          }
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Custom Latent-PABU CUDA kernel proposed to handle dynamic outlier clamping during quantization export.",
+          "parameters": null
+        }
+      },
+      {
+        "category": "other",
+        "data": {
+          "description": "Throughput recovery effort to restore Flash Attention 3 and increase training step count under the 600s budget.",
+          "parameters": {
+            "step_count_current": 700,
+            "step_count_sota": 6922
+          }
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "Saliency-Boosted GPTQ using AdamW v_t as a saliency signal",
+      "High-Entropy Routing with QK-Gain 4.0",
+      "Dedicated SLOT bias before final RMSNorm",
+      "Latent-PABU CUDA kernel for dynamic outlier clamping",
+      "Throughput-starvation diagnosis and corrected BPB accounting"
+    ],
+    "artifact_size": "8.15 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1559,
+    "title": "Single H100 10 min 16mb< 1.24 bpb",
+    "author": "adityasasidhar",
+    "status": "open",
+    "val_bpb": 1.2498,
+    "architecture": "Transformer",
+    "quantization": "mixed int6/int8 QAT",
+    "optimizer": "AdamW",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "GQA",
+          "description": "Uses grouped query attention with 8 query heads and 4 KV heads.",
+          "parameters": {
+            "num_heads": 8,
+            "num_kv_heads": 4
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "Partial RoPE",
+          "description": "Applies rotary position embeddings only to the first part of each head.",
+          "parameters": {
+            "dimensions": 32
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "XSA",
+          "description": "Enables XSA on the final layers of the model.",
+          "parameters": {
+            "layers": 2
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP3x",
+          "description": "Increases MLP expansion from 2x to 3x.",
+          "parameters": {
+            "multiplier": 3
+          }
+        }
+      },
+      {
+        "category": "initialization",
+        "data": {
+          "method": "OrthoInit",
+          "description": "Orthogonally initializes large linear layers and scales projection weights by depth."
+        }
+      },
+      {
+        "category": "sequence_length",
+        "data": {
+          "train_length": 2048,
+          "eval_length": null
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "AdamW",
+          "weight_decay": 0.04,
+          "momentum": null,
+          "other_params": {
+            "muon_wd": 0.02,
+            "embed_lr": 0.04,
+            "matrix_lr": 0.032,
+            "scalar_lr": 0.032
+          }
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_iters": 1200,
+            "warmdown_last_frac": 0.2,
+            "warmup_steps": 20
+          }
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "mixed int6/int8",
+          "bits": null,
+          "scope": "model weights"
+        }
+      },
+      {
+        "category": "quantization",
+        "data": {
+          "method": "STE QAT",
+          "bits": 8,
+          "scope": "selected CastedLinear weights"
+        }
+      },
+      {
+        "category": "evaluation_technique",
+        "data": {
+          "method": "sliding window eval",
+          "parameters": {
+            "stride": 128,
+            "eval_batch_seqs": 32
+          }
+        }
+      },
+      {
+        "category": "compression",
+        "data": {
+          "method": "zlib",
+          "level": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "weight decay",
+          "parameters": {
+            "adam_wd": 0.04,
+            "muon_wd": 0.02
+          }
+        }
+      }
+    ],
+    "compression": "zlib",
+    "novel_contributions": [
+      "Single-H100 run with sliding-window validation to improve measured bpb",
+      "Mixed-precision int6/int8 export format to fit under the 16MB limit",
+      "STE QAT applied late in training for selected weights",
+      "Partial RoPE with rope_dims=32",
+      "XSA enabled only on the final layers",
+      "OrthoInit-style initialization with depth-scaled projection weights",
+      "Warmdown driven by wallclock fraction",
+      "Sliding-window evaluation via reusable forward_logits path"
+    ],
+    "artifact_size": "15.2 MB",
+    "prompt_version": "v2",
+    "is_record": false
+  },
+  {
+    "pr_number": 1560,
+    "title": "Record: VarLen Attention + Triton Fused MLP + Doc-TTT + Warmdown 0.75 + Chunk 48 — val_bpb 1.07406 (3-seed mean)",
+    "author": "dexhunter",
+    "status": "open",
+    "val_bpb": 1.07406,
+    "architecture": "Transformer",
+    "quantization": null,
+    "optimizer": "Muon",
+    "training_techniques": [
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "attention",
+          "description": "VarLen attention with per-document cu_seqlens and strict causal masking",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "MLP",
+          "description": "Triton fused MLP implementation",
+          "parameters": null
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LoRA TTT",
+          "description": "doc-independent LoRA-based test-time training stack",
+          "parameters": null
+        }
+      },
+      {
+        "category": "lr_schedule",
+        "data": {
+          "method": "warmdown",
+          "parameters": {
+            "warmdown_frac": 0.75
+          }
+        }
+      },
+      {
+        "category": "test_time_training",
+        "data": {
+          "method": "LoRA TTT",
+          "parameters": {
+            "chunk_size": 48
+          }
+        }
+      },
+      {
+        "category": "optimizer_technique",
+        "data": {
+          "method": "Muon",
+          "weight_decay": null,
+          "momentum": 0.97,
+          "other_params": null
+        }
+      },
+      {
+        "category": "regularization",
+        "data": {
+          "method": "logit softcap",
+          "parameters": {
+            "value": 30
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "LeakyReLU",
+          "description": "LeakyReLU activation used in the MLP",
+          "parameters": {
+            "slope": 0.5
+          }
+        }
+      },
+      {
+        "category": "architecture_modification",
+        "data": {
+          "component": "weight tying",
+          "description": "Tied embeddings",
+          "parameters": null
+        }
+      }
+    ],
+    "compression": null,
+    "novel_contributions": [
+      "VarLen attention with per-document cu_seqlens and strict causal masking",
+      "Triton fused MLP",
+      "doc-TTT stack",
+      "Warmdown fraction increased to 0.75",
+      "TTT chunk size increased to 48",
+      "Muon momentum tuned to 0.97"
+    ],
+    "artifact_size": "~15.99 MB",
+    "prompt_version": "v2",
+    "is_record": false
   }
 ]
