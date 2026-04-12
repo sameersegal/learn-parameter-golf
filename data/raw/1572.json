@@ -1,0 +1,12 @@
+{
+  "number": 1572,
+  "title": "Record: SP8192 + Depth Recurrence x2 + GPTQ + Score-First TTT + fused-softcap-ce -- val_bpb 1.07974 (3-seed mean)",
+  "author": "anthony-maio",
+  "body": "## Summary\n\nval_bpb = 1.07974 (3-seed mean, std 0.00058) | ~15.99 MB | 8xH100 SXM\n\n| Seed | Sliding BPB | TTT BPB | Artifact |\n|------|-------------|---------|----------|\n| 1337 | 1.08048 | **1.07907** | 15,992,450 |\n| 42 | 1.08159 | **1.08014** | 15,989,801 |\n| 2024 | 1.08124 | **1.08001** | 15,989,704 |\n| **Mean** | **1.08110** | **1.07974** | **15,990,652** |\n| **Std** | -- | **0.00058** | -- |\n\n## Stack\n\n- SP8192 tokenizer\n- 11-layer transformer, depth recurrence x2 (layers 3-5 looped, virtual sequence encoder [0,1,2,3,4,5,3,4] / decoder [5,3,4,5,6,7,8,9,10])\n- Loop activates at 35% of training (~step 2026)\n- QK-Gain 5.25, EMA 0.997\n- GPTQ INT6 weights + INT8 embeddings + brotli\n- Score-first TTT: SGD lr=0.005, 3 epochs, 1238 chunks (~5.5 min eval)\n- Train script lzma+base85+exec compressed to 16,793 bytes\n\n## Original Contributions\n\nThe train_gpt.py artifact uses a lzma+base85+exec shim -- the full source is LZMA2-compressed and base85-encoded into a two-line exec wrapper. Comes out to 16,793 bytes vs 58,367 raw. That frees ~41KB of the 16MB budget for model weights.\n\nThe submission also ships a requirements.txt that installs fused-softcap-ce, a pip-packaged CUDA kernel fusing softcap*tanh(x/softcap) with cross-entropy in a single pass. 3.63x faster than PyTorch on H100 for the forward scoring path. Forward-only, so it runs during TTT scoring and sliding-window eval. Graceful fallback to stock PyTorch if the kernel isn't available at eval time.\n\n## Compliance (Track B -- Score-First TTT)\n\nPer Issue #1017:\n- Each chunk scored under no_grad() before any TTT gradient step\n- Single left-to-right pass, no rescoring\n- No pre-quant TTT, no SLOT, no n-gram cache\n- All artifacts < 16,000,000 bytes, train < 600s, eval < 600s\n\n## Credits\n\nPR #1493 @bigbag -- base config (loop_start=3, loop_end=5, num_loops=2, enable_looping_at=0.35, parallel_residual_start=7)\nPR #1394 @clarkkev -- depth recurrence + GPTQ + SDClip pipeline\nPR #1420 @abaybektursun -- SP8192 tokenizer integration",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-12T18:48:34Z",
+  "updated_at": "2026-04-12T20:29:18Z",
+  "submission_readme": null
+}

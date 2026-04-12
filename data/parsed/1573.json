@@ -1,0 +1,233 @@
+{
+  "pr_number": 1573,
+  "title": "Record: 12L RecycledCore Int5 \u2014 val_bpb 1.1464 (seed 1337)",
+  "author": "shivangbaveja",
+  "status": "open",
+  "val_bpb": 1.1464,
+  "architecture": "Transformer",
+  "quantization": "int5 GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recycled-core depth with layers replayed to create more virtual layers than physical layers.",
+        "parameters": {
+          "layers": 12,
+          "virtual_layers": 14,
+          "replayed_layers": [
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gate on attention output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "First-layer values are blended into subsequent layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 5,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 50,
+          "snapshots": 13
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LN scale",
+        "description": "LayerNorm scale uses 1/sqrt(layer+1).",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Learned skip weights provide U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with 2048 buckets.",
+        "parameters": {
+          "buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Per-dimension sigmoid gating.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embeddings used in later layers.",
+        "parameters": {
+          "dimensions": 128,
+          "layers": [
+            10,
+            11
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "formula": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Recycled-core depth with replayed layers to create 14 virtual layers from 12 physical layers",
+    "Int5 quantization of both MLP and attention weights to fit under the 16 MB limit",
+    "Gated attention with value residual blending",
+    "LeakyReLU(0.5)^2 MLP activation",
+    "Combination of SWA and EMA with Muon optimization",
+    "Partial RoPE, XSA, BigramHash, SmearGate, and value embeddings in later layers"
+  ],
+  "artifact_size": "15.93 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
