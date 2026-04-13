@@ -1,0 +1,129 @@
+{
+  "pr_number": 1606,
+  "title": "Non-Record v2: 7L UNet + Int8 QAT + EMA + Long Train \u2014 1.3969 BPB (DGX Spark)",
+  "author": "AlirezaAlampour",
+  "status": "open",
+  "val_bpb": 1.39693,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style encoder/decoder skip connections with learned per-block residual mixing.",
+        "parameters": {
+          "layers": 7,
+          "d": 512,
+          "heads": 8,
+          "kv_heads": 4,
+          "mlp_mult": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / tied output projection.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8 QAT",
+        "bits": 8,
+        "scope": "all weight matrices"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9382982028913158,
+        "other_params": {
+          "Newton_Schulz_orthogonalization": true,
+          "adam_for_embeddings": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "cap": 30
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1558
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "7-layer U-Net Transformer with learned skip connections and residual mixing",
+    "Int8 quantization-aware training with roundtrip validation",
+    "EMA weight averaging for final checkpoint serialization",
+    "Longer 4-hour training budget to reach ~1000 steps on DGX Spark",
+    "4x wider MLP tradeoff with fewer layers for better low-step performance",
+    "Cross-seed validation showing stable performance across three seeds"
+  ],
+  "artifact_size": "~15.5 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
