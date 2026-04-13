@@ -1,0 +1,235 @@
+{
+  "pr_number": 1602,
+  "title": "[Non-record] Experimentation Summary: Autopsy of 100+ Experiments \u2014 What Worked, What Didn\u2019t, Mind Map for LLM Agents, etc.",
+  "author": "SPThole",
+  "status": "open",
+  "val_bpb": 1.0744,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence in the encoder to create more virtual layers from fewer physical layers.",
+        "parameters": {
+          "layers": 3,
+          "extra_passes": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram-based hash embeddings / co-occurrence-driven attention initialization and related bigram features.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Trigram hash table / trigram embedding variants used for token context features.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention added to improve modeling capacity and quantization behavior.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses RoPE on only part of the head dimension to free capacity for semantic matching.",
+        "parameters": {
+          "rope_dims": 16,
+          "head_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Adjusted number of KV heads / multi-head attention width.",
+        "parameters": {
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Added value residual / cascading value highway to improve deep-layer information flow.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared embeddings / tied weights used in some variants and ablations.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6",
+        "bits": null,
+        "scope": "MLP proj and attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 100
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parallel": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 400,
+          "start_step": 900
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "sparsity": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal constraint / initialization behavior referenced in Muon-related experiments."
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Large-scale autopsy of 100+ experiments with a structured mind map and experiment lineage analysis",
+    "Demonstration that depth recurrence, partial RoPE, and parallel residual-style routing materially improve parameter efficiency",
+    "Identification that warmdown scheduling was a major hidden issue and that fixing it produced a large bpb gain",
+    "Evidence that auxiliary losses generally hurt in the compute-starved regime",
+    "Discovery that simpler architectures and fewer competing objectives often outperform more complex variants",
+    "Integration and ablation of meta-TTT, showing its gains are architecture-limited",
+    "Community-derived improvements such as SP8192 tokenizer, improved parallel residuals, and QK gain initialization",
+    "Quantization-focused improvements including GPTQ, mixed int5/int6, per-layer clipping, and artifact compression strategies"
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

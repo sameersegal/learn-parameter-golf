@@ -1,0 +1,115 @@
+{
+  "pr_number": 1601,
+  "title": "[non-record] Sharpness-Aware Minimization (SAM) Inner Loop for Meta-TTT",
+  "author": "SPThole",
+  "status": "open",
+  "val_bpb": 1.11898,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ+lzma",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "11-layer U-Net GPT with encoder-decoder skip connections.",
+        "parameters": {
+          "layers": 11,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8Q / 4KV heads.",
+        "parameters": {
+          "q_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with position-conditional logic.",
+        "parameters": {
+          "dimensions": "4096x64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA enabled across all blocks.",
+        "parameters": {
+          "blocks": 11
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "every": 4,
+          "inner_outer_split": "cross-chunk",
+          "delta_loss": true,
+          "optimizer": "SAM",
+          "rho": 0.05
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "inner_loop": "SAM",
+          "meta_training": "FOMAML"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "post_ema_float_baseline": 1.1384
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Replaced the MetaSGD inner loop with Sharpness-Aware Minimization (SAM) for Meta-TTT.",
+    "Applied SAM perturbation in the FOMAML inner loop to seek flatter minima before test-time adaptation.",
+    "Reported that SAM did not improve the TTT delta, which remained invariant at about -0.023 bpb.",
+    "Performed memory and throughput analysis showing SAM increased peak GPU memory and reduced completed steps.",
+    "Included weight-space analysis suggesting SAM stayed in the same basin as the MetaSGD variant."
+  ],
+  "artifact_size": "15.88 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
