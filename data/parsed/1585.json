@@ -1,0 +1,158 @@
+{
+  "pr_number": 1585,
+  "title": "Record: Casefold Tokenizer + Parallel Residuals + Systems Optimization \u2014 val_bpb 1.0639 (3-seed mean)",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.0639,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings.",
+        "parameters": {
+          "partial_ratio": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 with recurrence activated partway through training.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "activated_at_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Dual-lane parallel residual architecture with gated/parallel residual structure.",
+        "parameters": {
+          "start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "sharded_reduce_scatter_all_gather": true,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 32000,
+          "epochs_per_chunk": 3,
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "gradient_clipping": 1.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses a learned hash embedding during TTT.",
+        "parameters": {
+          "dimensions": 16384
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Systems-level optimizations that increase throughput without changing the ML",
+    "Fused Muon kernel combining momentum update, Nesterov extrapolation, row normalization, and Newton-Schulz orthogonalization",
+    "Batched EMA using foreach operations",
+    "Reusable numpy preallocation in the data loader",
+    "Casefold v2 tokenizer with NFKC + lowercased retraining and verified byte counting",
+    "Parallel residual architecture with dual-lane residuals",
+    "Score-first chunk-based TTT with hash embedding"
+  ],
+  "artifact_size": "~15.98 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
