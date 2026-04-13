@@ -1,0 +1,105 @@
+{
+  "pr_number": 1592,
+  "title": "Non-record: Hash-Gated Embeddings + QAT + Two-Pass Latent Compression + Depth Recurrence",
+  "author": "seekerPrice",
+  "status": "closed",
+  "val_bpb": 2.4264,
+  "architecture": "Transformer",
+  "quantization": "int6 QAT",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-gated additive compositional embeddings using multiple hashed base vectors instead of a full embedding table.",
+        "parameters": {
+          "K": 256
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Two-pass latent compression during training, with a second forward pass using projected stop-gradient softmax outputs as additional input; single-pass at evaluation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Factored embeddings using a low-rank [V x R] x [R x D] decomposition to reduce embedding bytes.",
+        "parameters": {
+          "rank": 256
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses physical layers to create more virtual layers without additional parameters.",
+        "parameters": {
+          "physical_layers": 8,
+          "virtual_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Attention and MLP operate in parallel on the same pre-residual input in later layers.",
+        "parameters": {
+          "start_layer": 6
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "type": "entropy regularizer"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Hash-gated additive compositional embeddings to reduce embedding parameters and logit computation cost",
+    "Quantization-aware training from early steps using a straight-through estimator",
+    "Two-pass latent compression training with single-pass inference",
+    "Factored embeddings via low-rank decomposition",
+    "Depth recurrence to create more virtual layers from fewer physical layers",
+    "Parallel residual connections in later layers",
+    "Weight entropy regularization to improve zlib compression"
+  ],
+  "artifact_size": "8.66 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
