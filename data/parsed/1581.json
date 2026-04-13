@@ -1,0 +1,162 @@
+{
+  "pr_number": 1581,
+  "title": "Non-record: JEPA v3 \u2014 span-masked I-JEPA + VICReg, val_bpb 1.2321",
+  "author": "aiejvn",
+  "status": "open",
+  "val_bpb": 1.2321,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding with masked-position zeroing to prevent token identity leakage.",
+        "parameters": {
+          "vocab_size": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "11-layer U-Net Transformer with encoder-decoder skip connections.",
+        "parameters": {
+          "layers": 11,
+          "dim": 512,
+          "encoder_layers": 5,
+          "decoder_layers": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Transformer MLP expansion multiplier of 3.",
+        "parameters": {
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9999
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "matrix parameters"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "scalar parameters"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Span-masked I-JEPA style auxiliary objective where target spans are replaced with a learned mask embedding in the context encoder, while the target encoder sees the full unmasked sequence.",
+        "parameters": {
+          "num_spans": 4,
+          "span_len_mean": 16,
+          "span_len_min": 4,
+          "mask_ratio": 0.06
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "VICReg anti-collapse regularization applied to predictor-side masked representations using variance hinge and covariance penalty.",
+        "parameters": {
+          "var_weight": 0.15,
+          "cov_weight": 0.02,
+          "gamma": 1.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Span-masked I-JEPA objective where the context encoder cannot see target tokens",
+    "Learned mask embedding for masked spans with bigram hash leakage prevention",
+    "VICReg variance and covariance regularization on predictor-side masked representations",
+    "Optimizer bug fix that routes JEPAPredictor and jepa_mask_emb into optimizer groups",
+    "Demonstration that properly masked JEPA avoids the collapse seen in prior submissions"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

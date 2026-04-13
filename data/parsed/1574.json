@@ -1,0 +1,160 @@
+{
+  "pr_number": 1574,
+  "title": "[Non-Record] SSM8: Fat State Mamba SSM, BPB=1.3587",
+  "author": "KRGulaj",
+  "status": "open",
+  "val_bpb": 1.3587,
+  "architecture": "Mamba",
+  "quantization": "int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mamba",
+        "description": "Pure recurrent Mamba state space model baseline without attention layers.",
+        "parameters": {
+          "d_model": 640,
+          "d_inner": 1280,
+          "d_state": 34,
+          "d_conv": 4,
+          "num_layers": 8,
+          "head_adapter_rank": 16,
+          "vocab_size": 1056
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding logits with a low-rank head adapter on top.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Fat State design using d_state=34 to increase recurrent memory capacity.",
+        "parameters": {
+          "d_state": 34
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "2D weight matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalar parameters",
+          "fused": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all weights; embeddings int8"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Score-first test-time training updates LoRA adapters on previous window tokens before scoring the current window.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Online entropy-based data filtering using a zlib compression ratio heuristic at batch load time.",
+        "parameters": {
+          "thresholds": [
+            4.0,
+            2.5,
+            2.0,
+            1.8
+          ]
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup + stable + cosine decay",
+        "parameters": {
+          "warmup": 0.1,
+          "stable": 0.7,
+          "decay": 0.2
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient checkpointing",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Pure Mamba SSM baseline within the 16 MB / 10-minute constraint",
+    "Fat State design with d_state=34 for richer recurrent memory",
+    "Score-First LoRA TTT adapted for recurrent architectures",
+    "Entropy-based data filtering heuristic at batch load time",
+    "GPTQ-lite int6 compression pipeline with zstd artifact compression"
+  ],
+  "artifact_size": "15.93 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

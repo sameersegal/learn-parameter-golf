@@ -1,0 +1,131 @@
+{
+  "pr_number": 1582,
+  "title": "Non-record: MDLM Masked Diffusion + Depth Recurrence \u2014 val_bpb 1.3428 (8\u00d7H100, seed=1337)",
+  "author": "He-Wenhao",
+  "status": "open",
+  "val_bpb": 1.3428,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Physical layers L1-L3 are looped once extra to increase effective depth.",
+        "parameters": {
+          "physical_layers": 9,
+          "effective_layers": 12,
+          "recurrent_layers": 3,
+          "extra_loops": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 8,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "per-row weights"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_lr_ratio": 0.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses squared ReLU activation in the MLP.",
+        "parameters": {
+          "hidden_dim": 1024
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "adam_weight_decay": 0.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Learned encoder-to-decoder skip connections are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Antithetic sampling is used for variance reduction during training.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with kv_groups=4.",
+        "parameters": {
+          "heads": 8,
+          "kv_groups": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "Depth recurrence to increase effective depth without increasing physical layers",
+    "STE QAT applied late in training to reduce quantization loss",
+    "EMA before serialization to improve post-roundtrip performance",
+    "GPTQ-lite percentile clip search with min-MSE selection",
+    "Combination of Muon warmdown, ReLU\u00b2 MLP, GQA, and U-Net skip connections"
+  ],
+  "artifact_size": "14.73 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
