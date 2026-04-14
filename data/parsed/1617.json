@@ -1,0 +1,156 @@
+{
+  "pr_number": 1617,
+  "title": "[Non-Record] Single H100 16mb< 1.21bpb",
+  "author": "adityasasidhar",
+  "status": "open",
+  "val_bpb": 1.2192,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads for parameter efficiency.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-sequence attention enabled in the deepest layers.",
+        "parameters": {
+          "xsa_last_n": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP width expansion.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares token embedding and LM head weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Reduced KV head count relative to query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal variance scaling for large linear weights."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "direct_weight_decay": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "fused": true,
+          "used_for": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.2,
+          "budget_seconds": 600
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "final 15% of training"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "attention/MLP layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 96
+        }
+      }
+    }
+  ],
+  "compression": "zlib-9",
+  "novel_contributions": [
+    "Single-H100 pure neural architecture optimization under a 16MB artifact budget",
+    "8-layer Transformer with GQA, partial RoPE, XSA, and 3x MLP expansion",
+    "Late QAT with mixed int6/int8 storage to reduce artifact size",
+    "Wallclock-aware warmdown learning-rate schedule for a fixed compute budget",
+    "Sliding-window validation evaluation with stride 96",
+    "Zlib-compressed export of the final artifact"
+  ],
+  "artifact_size": "~15.92 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

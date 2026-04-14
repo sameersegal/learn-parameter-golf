@@ -1,0 +1,166 @@
+{
+  "pr_number": 1616,
+  "title": "Attempt/qk gain 5.5 deeper recurrence",
+  "author": "Vickyrrrrrr",
+  "status": "open",
+  "val_bpb": 1.41,
+  "architecture": "Transformer",
+  "quantization": "int8 GPTQ",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Extended recurrence from 3 layers to 4 layers, looping layers 2-5 to increase virtual depth.",
+        "parameters": {
+          "layers": 4,
+          "recurrent_layers": [
+            2,
+            3,
+            4,
+            5
+          ],
+          "virtual_depth": 18
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Adjusted QK-Gain upward to test monotonic improvement.",
+        "parameters": {
+          "qk_gain": 5.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Uses GPT-J style parallel residual connections from layer 7 onward.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": 0.095,
+        "momentum": 0.9,
+        "other_params": {
+          "mlr": 0.022
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Pushed QK-Gain from 5.25 to 5.5",
+    "Extended depth recurrence from 3 layers to 4 layers (layers 2-5)",
+    "Increased virtual depth from 15 to 18 layers",
+    "Combined SP8192, parallel residuals, legal score-first TTT, and recurrence in one submission",
+    "Used int8 + zlib roundtrip compression to fit artifact constraints"
+  ],
+  "artifact_size": "11.16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
