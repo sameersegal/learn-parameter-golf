@@ -1,0 +1,122 @@
+{
+  "pr_number": 1609,
+  "title": "SKC-600 ternary: split engram (packed-lite + eval) and harden build pipeline",
+  "author": "Akhilesh-Gogikar",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "ternary",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds an EngramHash-style learned hash embedding table for token n-gram statistics, with a packed-lite training/export path and a separate eval-time engram.",
+        "parameters": {
+          "orders": 3,
+          "buckets": 4096
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Adds EvalEngram, a VRAM-resident evaluation-time engram that applies entropy-gated additive logit correction and is designed to stack with Legal TTT.",
+        "parameters": {
+          "enabled_by_default": false
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "freeze_packed_engram": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.95,
+        "other_params": {
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "k": 5
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.4
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hardens the submission build pipeline with DCE extraction, unused-import pruning, and py_compile smoke testing after extraction.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Split EngramHash into a packed-lite training/export path and a separate eval-time EvalEngram",
+    "Entropy-gated additive logit correction from a VRAM-resident eval engram",
+    "Freeze/restore of packed engram tables during evaluation to prevent TTT drift",
+    "Build pipeline hardening with DCE, unused-import pruning, and py_compile smoke checks",
+    "Cleanup of stale root scripts and archival of competition ablation/orchestration records"
+  ],
+  "artifact_size": "10.4MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
