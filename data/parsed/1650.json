@@ -1,0 +1,155 @@
+{
+  "pr_number": 1650,
+  "title": "Non-record: Fibonacci Manifold Network + Hybrid Attention + Sparse Braid",
+  "author": "Jaredcastorena",
+  "status": "open",
+  "val_bpb": 1.4233,
+  "architecture": "Hybrid",
+  "quantization": "int8+zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "FMN",
+        "description": "Fibonacci Manifold Network with a shared matrix constrained by W0^2 = W0 + I and reused across all depths.",
+        "parameters": {
+          "layers": 12,
+          "shared_matrix": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Top-layer causal self-attention added only in the upper layers of the hybrid model.",
+        "parameters": {
+          "layers": 3,
+          "heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SparseBraidRegister",
+        "description": "Sparse recurrent entity memory with K slots, gated carry, strand mixing, and directional render gating.",
+        "parameters": {
+          "K": 7,
+          "slot_dim": 128,
+          "window": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "LM head shares weights with the token embedding matrix.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "PsiNet uses LeakyReLU(0.5) inside the residual MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "all other non-braid matrix parameters and braid matrices",
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "token embeddings and scalar parameters"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "FMNRiemannianAdam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "shared W0 manifold-constrained matrix"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "dropout",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmup",
+        "parameters": {
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Fibonacci Manifold Network with a shared matrix constrained to W0^2 = W0 + I",
+    "Exact phi/psi eigenspace projection via closed-form Richardson-style cancellation",
+    "Hybrid design combining pure FMN layers with top-layer causal self-attention",
+    "Sparse braid recurrent entity memory with gated slot updates and directional render gating",
+    "Riemannian Adam-style optimization on the Fibonacci manifold",
+    "Near-lossless int8 roundtrip with very small quantization penalty"
+  ],
+  "artifact_size": "14,785,394 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
