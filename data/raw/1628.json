@@ -1,0 +1,12 @@
+{
+  "number": 1628,
+  "title": "SP8192 Depth Recurrence + Parallel Residuals + TTT (1.1921 BPB)",
+  "author": "yu314-coder",
+  "body": "## Summary\n- **val_bpb: 1.1921** (without TTT) / **1.1888** (with TTT)\n- SP8192 tokenizer + 11-layer transformer with depth recurrence (17 virtual layers from 11 physical)\n- Parallel residuals (GPT-J style), partial RoPE, EMA, score-first test-time training\n- Artifact: 15.79 MB (under 16MB limit)\n\n## Key Techniques\n- **Depth recurrence:** Layers 3-5 shared and looped 3x, giving 17 virtual layers from 11 physical\n- **SP8192 tokenizer:** Better compression per byte than SP1024/4096\n- **Parallel residuals:** GPT-J style for layers 7+ \n- **Partial RoPE:** 16/64 head dims use rotary embeddings\n- **EMA:** Decay 0.9965, starts at 50% of training\n- **TTT:** Score-first chunk-based SGD at eval time (adds ~0.003 BPB improvement)\n- **Muon optimizer** for weight matrices + Adam for scalars\n\n## Test plan\n- [ ] Reproduce on 8xH100 SXM with `torchrun --nproc_per_node=8 train_gpt.py`\n- [ ] Verify artifact size < 16MB\n- [ ] Verify val_bpb improvement > 0.005 nats with p < 0.01\n\n\ud83e\udd16 Generated with [Claude Code](https://claude.com/claude-code)",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-15T00:44:41Z",
+  "updated_at": "2026-04-15T00:44:41Z",
+  "submission_readme": "# SP8192 Depth Recurrence + Parallel Residuals + TTT\n\n## Configuration\n- **Tokenizer:** SP8192 (8192 vocab SentencePiece BPE)\n- **Architecture:** 11 physical layers, 512 dim, 8 heads / 4 KV heads\n- **Depth recurrence:** Layers 3-5 shared, looped 3x = 17 virtual layers\n- **Parallel residuals:** GPT-J style for layers 7+\n- **Activation:** LeakyReLU(0.5)^2\n- **Partial RoPE:** 16/64 head dims with rotary, rest position-free\n- **QK gain:** 5.25 (learnable per-head)\n- **Skip connections:** U-Net encoder-decoder with sigmoid-gated skip weights\n\n## Training\n- **Optimizer:** Muon (matrices) + Adam (embeddings/scalars)\n- **Batch:** 524,288 tokens/step on 8xH100\n- **Warmdown:** 72% linear warmdown\n- **EMA:** Decay 0.9965, starts at 50% of training\n- **Quantization:** int8 per-row + zlib level 9\n\n## Evaluation\n- **Test-Time Training:** Score-first chunk-based SGD (lr=0.005, 3 epochs, momentum=0.9)\n\n## Results (8xH100, 10 min)\n- val_bpb: **1.1921** (without TTT)\n- val_bpb: **1.1888** (with TTT)\n- Artifact: 15.79 MB (PASS)\n"
+}

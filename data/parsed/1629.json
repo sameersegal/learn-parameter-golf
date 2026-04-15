@@ -1,0 +1,152 @@
+{
+  "pr_number": 1629,
+  "title": "Notable Non-Record: Switched Deep Supervision (first DS submission)",
+  "author": "channyzf6",
+  "status": "open",
+  "val_bpb": 1.08288,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared LM head / tied embedding reused for auxiliary deep supervision losses.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 three times with activation at 35% of training.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "repeats": 3,
+          "activate_at_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention on all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses LeakyReLU squared.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP and attention weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Switched Deep Supervision: randomly selects one intermediate layer per step for auxiliary cross-entropy supervision through the shared LM head.",
+        "parameters": {
+          "layers": [
+            6,
+            7,
+            9
+          ],
+          "alpha": 0.01,
+          "warmup_steps": 200,
+          "decay_start_frac": 0.7,
+          "decay_end_frac": 0.85
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Switched Deep Supervision with randomly selected single-layer auxiliary supervision each step",
+    "Deep supervision via shared LM head with zero new parameters",
+    "Fraction-based DS alpha decay schedule",
+    "Per-layer adaptive GPTQ with int7 embeddings to fit the 16 MB limit",
+    "Documented negative results for predictive coding and multi-token prediction variants"
+  ],
+  "artifact_size": "15,997,104 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
