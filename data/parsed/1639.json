@@ -1,0 +1,154 @@
+{
+  "pr_number": 1639,
+  "title": "Adaptive Test-Time Training (TTT) with continuous LR-scaling.",
+  "author": "kunwar-vikrant",
+  "status": "open",
+  "val_bpb": 1.08319,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer depth recurrence with loops activated during training",
+        "parameters": {
+          "loops": "3-5",
+          "activated_at": "35% training"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "layers": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA used in all layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Leaky ReLU activation in the MLP",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residual / skip-style connections in later layers",
+        "parameters": {
+          "layers": "L7+"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "base_epochs": 3,
+          "adaptive_epochs": true,
+          "max_epochs": 5,
+          "min_epochs": 1,
+          "ema_alpha": 0.3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window": 32768
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Adaptive test-time training with per-chunk difficulty-aware epoch allocation",
+    "Use of chunk NLL relative to a running EMA mean to estimate chunk difficulty",
+    "Discovery that chunk-level NLL variance is too narrow for integer epoch allocation to matter",
+    "Proposal of continuous LR-scaling to avoid rounding dead-zones in adaptive TTT"
+  ],
+  "artifact_size": "15.28 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
