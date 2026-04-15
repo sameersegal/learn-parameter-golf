@@ -1,0 +1,151 @@
+{
+  "pr_number": 1644,
+  "title": "Non-record: Mamba-3 Hybrid SSM + SP8192 + Legal TTT \u2014 1.1473 bpb",
+  "author": "mradassaad",
+  "status": "open",
+  "val_bpb": 1.1473,
+  "architecture": "Mamba",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "7-layer Mamba-3 hybrid SSM with 5 SSM blocks and 2 FlashAttention layers placed at positions 2 and 5.",
+        "parameters": {
+          "layers": 7,
+          "ssm_blocks": 5,
+          "attention_layers": 2,
+          "dim": 512,
+          "d_state": 64,
+          "expand": 2,
+          "headdim": 64,
+          "chunk_size": 64,
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunks": 310,
+          "chunk_tokens": 32768,
+          "learning_rate": 0.01,
+          "momentum": 0.9,
+          "epochs": 1
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stateful-overlap eval",
+        "parameters": {
+          "overlap": 1024
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2600,
+          "shape": "linear"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_eq_r": 1,
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SP8192 SentencePiece BPE tokenizer trained from scratch on FineWeb/docs_selected.jsonl.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Hybrid Mamba-3 SSM with interleaved FlashAttention layers",
+    "SP8192 tokenizer trained from scratch",
+    "INT8 embeddings plus GPTQ quantization for a compact artifact",
+    "Chunk score-first test-time training",
+    "Stateful-overlap evaluation with SSM state carryover",
+    "Mamba-3 Triton kernel profiling and autotuning analysis"
+  ],
+  "artifact_size": "15.93MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

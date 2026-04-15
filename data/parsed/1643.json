@@ -1,0 +1,192 @@
+{
+  "pr_number": 1643,
+  "title": "Non-record: Mamba-3 Hybrid SSM + SP8192 + Legal TTT \u2014 1.1473 bpb",
+  "author": "mradassaad",
+  "status": "closed",
+  "val_bpb": 1.1473,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mamba",
+        "description": "Hybrid Mamba-3 state-space model with attention layers inserted at positions 2 and 5.",
+        "parameters": {
+          "layers": 7,
+          "attn_layers": 2,
+          "dim": 512,
+          "d_state": 64,
+          "expand": 2,
+          "headdim": 64,
+          "chunk_size": 64,
+          "mlp_mult": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "block weights and embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Causal grouped-query attention with RoPE and GLU values.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the hybrid architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate component included in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash feature used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU\u00b2 hidden activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stateful-overlap eval",
+        "parameters": {
+          "overlap": 1024
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunks": 310,
+          "chunk_tokens": 32,
+          "seq_len": 4096,
+          "learning_rate": 0.01,
+          "momentum": 0.9,
+          "epochs": 1
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2600
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Hybrid Mamba-3 SSM plus attention architecture",
+    "SP8192 tokenizer trained from scratch on FineWeb",
+    "INT8 embedding quantization with GPTQ on weights",
+    "Chunk score-first test-time training",
+    "Stateful-overlap evaluation for faster inference",
+    "QAT applied to Mamba-3 linear layers to reduce quantization gap",
+    "Pure Triton Mamba-3 kernel integration and profiling"
+  ],
+  "artifact_size": "15.93MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
