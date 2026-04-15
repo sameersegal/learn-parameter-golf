@@ -1,0 +1,155 @@
+{
+  "pr_number": 1640,
+  "title": "[Non-record] Universal Transformer Depth Recurrence INT6",
+  "author": "thestbobo",
+  "status": "open",
+  "val_bpb": 1.1412,
+  "architecture": "Transformer",
+  "quantization": "INT6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Universal Transformer-style recurrence with 6 unique blocks applied 4 times each for 24 effective layers.",
+        "parameters": {
+          "unique_blocks": 6,
+          "recurrence_steps": 4,
+          "effective_layers": 24
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared block weights reused across recurrence steps.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram context embeddings indexed by hashed token bigrams.",
+        "parameters": {
+          "buckets": 2048,
+          "dim": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Stored intermediate states are reused in reverse order during later recurrence steps.",
+        "parameters": {
+          "steps": 24
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5) squared activation in the MLP.",
+        "parameters": {
+          "alpha": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "INT6 QAT",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "all linear weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "linear layers"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.04
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Universal Transformer-style depth recurrence for parameter sharing across layers",
+    "FiLM conditioning to specialize shared blocks across recurrence steps",
+    "U-Net skip connections adapted to the recurrence loop",
+    "BigramHash embeddings for cheap local context modeling",
+    "LeakyReLU(0.5)^2 activation for tied-weight recurrence",
+    "INT6 QAT with STE and GPTQ-style per-row clipping",
+    "Muon optimization with weight decay tuned for compression",
+    "Sliding-window evaluation with stride 64"
+  ],
+  "artifact_size": "13,841,922 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
