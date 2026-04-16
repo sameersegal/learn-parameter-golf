@@ -1,0 +1,118 @@
+{
+  "pr_number": 1679,
+  "title": "[Non-record] Megakernel Saturation Study: 5 Triton fusion variants cannot beat torch.compile at 27M scale",
+  "author": "ChideraIbe123",
+  "status": "open",
+  "val_bpb": 0.7625,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation in the fused architecture variants.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses BigramHash in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA-all attention modification.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Systematic 5-variant ablation of manual Triton block-level MLP fusion on top of a merged SOTA architecture",
+    "Negative result showing all fused variants remain within 0.0008 BPB of each other and slightly worse than eager torch.compile",
+    "Audit-guided best-practices fused kernel variant with epilogue scale, fp32 inv_rms, and GROUP_SIZE_M=8 L2 swizzle",
+    "Direct comparison against the PR #1450 act_grad-in-forward architecture",
+    "Argument that torch.compile already provides near-optimal fusion at 27M scale and manual block-level MLP fusion is saturated"
+  ],
+  "artifact_size": "13.85 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

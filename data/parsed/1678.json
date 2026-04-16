@@ -1,0 +1,120 @@
+{
+  "pr_number": 1678,
+  "title": "SP8192 + 4-Layer Depth Recurrence (loop_end=6)",
+  "author": "tashapais",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "int6/int8 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Expands the recurrent core from 3 looped layers to 4 by setting loop_end=6, promoting layer 6 into the recurrence.",
+        "parameters": {
+          "layers": 4,
+          "loop_end": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses additional skip connections induced by the deeper recurrence, increasing skips from 8 to 9.",
+        "parameters": {
+          "skips": 9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "GPT-J-style parallel attention and MLP residual path in the decoder post-loop section.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "row_normalized": true,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.095
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Extends depth recurrence from 3 looped layers to 4 (loop_end=6).",
+    "Promotes layer 6 into the recurrent core, increasing virtual depth to 19 layers.",
+    "Adds one new U-Net skip connection while keeping compute budget approximately constant.",
+    "Uses QK gain default 5.25 as part of the updated script defaults.",
+    "Maintains the full SOTA technique stack while changing only the recurrence depth and default QK gain."
+  ],
+  "artifact_size": "~16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
