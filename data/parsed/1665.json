@@ -1,0 +1,149 @@
+{
+  "pr_number": 1665,
+  "title": "Non-record: BESE + Mamba-3 SSD Hybrid (1.3571 BPB, 7.6 MB artifact)",
+  "author": "mrbese",
+  "status": "open",
+  "val_bpb": 1.3571,
+  "architecture": "Hybrid",
+  "quantization": "mixed int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "6 Mamba-3 SSD blocks combined with 2 attention blocks for global mixing.",
+        "parameters": {
+          "layers": 8,
+          "mamba_blocks": 6,
+          "attention_blocks": 2,
+          "attention_positions": [
+            2,
+            5
+          ],
+          "dim": 512,
+          "d_state": 128,
+          "ngroups": 1,
+          "expand": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Attention blocks use grouped query attention.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Depth recurrence on SSM layers was disabled because it hurt performance.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared B/C projections across SSM heads via ngroups=1.",
+        "parameters": {
+          "ngroups": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6",
+        "bits": 6,
+        "scope": "MLP, attention, and Mamba projection weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Applied an n-gram tilt using a pre-computed trigram prior as an additive logit bias during evaluation.",
+        "parameters": {
+          "ngram": "trigram"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 1200
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 5000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Custom BESE byte-level tokenizer with 288 vocabulary size.",
+        "parameters": {
+          "vocab_size": 288
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "First submission combining a custom byte-level tokenizer with Mamba-3 SSD",
+    "BESE 288-vocab tokenizer for improved artifact efficiency",
+    "Hybrid architecture mixing Mamba-3 SSD blocks with attention blocks",
+    "Demonstrated competitive BPB at roughly half the artifact budget",
+    "Pure PyTorch SSD implementation with a causality fix in chunked SSD"
+  ],
+  "artifact_size": "7.6 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

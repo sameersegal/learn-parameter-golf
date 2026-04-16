@@ -1,0 +1,206 @@
+{
+  "pr_number": 1666,
+  "title": "Record: BESE 288-vocab Novel Tokenizer \u2014 1.1531 BPB (3-seed mean)",
+  "author": "mrbese",
+  "status": "open",
+  "val_bpb": 1.1531,
+  "architecture": "Transformer",
+  "quantization": "INT6",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Applies recurrent depth over layers 3-5 for multiple forward loops during training.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "loops": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a hashed bigram feature embedding for evaluation and modeling.",
+        "parameters": {
+          "vocab": 2048,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA in the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 3x MLP expansion ratio.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared as the activation function."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Enables value embeddings in later layers.",
+        "parameters": {
+          "dim": 128,
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "interval": 50,
+          "condition": "lr_scale < 0.2"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_from": 0.92,
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.95
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_steps": 5000
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Custom two-layer BESE tokenizer with 40 structured base tokens and 248 BPE merges, replacing SentencePiece.",
+        "parameters": {
+          "vocab_size": 288
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "First custom tokenizer submission on the record track",
+    "Two-layer BESE tokenizer with 40 base tokens and 248 BPE merges",
+    "Byte-count invariant tokenizer design for exact BPB accounting",
+    "Custom tokenizer reduces embedding table size to fund deeper recurrence and other model capacity",
+    "Depth recurrence, parallel residuals, and n-gram eval-time logit tilt enabled by saved artifact budget",
+    "Three-seed mean result with all runs under the wallclock limit"
+  ],
+  "artifact_size": "12.72 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
