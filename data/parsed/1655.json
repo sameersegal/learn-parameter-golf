@@ -1,0 +1,140 @@
+{
+  "pr_number": 1655,
+  "title": "14L QEP GPTQ + Per-Window SGD TTT (1.1135 BPB, 3-seed)",
+  "author": "himanalot",
+  "status": "open",
+  "val_bpb": 1.1135,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads",
+        "parameters": {
+          "layers": 14,
+          "dimensions": 512,
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections across the 14-layer network",
+        "parameters": {
+          "encoder_layers": 7,
+          "decoder_layers": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding module",
+        "parameters": {
+          "vocab_size": 8192,
+          "dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Leaky ReLU squared activation",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.09,
+        "momentum": 0.99,
+        "other_params": {
+          "adam_weight_decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention + MLP weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "momentum": 0.9,
+          "stride": 76,
+          "freeze_layers": 2,
+          "epochs": 1
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 76
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "QEP-aware GPTQ with sequential block calibration using partially quantized model outputs",
+    "Online per-window score-first SGD test-time training",
+    "Critical-depth 14-layer 512d GQA architecture",
+    "Brotli-compressed artifact under the 16MB limit"
+  ],
+  "artifact_size": "15.80MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

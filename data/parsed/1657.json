@@ -1,0 +1,107 @@
+{
+  "pr_number": 1657,
+  "title": "WIP: MoD + ACT adaptive halting submission",
+  "author": "ChipGlitch",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "MuonEq-R",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses recurrent depth-style repeated transformer passes as part of the stack.",
+        "parameters": {
+          "max_steps": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mixture of Depths",
+        "description": "Per-layer token routing selects which tokens participate in each transformer block.",
+        "parameters": {
+          "top_k_fraction": 0.75
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adaptive Computation Time with learned halting probabilities per token and ponder cost regularization.",
+        "parameters": {
+          "ponder_cost_lambda": 0.01,
+          "max_steps": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_with": "embeddings/scalars"
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Combines Mixture of Depths token routing with Adaptive Computation Time learned halting.",
+    "Introduces a 2D adaptive compute budget over tokens using both layer-wise routing and recurrence-wise halting.",
+    "Builds on the SP8192 + GPTQ + parallel residuals stack with adaptive compute allocation.",
+    "Uses per-token, input-conditional compute allocation instead of fixed-depth recurrence."
+  ],
+  "artifact_size": "\u226416MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
