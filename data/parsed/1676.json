@@ -1,0 +1,187 @@
+{
+  "pr_number": 1676,
+  "title": "Record-track: Trajectory-State Readout + Muon 0.98 + Legal TTT (1.0788)",
+  "author": "aazizyan",
+  "status": "open",
+  "val_bpb": 1.0788,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Looped blocks with three recurrence passes over layers 3-5, using encoder and decoder passes.",
+        "parameters": {
+          "loops": 3,
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated U-Net style skip connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "trajectory-state readout",
+        "description": "Grouped readout blends hidden states from all three recurrence passes instead of using only the final pass.",
+        "parameters": {
+          "groups": 16,
+          "learned_parameters": 32
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.98,
+        "other_params": {
+          "row_normalized": true,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "causal": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "score_before_update": true,
+          "single_pass": true,
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs_per_chunk": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32000,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Trajectory-state readout that learns a grouped correction from all three recurrence passes",
+    "Step-based loop activation at step 2000 to remove a wallclock curriculum confound",
+    "Adoption of Muon momentum 0.98 and tighter GPTQ calibration budget from prior work",
+    "Legal score-first full-parameter TTT under the competition constraints"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

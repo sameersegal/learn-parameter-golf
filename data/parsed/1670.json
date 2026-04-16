@@ -1,0 +1,209 @@
+{
+  "pr_number": 1670,
+  "title": "Record: Casefold V4 Tokenizer + Multi-Phase Global SGD TTT \u2014 val_bpb 1.05970 (3-seed mean)",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.0597,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6/7-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to a partial subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses layers in encoder/decoder recurrence patterns.",
+        "parameters": {
+          "encoder": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            3,
+            4
+          ],
+          "decoder": [
+            5,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip connections between layers in a U-Net-like pattern.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses sigmoid-gated skip connections / gating in the residual path.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Exponential moving average of model weights during training.",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "newton_schulz_steps": 5,
+          "row_normalized": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "method_variant": "Multi-Phase Global SGD",
+          "phases": 3,
+          "prefix_documents": 2000,
+          "learning_rate": 0.001,
+          "momentum": 0.9,
+          "gradient_clipping": 1.0
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.75
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Casefold tokenizer normalization with retrained SP8192 BPE on lowercased data",
+    "Multi-phase global SGD test-time training with score-first ordering",
+    "Phased TTT over 2000 validation prefix documents in 3 phases",
+    "Trimmed GPTQ calibration/reserve setup for smaller artifacts",
+    "Adaptive GPTQ clipping inherited from the PR #1530 base"
+  ],
+  "artifact_size": "~15.20 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

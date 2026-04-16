@@ -1,0 +1,107 @@
+{
+  "pr_number": 1674,
+  "title": "Non-record: Parcae Loop Injection + Gemma-style Attention + Gram NS",
+  "author": "mikeapedia",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Adds constrained loop injection at recurrence boundaries using learned decay and re-injection of the original residual stream.",
+        "parameters": {
+          "eval_extra_loops": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary position embeddings on global attention layers and full RoPE on local layers.",
+        "parameters": {
+          "global_layers": [
+            4,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window attention",
+        "description": "Uses local sliding-window causal attention for non-global layers.",
+        "parameters": {
+          "window_size": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Ties K and V projections on global attention layers to share the same weight matrix.",
+        "parameters": {
+          "global_layers": [
+            4,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with a 2:1 query-to-KV head ratio on global layers.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4,
+          "ratio": "2:1"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "muon_backend_steps": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses Gram Newton-Schulz on high-aspect-ratio MLP banks, including a restart at step 2 to suppress spurious negative eigenvalues.",
+        "parameters": {
+          "banks": [
+            "mlp_up_bank",
+            "mlp_down_bank"
+          ]
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Parcae-inspired constrained loop injection with learned decay and residual re-injection",
+    "Evaluation support for extra loop iterations via set_eval_loop_indices()",
+    "Gram Newton-Schulz for high-aspect-ratio MLP banks",
+    "Reduced Muon backend steps from 5 to 4",
+    "Gemma-style global/local attention pattern with partial RoPE on global layers",
+    "KV tying on global attention layers"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,198 @@
+{
+  "pr_number": 1672,
+  "title": "Record: GDN-Hybrid + TMA Megakernel + Brotli-11 \u2014 val_bpb 1.01195 (3-seed mean)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "val_bpb": 1.01195,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Recurrent GDN layers used as the main backbone.",
+        "parameters": {
+          "layers": 5,
+          "dim": 512,
+          "heads": 8,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SWA",
+        "description": "Sliding Window Attention with causal masking and weight sharing.",
+        "parameters": {
+          "window": 512,
+          "qk_gain": 5.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Fused MLP uses ReLU squared activation in a Triton megakernel.",
+        "parameters": {
+          "block_m": 128,
+          "block_n": 128,
+          "block_k": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "adamw_for": "scalars/embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_checkpoint_range": "17-18"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "total_iterations": 2100,
+          "warmdown_iterations": 1000,
+          "schedule": "cosine"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs_per_chunk": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Some layers are looped multiple times to create virtual depth.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip gates / U-Net-style skip connections are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Eval-time hash embedding based on previous/current token pairs.",
+        "parameters": {
+          "size": 16384
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Fused Triton Hopper TMA persistent MLP megakernel for the relu_sq forward pass",
+    "Brotli-11 artifact compression with size-descending tensor ordering",
+    "GPTQ int6 quantization with eigendecomposition-based Hessian repair",
+    "GDN-Hybrid architecture combining recurrent GatedDeltaNet layers with sliding window attention",
+    "Score-first TTT and eval-time hash embedding / Tap-In style retrieval improvements"
+  ],
+  "artifact_size": "15,765,907 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

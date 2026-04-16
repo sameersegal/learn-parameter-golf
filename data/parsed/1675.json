@@ -1,0 +1,109 @@
+{
+  "pr_number": 1675,
+  "title": "11L + LN Scale + BigramHash 3072x112 + GPTQ:   val_bpb=1.1451",
+  "author": "jayzuccarelli",
+  "status": "open",
+  "val_bpb": 1.14508063,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "attn_scale_init": "1/sqrt(layer_idx+1)",
+          "mlp_scale_init": "1/sqrt(layer_idx+1)"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Larger bigram hash table with smaller per-bucket dimension to keep parameter budget similar while improving short-range context modeling.",
+        "parameters": {
+          "vocab_size": 3072,
+          "dimension": 112
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-position self-attention applied to all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation uses leaky_relu(x, 0.5)^2.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_steps": 0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "LN Scale initialization for attention and MLP scales",
+    "BigramHash 3072x112 with larger vocab and same parameter budget",
+    "Full Hessian GPTQ with autoregressive self-generated calibration",
+    "XSA applied to all 11 layers",
+    "LeakyReLU(0.5)^2 MLP activation",
+    "EMA before GPTQ"
+  ],
+  "artifact_size": "15.79 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
