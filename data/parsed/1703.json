@@ -1,0 +1,108 @@
+{
+  "pr_number": 1703,
+  "title": "Add non-record SP8192 Parcae trajectory readout submission",
+  "author": "Buld1n",
+  "status": "open",
+  "val_bpb": 1.08322102,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.98,
+        "other_params": {
+          "gptq_reserve_seconds": 4,
+          "gptq_calibration_batches": 16
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Looped recurrent band with bounded loop reinjection at each loop boundary and late loop onset.",
+        "parameters": {
+          "num_loops": 2,
+          "loop_start": 3,
+          "loop_end": 5,
+          "enable_looping_at_step": 2600
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Parcae-style bounded loop reinjection using x <- A_bar * x + B_bar * x0.",
+        "parameters": {
+          "loop_inject_enabled": 1,
+          "loop_inject_scale": 1.0,
+          "loop_inject_start_pass": 1,
+          "loop_inject_init": 0.1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Grouped trajectory-delta readout on the final looped block to recover information from earlier loop passes.",
+        "parameters": {
+          "use_pass_readout": 1,
+          "readout_groups": 16,
+          "readout_scale": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Parallel residual path enabled as a training-side option, though set to start at step 0 in this run.",
+        "parameters": {
+          "enable_parallel_residual_at_step": 0,
+          "parallel_residual_start": 7
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Parcae-style bounded loop reinjection at loop boundaries",
+    "Grouped trajectory-delta readout from earlier loop passes",
+    "Late loop onset for the recurrent band",
+    "Combination of recurrence stabilization and trajectory readout with minimal parameter overhead"
+  ],
+  "artifact_size": "16,061,982 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

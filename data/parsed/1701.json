@@ -1,0 +1,95 @@
+{
+  "pr_number": 1701,
+  "title": "Add non-record SP8192 trajectory readout submission",
+  "author": "Buld1n",
+  "status": "open",
+  "val_bpb": 1.1016,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent SP8192 backbone with looping over the final block and storing hidden states from each visit for a trajectory readout.",
+        "parameters": {
+          "num_loops": 2,
+          "loop_start": 3,
+          "loop_end": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "Grouped trajectory-delta readout on the final looped block that corrects the final hidden state using earlier recurrent pass states.",
+        "parameters": {
+          "groups": 16,
+          "scale": 0.35
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.98,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "late loop onset",
+        "parameters": {
+          "enable_looping_at_step": 2600
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Non-record SP8192 trajectory readout on the final looped block",
+    "Grouped correction using earlier recurrent pass hidden states",
+    "Late loop onset at step 2600",
+    "Full test-time training with readout-focused recurrent adaptation"
+  ],
+  "artifact_size": "16,064,921 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

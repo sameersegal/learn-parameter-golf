@@ -1,0 +1,113 @@
+{
+  "pr_number": 1700,
+  "title": "Add SP8192 Multi-Phase Global SGD + Phased TTT (1.07219 bpb)",
+  "author": "jorge-asenjo",
+  "status": "open",
+  "val_bpb": 1.07219,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phased": true,
+          "num_phases": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped with warmup during training/inference.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings and per-layer weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int7",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "matrix_lr": 0.026
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SP-8192 tokenizer with 8192-vocab SentencePiece BPE.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Multi-phase global SGD at test time: validation is split into phases, chunks are scored first under no_grad, then base weights are updated with SGD on already-scored tokens.",
+        "parameters": {
+          "num_phases": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "phased": true
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Multi-phase global SGD at test time with score-before-update legality",
+    "Phased LoRA test-time training",
+    "SP-8192 tokenizer",
+    "Int7 embedding quantization",
+    "Per-layer GPTQ with sigma clipping",
+    "Muon optimizer with tuned momentum and matrix learning rate",
+    "Depth recurrence",
+    "VarLen flash attention",
+    "Fused triton MLP",
+    "Brotli-compressed artifact"
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
