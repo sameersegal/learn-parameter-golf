@@ -1,0 +1,96 @@
+{
+  "pr_number": 1692,
+  "title": "Non-record: Initial small random mini-MoE",
+  "author": "joshEng1",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP up projection randomization",
+        "description": "Selected MLP up projections are replaced with seeded frozen QR random feature maps while keeping the rest of the MLP trainable.",
+        "parameters": {
+          "layers": 5,
+          "model_dim": 512,
+          "num_layers": 12
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Seeded frozen QR random bases are used for the random MLP up projections."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "learned per-feature gain",
+        "description": "A learned gain vector is applied across the concatenated random hidden state.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "low-rank correction",
+        "description": "Optional learned low-rank correction is added on top of the frozen random up projection.",
+        "parameters": {
+          "rank": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "routed expert mixing",
+        "description": "A small token-dependent router rescales expert chunks from multiple random expert subspaces.",
+        "parameters": {
+          "experts": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window eval",
+        "description": "Final sliding-window evaluation is added alongside exact evaluation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": null,
+          "context_length": null
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Initial implementation of a small random mini-MoE follow-up to the random MLP up idea",
+    "Concatenated multiple frozen random expert bases into one single-pass random up projection",
+    "Token-dependent routing over random expert subspaces after the shared projection",
+    "Optional rank-8 or rank-16 learned correction on top of routed random features",
+    "Preservation of seed-regenerated frozen weights and state_dict exclusion for artifact efficiency",
+    "Added final sliding-window evaluation wiring in the root trainer"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
