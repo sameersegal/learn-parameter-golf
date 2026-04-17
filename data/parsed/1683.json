@@ -1,0 +1,198 @@
+{
+  "pr_number": 1683,
+  "title": "10-min record: 13L int4 MLP + qTTT + QAT Precompile + ANS Hybrid (val\u2026",
+  "author": "yunoshev",
+  "status": "open",
+  "val_bpb": 1.128,
+  "architecture": "Transformer",
+  "quantization": "int4 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "13-layer transformer with grouped query attention, 8 heads and kv=4.",
+        "parameters": {
+          "layers": 13,
+          "d_model": 512,
+          "heads": 8,
+          "kv": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary position embeddings with 0.25 coverage.",
+        "parameters": {
+          "ratio": 0.25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention uses a gating mechanism.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Includes a value residual pathway.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a bigram hash table embedding head.",
+        "parameters": {
+          "dimensions": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Uses a value embedding head.",
+        "parameters": {
+          "dimensions": 96
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 4,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 5,
+        "scope": "attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 4,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "per-layer"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 200
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "adamw_for_scalars": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "qTTT",
+        "parameters": {
+          "learning_rate": 0.002,
+          "epochs": 3,
+          "target": "qo_bank"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "ANS + brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 32000
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 3500
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    }
+  ],
+  "compression": "ANS + brotli",
+  "novel_contributions": [
+    "13-layer int4 MLP transformer with extra depth to offset aggressive quantization",
+    "qTTT test-time training on the Q-projection bank",
+    "QAT precompile warmup to avoid torch.compile recompilation stalls when late QAT activates",
+    "Hybrid ANS/Brotli artifact compression choosing the smaller encoding per tensor",
+    "Adaptive Hessian-weighted GPTQ auto-clip over multiple sigma candidates",
+    "Training-only document-boundary attention with eval-time varlen disabled for fused TTT sliding evaluation",
+    "Fused TTT plus sliding-window evaluation within the 600-second budget"
+  ],
+  "artifact_size": "15.35 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
