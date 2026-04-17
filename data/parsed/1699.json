@@ -1,0 +1,178 @@
+{
+  "pr_number": 1699,
+  "title": "Non-record: 19.2M MDLM Text Diffusion:  fp8 e4m3 + EMA 0.999 + Muon LR 0.02",
+  "author": "lsb",
+  "status": "open",
+  "val_bpb": 1.48306,
+  "architecture": "Transformer",
+  "quantization": "fp8 e4m3",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "fp8 e4m3",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Bidirectional masked diffusion transformer with grouped query attention and non-causal attention.",
+        "parameters": {
+          "layers": 8,
+          "dim": 576,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Embedding table is tied with the output head, excluding the [MASK] token from prediction vocabulary.",
+        "parameters": {
+          "vocab_size_plus_mask": 1025
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Transformer uses U-Net style encoder-decoder skip connections with learned skip weights.",
+        "parameters": {
+          "encoder_layers": 4,
+          "decoder_layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "MLP uses relu^2 activation with 2x expansion.",
+        "parameters": {
+          "mlp_hidden_dim": 1152
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses rotary positional embeddings.",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.999,
+          "start_frac": 0.1,
+          "shadow_dtype": "fp32"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.95,
+        "other_params": {
+          "lr": 0.02,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalars",
+          "lr": 0.05,
+          "beta1": 0.9,
+          "beta2": 0.95
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 6
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Low-discrepancy stratified time sampling during training for diffusion masking.",
+        "parameters": {
+          "t_range": [
+            0.001,
+            1.0
+          ]
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "chain-rule eval",
+        "parameters": {
+          "variants": [
+            "left-to-right",
+            "confidence-order"
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "zlib/lzma",
+  "novel_contributions": [
+    "First text diffusion submission to Parameter Golf",
+    "Bidirectional masked diffusion LM (MDLM) for text",
+    "fp8 e4m3 quantization to fit a 19.2M parameter model into ~15.8MB",
+    "EMA with fp32 shadow to avoid bf16 freezing at high decay",
+    "Muon learning rate reduction to 0.02 for the MDLM objective",
+    "Comparison of NELBO, left-to-right chain-rule, and confidence-order chain-rule evaluation",
+    "Empirical analysis of the diffusion-vs-autoregressive BPB gap across prefix lengths"
+  ],
+  "artifact_size": "15.83 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

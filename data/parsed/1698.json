@@ -1,0 +1,123 @@
+{
+  "pr_number": 1698,
+  "title": "Record: GatedDeltaNet (FLA) + Legal Score-First TTT \u2014 val_bpb 1.00995 (3-seed mean)",
+  "author": "arsenis-cmd",
+  "status": "open",
+  "val_bpb": 1.00995,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Replaces softmax attention with linear gated delta rule recurrence from Flash Linear Attention.",
+        "parameters": {
+          "layers": 10,
+          "dimensions": 544,
+          "heads": 8,
+          "kv_sharing_stride": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "K_KVShare_Wider",
+        "description": "Wider architecture with KV sharing and 10-layer configuration built on PR #1687.",
+        "parameters": {
+          "layers": 10,
+          "dimensions": 544,
+          "heads": 8,
+          "kv_sharing_stride": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "matrices and embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adam_for_scalars_embeds": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_every": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "applied_to": "TTT learning rate"
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Uses GatedDeltaNet linear attention from Flash Linear Attention instead of softmax attention.",
+    "Applies legal score-first test-time training with 3-epoch SGD adaptation on previously scored chunks.",
+    "Builds on the K_KVShare_Wider architecture from PR #1687.",
+    "Achieves a 3-seed mean validation BPB of 1.00995 with sub-16 MiB artifacts."
+  ],
+  "artifact_size": "15.83 MiB",
+  "prompt_version": "v2",
+  "is_record": false
+}
