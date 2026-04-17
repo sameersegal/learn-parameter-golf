@@ -1,0 +1,173 @@
+{
+  "pr_number": 1688,
+  "title": "Add SP8192 qkramp05 + par-residual L6 + legal TTT systems rerun (1.080885 seed 42)",
+  "author": "Buld1n",
+  "status": "open",
+  "val_bpb": 1.08088517,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings with 16/64 dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses looped layers / recurrence in the depth stack.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Includes skip-gated U-Net style connections.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residual lanes",
+        "description": "Adds parallel attention/MLP residual lanes starting from layer 6.",
+        "parameters": {
+          "start_layer": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK depth ramp",
+        "description": "Applies a depth-dependent QK gain ramp instead of a flat gain.",
+        "parameters": {
+          "qk_gain_init": 5.0,
+          "qk_gain_depth_ramp": 0.5
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.022
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "SP8192 qkramp05_par0 rerun on a corrected CUDA 12.8 / PyTorch 2.9.1 + flash_attn_3 runtime stack",
+    "QK depth ramp with gain increasing from 5.0 to 5.5 across depth",
+    "Parallel residual lanes starting at layer 6",
+    "Legal score-first TTT on already-scored tokens",
+    "Systems rerun that recovered throughput and increased training steps under the same wallclock budget"
+  ],
+  "artifact_size": "15,993,776 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
