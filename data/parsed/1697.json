@@ -1,0 +1,117 @@
+{
+  "pr_number": 1697,
+  "title": "Add non-record SP8192 pass-gated recurrence submission",
+  "author": "Buld1n",
+  "status": "open",
+  "val_bpb": 1.08119835,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Pass-gated recurrent attention in the looped band with an extra recurrent attention gate so reused blocks are not exact repeats.",
+        "parameters": {
+          "looped_band_layers": "3..5",
+          "recur_attn_gate": 1,
+          "recur_attn_gate_scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent SP8192 stack with looping over a subset of layers and delayed loop activation.",
+        "parameters": {
+          "enable_looping_at_step": 2600
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "attention and MLP matrices, embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "small control tensors"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Easy-chunk legal TTT with lighter adaptation on easy chunks and stronger adaptation on harder chunks.",
+        "parameters": {
+          "ttt_easy_chunk_ratio": 0.998,
+          "ttt_easy_chunk_epochs": 1,
+          "ttt_outlier_drop_fraction": 0.03,
+          "ttt_score_weight_power": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Late step-based loop onset sweep over multiple candidate onset steps to find the best activation point.",
+        "parameters": {
+          "swept_values": [
+            1600,
+            2000,
+            2400,
+            2600,
+            2800,
+            3000
+          ],
+          "best_value": 2600
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Control-int8 packing for small scalar/control tensors to fit under the 16 MB submission limit.",
+        "parameters": {
+          "tensors": [
+            "attn_scale",
+            "mlp_scale",
+            "resid_mix",
+            "recur_attn_delta",
+            "q_gain",
+            "skip_weights",
+            "skip_gates"
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Pass-gated recurrent attention in the looped band",
+    "Easy-chunk legal TTT recipe",
+    "Late step-based loop-onset sweep showing 2600 as best among tested values",
+    "Control-int8 packing to fit under the 16 MB limit",
+    "Competitive non-record SP8192 submission with 1.08065825 bpb best single seed"
+  ],
+  "artifact_size": "15,983,090 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

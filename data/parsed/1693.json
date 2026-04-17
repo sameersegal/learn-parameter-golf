@@ -1,0 +1,206 @@
+{
+  "pr_number": 1693,
+  "title": "Record: Casefold V4 + AttnOutGate + Multi-Phase Global SGD TTT \u2014 val_bpb 1.05733 (3-seed mean)",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.05733,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Attention Output Gate",
+        "description": "Per-head multiplicative gate on attention outputs, zero-initialized so heads pass through at scale 1.0 at init.",
+        "parameters": {
+          "layers": 11,
+          "heads": 8,
+          "width": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Input-dependent residual mixer that blends the current token with the previous token in a causal, backward-looking way.",
+        "parameters": {
+          "width": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent layer reuse with encoder/decoder layer loops.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation variant.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "row_normalized": true,
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000,
+          "learning_rate": 0.001,
+          "momentum": 0.9,
+          "gradient_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 96,
+          "learning_rate": 0.0001,
+          "chunk": 48,
+          "batch_size": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.75
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "causal": true
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Attention Output Gate applied per head across all attention paths with zero initialization",
+    "SmearGate residual mixer combined with the casefold V4 baseline",
+    "Multi-phase global SGD score-first TTT with phased prefix scoring",
+    "Casefold V4 tokenizer retrained from scratch on lowercased data",
+    "Record-setting improvement to val_bpb 1.05733 with 3-seed mean"
+  ],
+  "artifact_size": "~15.21 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
