@@ -1,0 +1,155 @@
+{
+  "pr_number": 1709,
+  "title": "Non-record: XSA F.normalize fix + byte-shuffle/brotli + Muon WD as compression knob",
+  "author": "Bananakin1",
+  "status": "open",
+  "val_bpb": 1.147,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ-lite",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross-subtraction attention with a corrected normalization step; replaces erroneous rms_norm usage with normalize for unit-vector projection removal.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.085,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding component used in the model.",
+        "parameters": {
+          "buckets": 3072,
+          "dimensions": 112
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate module included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the transformer stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with partial application.",
+        "parameters": {
+          "dimensions": 16,
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.085
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Verified bug fix for XSA normalization: replacing F.rms_norm with F.normalize to avoid over-subtracting the projection by head_dim.",
+    "Byte-shuffle with stride 2 followed by brotli q=11 for artifact compression, with LZMA-9 fallback.",
+    "Hypothesis that Muon weight decay acts as a compression-aware knob affecting artifact size.",
+    "Single-point comparison showing brotli+shuffle produced a smaller artifact than LZMA-9 on one checkpoint."
+  ],
+  "artifact_size": "15.96 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

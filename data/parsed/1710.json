@@ -1,0 +1,191 @@
+{
+  "pr_number": 1710,
+  "title": "submission: SFT \u2014 Random Feature Adapters (Learning adapters on rando\u2026",
+  "author": "AVINASH0052",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RandomFeatureMLP",
+        "description": "MLP uses a fixed random projection regenerated from a deterministic seed; only the output projection is learned.",
+        "parameters": {
+          "expansion": 4,
+          "seed_base": 314159
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses layers 3-5 for extra virtual depth.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "extra_iterations": 2,
+          "virtual_layers": 17
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Uses parallel residual connections starting from later layers.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Sigmoid-gated skip connections inspired by U-Net style residual routing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.022,
+          "scalar_lr": 0.02,
+          "embed_lr": 0.03
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weight matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_size": 32000,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "seq_len": 2048,
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(2L+1)"
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "RandomFeatureMLP with fixed random projections and only learned output projections",
+    "Learning adapters on random linear maps",
+    "Parameter-efficient MLP design that halves MLP parameter storage",
+    "Depth recurrence to create 17 virtual layers from 11 physical layers",
+    "GPTQ int6 compression with Brotli-11 artifact packing"
+  ],
+  "artifact_size": "~13.4MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
