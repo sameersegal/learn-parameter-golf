@@ -1,0 +1,107 @@
+{
+  "pr_number": 1718,
+  "title": "Non-record: Eval-time lever ablations on SP8192 absolute-RoPE stack (companion to PR #1716)",
+  "author": "himanshudongre",
+  "status": "open",
+  "val_bpb": 1.07882,
+  "architecture": "Transformer",
+  "quantization": "mixed int8/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Reduced BigramHashEmbedding projection dimension to 32 for a small but consistent gain and smaller parameter footprint.",
+        "parameters": {
+          "dimensions": 32
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int8/int6",
+        "bits": 8,
+        "scope": "control tensors, small matrices, tok_emb"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 4
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 128,
+          "context_length": 4096
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "window": 1024
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "matrices only"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adaptive Hadamard rotation before GPTQ to test whether random orthogonalization reduces quantization error on Muon-trained weights.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Structured ablation writeup documenting which eval-time levers helped or failed on the SP8192 absolute-RoPE stack.",
+    "Path A v3 passthrough quantization that reduced artifact size to fit under the 16 MB cap with no measured bpb cost.",
+    "Demonstration that increasing eval sequence length, SWA, and longer training sequence length all regress under sliding-window scoring for the same architectural reason.",
+    "Identification of a QAT and score-first TTT incompatibility on this stack.",
+    "Null result showing adaptive Hadamard GPTQ does not help on Muon-trained sub-Gaussian weights.",
+    "Argument that relative-position attention methods like ALiBi or NoPE are the correct next direction."
+  ],
+  "artifact_size": "15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
