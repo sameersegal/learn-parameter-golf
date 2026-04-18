@@ -1,0 +1,159 @@
+{
+  "pr_number": 1720,
+  "title": "Notable: SP8192 + 3-Layer Recurrence + Parallel Residuals - 5-Seed Quantization Reference and SDClip Ablations",
+  "author": "kiyoaki",
+  "status": "open",
+  "val_bpb": 1.08180758,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence loops layers 3-5, yielding 17 virtual layers from 11 physical layers.",
+        "parameters": {
+          "layers": 3,
+          "virtual_layers": 17,
+          "physical_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "GPT-J style parallel residuals where attention and MLP share the pre-residual input starting from layer 7.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.026,
+          "warmdown_frac": 0.75
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.75
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP and attention matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "int6 for attention and MLP, int8 for embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "no_ttt": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "5-seed near-frontier reference for the SP8192 / 3-layer recurrence / parallel residual stack",
+    "Empirical observation that post-quantization val_bpb is lower than pre-quantization across all 5 seeds",
+    "Documented SDClip ablation sweep showing quality/size tradeoffs and a negative-result clipping variant",
+    "Reference implementation under the 16 MB decimal artifact cap with all five seeds",
+    "Canonical SP8192 utf-8 byte-accounting validation with no TTT"
+  ],
+  "artifact_size": "15,989,432 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

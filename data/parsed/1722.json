@@ -1,0 +1,216 @@
+{
+  "pr_number": 1722,
+  "title": "Record: Trinity SLOT v3 + Pre-Quant TTT \u2014 val_bpb 0.65802 (3-seed mean)",
+  "author": "deborahnelson8788726",
+  "status": "open",
+  "val_bpb": 0.65802,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "3.0x MLP expansion with LeakyReLU activation",
+        "parameters": {
+          "hidden_multiplier": 3.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 8 attention heads and 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to a subset of head dimensions",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash feature with XOR hashing",
+        "parameters": {
+          "dimensions": "3072x112"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Embeddings",
+        "description": "Value embeddings used in later layers",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections with SmearGate",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate used in U-Net skip connections",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval_steps": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 1e-08,
+        "momentum": null,
+        "other_params": {
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "eps": 1e-05
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.001,
+          "epochs": 1,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 10
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-sample SLOT v3 optimization on top of TTT-adapted model using ephemeral delta and logit bias parameters",
+        "parameters": {
+          "steps": 24,
+          "learning_rate": 0.024
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.024,
+          "end_lr": 0.001
+        }
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Pre-quant score-first test-time training on already-scored chunks",
+    "Per-sample SLOT v3 applied after TTT for additional adaptation",
+    "TTT \u2192 SLOT cascade on top of the PR #1019 SOTA stack",
+    "Three-seed verified record result with low variance",
+    "No scored-region SLOT leakage and no target-in-key n-gram cache"
+  ],
+  "artifact_size": "15.8MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

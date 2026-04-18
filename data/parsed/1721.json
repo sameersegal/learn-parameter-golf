@@ -1,0 +1,157 @@
+{
+  "pr_number": 1721,
+  "title": "WIP: FreqGPTQ + GatedDeltaNet + Adaptive Quantization",
+  "author": "OlesStankevych",
+  "status": "closed",
+  "val_bpb": null,
+  "architecture": "Hybrid",
+  "quantization": "mixed int5/6/8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Uses a GatedDeltaNet-based hybrid architecture with Legal TTT and tied embeddings.",
+        "parameters": {
+          "layers": 10,
+          "dim": 544,
+          "heads": 8,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram hash embedding used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate is included in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / tied LM head.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "control tensors and selected embedding rows"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "final block and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 50
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Frequency-weighted GPTQ calibration (FreqGPTQ) that boosts top-frequency tokens during Hessian accumulation",
+    "PassthroughQuant using int8 for control tensors to reduce artifact size",
+    "Sandwich quantization with a higher-precision final block to protect LM head signal",
+    "Adaptive embedding precision with int8 for frequent tokens and lower precision for the rest",
+    "Configurable Int5/Int6 GPTQ with Late QAT clip range synchronization",
+    "LZMA self-extracting wrapper to reduce code size and free budget for weights"
+  ],
+  "artifact_size": "~15.8 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
