@@ -1,0 +1,105 @@
+{
+  "pr_number": 1739,
+  "title": "Submission: SP8192 + Depth Recurrence + Muon 0.99 (1.1497 pre-quant BPB)",
+  "author": "DevelopedByAnurag",
+  "status": "open",
+  "val_bpb": 1.1497,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Re-runs transformer layers 4 and 5 during the forward pass to create a deeper virtual network without adding parameters.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ],
+          "virtual_layers": 11,
+          "physical_layers": 9
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.085,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_steps": 1500,
+          "warmup_start_momentum": 0.85,
+          "warmdown_steps": 3000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned per-dimension sigmoid gate after the embedding layer that blends each token representation with its predecessor.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.996
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon_matrices": 0.085,
+          "embeddings": 0.085,
+          "adam_scalars": 0.02
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "SP8192 SentencePiece vocabulary scaling",
+    "Depth recurrence on layers 4 and 5",
+    "Muon momentum tuning to 0.99 with warmup and warmdown schedules",
+    "SmearGate embedding-level gating",
+    "EMA weight averaging",
+    "Sliding window evaluation with stride 64",
+    "INT8 per-row quantization with zlib compression"
+  ],
+  "artifact_size": "16,077,239 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

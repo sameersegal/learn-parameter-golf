@@ -1,0 +1,130 @@
+{
+  "pr_number": 1738,
+  "title": "Record: PR #1735 + CaseOps Tokenizer V15 (val_bpb 1.03540, mean of 3 seeds)",
+  "author": "alertcat",
+  "status": "open",
+  "val_bpb": 1.0354,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer depth recurrence / virtual layers in the model stack",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / embedding tying is implied by the inherited stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residual connections used in the inherited stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "QK-Gain 5.25 attention scaling used in the inherited stack",
+        "parameters": {
+          "qk_gain": 5.25
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 21,
+          "parallel_gpus": 8,
+          "federated_averaging": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "scope": "epoch-level",
+          "t_max": 21,
+          "eta_min_ratio": 0.1
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CaseOps lossless-case tokenizer with byte sidecar for honest BPB accounting",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "disabled_in_final_run": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Integrated CaseOps tokenizer byte-sidecar support into PR #1735's evaluation pipeline for honest BPB accounting",
+    "Combined SP8192 + 3-layer recurrence + parallel residuals + QK-Gain + pre-quant AdamW TTT with CaseOps tokenizer",
+    "Added validation byte-sidecar loading and excluded sidecar files from token globbing to avoid double counting",
+    "Disabled experimental TTT EMA after ablation showed it hurt performance",
+    "Achieved a 3-seed mean val_bpb of 1.03540, beating the record threshold"
+  ],
+  "artifact_size": "15.996 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
