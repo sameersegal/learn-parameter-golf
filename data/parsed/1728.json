@@ -1,0 +1,157 @@
+{
+  "pr_number": 1728,
+  "title": "Non-record: Neural Base Model, No TTT \u2014 Parcae + Gates + Layered Windows (val_bpb 1.07706)",
+  "author": "mikeapedia",
+  "status": "open",
+  "val_bpb": 1.07706,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int7 GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "window_size": null
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Causal residual mixer blending the current token with the previous token.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head input-dependent sigmoid-scaled gate on attention output.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Global attention layers use partial rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "layers": [
+            4,
+            9,
+            10
+          ],
+          "rope_dims": 16,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window attention",
+        "description": "Local layers use sliding-window causal attention with layered window sizes.",
+        "parameters": {
+          "local_window_512_layers": [
+            0,
+            1,
+            2,
+            3,
+            5
+          ],
+          "local_window_1024_layers": [
+            6,
+            7,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loop-based recurrence with constrained loop injection at re-entry.",
+        "parameters": {
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "KV-tying on global attention layers was disabled in this submission.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "xIELU fused MLP activation with squaring in the custom kernel.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli + lzma",
+  "novel_contributions": [
+    "No test-time training; submission isolates architectural gains.",
+    "Layered local sliding windows with different window sizes across layers.",
+    "Parcae constrained loop injection for bounded recurrent-style updates.",
+    "Attention output gating and SmearGate residual mixing.",
+    "Mixed-precision GPTQ quantization with brotli-compressed state dict."
+  ],
+  "artifact_size": "15,962,729 B",
+  "prompt_version": "v2",
+  "is_record": false
+}
