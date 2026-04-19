@@ -1,0 +1,117 @@
+{
+  "pr_number": 1743,
+  "title": "WIP: FreqGPTQ + GatedDeltaNet + Adaptive Quantization",
+  "author": "OleStan",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Hybrid",
+  "quantization": "mixed int5/6/8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GatedDeltaNet",
+        "description": "Base architecture built on GatedDeltaNet with Legal TTT.",
+        "parameters": {
+          "layers": 10,
+          "dim": 544,
+          "heads": 8,
+          "head_key_dim": 64
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "control tensors, small matrices, final block, top-100 embedding rows"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int8",
+        "bits": null,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_start": 50
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "freeze_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Frequency-weighted GPTQ calibration (FreqGPTQ) that boosts top-100 frequent tokens during Hessian accumulation",
+    "PassthroughQuant using int8 for control tensors instead of fp16",
+    "Sandwich quantization with int8 for the final block to protect LM head signal",
+    "Adaptive embedding precision with higher precision for frequent token rows",
+    "Configurable Int5/6 GPTQ with synced Late QAT clip range",
+    "LZMA self-extracting wrapper to reduce code size and free model budget"
+  ],
+  "artifact_size": "~15.8 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
