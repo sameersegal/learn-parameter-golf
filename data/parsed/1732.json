@@ -1,0 +1,199 @@
+{
+  "pr_number": 1732,
+  "title": "Record: SP8192 + Hadamard Rotation + AWQ + Layer-wise Precision + Hessian-Aware Calibration + Legal TTT \u2014 val_bpb 1.0785",
+  "author": "Victory963",
+  "status": "open",
+  "val_bpb": 1.0785,
+  "architecture": "Transformer",
+  "quantization": "mixed int8/int6/int4",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence expands 11 physical layers into 17 virtual layers via encoder-decoder skip connections.",
+        "parameters": {
+          "physical_layers": 11,
+          "virtual_layers": 17,
+          "recurrence_layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with reduced KV heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "rotary_dims": 16,
+          "total_dims": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections used in the recurrent architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel residuals",
+        "description": "GPT-J style parallel attention and MLP residual pathway.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK gain",
+        "description": "Learnable query scaling per head.",
+        "parameters": {
+          "gain": 5.25
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int8/int6/int4",
+        "bits": null,
+        "scope": "layer-wise"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "AWQ",
+        "bits": null,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings and attention"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP FC1"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "MLP FC2 and residuals"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hadamard rotation applied before quantization to reduce activation outliers and quantization noise.",
+        "parameters": {
+          "matrix_size": "512x512"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hessian-aware calibration using Fisher information diagonal to set quantization ranges.",
+        "parameters": {
+          "calibration_batches": 50
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "row_normalized": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Hadamard rotation for outlier removal before quantization",
+    "AWQ-based mixed-precision quantization with layer-wise int8/int6/int4 allocation",
+    "Hessian-aware calibration using Fisher information for quantization ranges",
+    "3-layer recurrence expanding 11 physical layers into 17 virtual layers",
+    "Legal score-first test-time training under evaluation constraints",
+    "GPT-J style parallel residual architecture with QK gain"
+  ],
+  "artifact_size": "~15.98 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
