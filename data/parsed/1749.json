@@ -1,0 +1,180 @@
+{
+  "pr_number": 1749,
+  "title": "GDN-Hybrid + Legal Score-First TTT + Full-Hessian GPTQ Int6",
+  "author": "gracebml",
+  "status": "open",
+  "val_bpb": 1.0996,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated DeltaNet",
+        "description": "Replaces most attention layers with recurrent GDN layers for long-range associative memory.",
+        "parameters": {
+          "layers": 10
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SWA",
+        "description": "Uses two sliding window attention layers, with shared weights between them.",
+        "parameters": {
+          "layers": 2,
+          "shared_weights": true,
+          "window": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding and lm-head weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-based bigram embedding for local n-gram statistics.",
+        "parameters": {
+          "buckets": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Hash-based trigram embedding for additional local n-gram features.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learned smoothing gate applied over embeddings before recurrent layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention used in the sliding window attention blocks.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Caps logits with tanh-based soft clipping to stabilize training.",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "warmup_momentum_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "scalar and embedding parameters"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 32
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_size": 32768,
+          "optimizer": "AdamW"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all linear layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "GDN-Hybrid architecture combining recurrent Gated DeltaNet layers with shared sliding-window attention",
+    "Legal score-first test-time training that adapts only after scoring already-evaluated tokens",
+    "Full-Hessian GPTQ Int6 quantization with Cholesky error compensation",
+    "Shared SWA weights to reduce parameter count",
+    "Eval-time hash embeddings and n-gram posterior tilt integrated into TTT",
+    "Hessian-aware quantization of recurrent layers with minimal BPB degradation"
+  ],
+  "artifact_size": "14.03 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
