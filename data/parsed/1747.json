@@ -1,0 +1,146 @@
+{
+  "pr_number": 1747,
+  "title": "Submission: SP8192 + Partial RoPE (16/64) + GPTQ SDClip + SGD TTT \u2014 val_bpb 1.0820 (3-seed mean)",
+  "author": "swapp1990",
+  "status": "open",
+  "val_bpb": 1.082,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotate only the first 16 of 64 head dimensions with RoPE, leaving the remaining 48 dimensions unrotated.",
+        "parameters": {
+          "dimensions": 16,
+          "head_dim": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP4x",
+        "description": "11-layer Transformer with 4x MLP expansion.",
+        "parameters": {
+          "layers": 11,
+          "intermediate_dim": 2048
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention and MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.005,
+          "scope": "all-weights",
+          "chunk_size": 2048
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "prefix_only": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "chunk_size": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "QK-Gain scaling applied to attention logits.",
+        "parameters": {
+          "gain": 5.25
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Partial RoPE using only the first 16 of 64 head dimensions",
+    "GPTQ + SDClip quantization stack with int6 weights and int8 embeddings",
+    "SGD all-weights test-time training with score-first compliance",
+    "Brotli-11 compression with byte shuffling",
+    "Reported 3-seed mean validation BPB of 1.0820"
+  ],
+  "artifact_size": "~15.86 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
