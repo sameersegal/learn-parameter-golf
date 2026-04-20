@@ -1,0 +1,159 @@
+{
+  "pr_number": 1754,
+  "title": "Add non-record submission: SP8192 baseline + LZMA code-wrap",
+  "author": "upascal",
+  "status": "open",
+  "val_bpb": 1.08814,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence enabled partway through training",
+        "parameters": {
+          "loop_start": 3,
+          "loop_end": 5,
+          "num_loops": 2,
+          "enabled_at": "50% training"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation",
+        "parameters": {
+          "squared": true,
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attn and mlp weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SDClip per-row clipping using a std-based scale rule before quantization",
+        "parameters": {
+          "int6_k": 12.85,
+          "int8_embedding_k": 20
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5,
+          "momentum_warmup_steps": 1500,
+          "adam_on": [
+            "scalars",
+            "embeds"
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_frac": 0.3,
+          "wallclock_cap_s": 600
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "muon": 0.095,
+          "adam": 0.02
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "seed": 1337
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Single-seed reproduction of the SP8192 + int6 GPTQ + SDClip stack",
+    "LZMA code-wrap applied to the training source",
+    "Validated non-record baseline submission under the 16MB cap"
+  ],
+  "artifact_size": "15,988,151 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

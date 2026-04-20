@@ -1,0 +1,120 @@
+{
+  "pr_number": 1753,
+  "title": "Non-record: Lottery Ticket Hypothesis with a few float parameters",
+  "author": "Abhishek-Dalvi410",
+  "status": "open",
+  "val_bpb": 1.2917,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are enabled for the transformer.",
+        "parameters": {
+          "tied_embeddings": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "custom random init",
+        "description": "Deterministic seed-derived float32 random initialization with Xavier uniform for embeddings/attention/projections, He uniform for MLP pre-ReLU layers, and zeros for 1D parameters."
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "binary_masks": true,
+          "learned_mask_scores": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Lottery Ticket Hypothesis / supermask training: freeze all weights at random init and learn per-element binary masks plus a few continuous scale parameters.",
+        "parameters": {
+          "mask_temperature_start": 1.0,
+          "mask_temperature_end": 0.5,
+          "mask_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Train a small set of continuous scale parameters alongside masks, including attn_scale, mlp_scale, head_scale, and pre_logit_scale.",
+        "parameters": {
+          "scale_params": [
+            "attn_scale",
+            "mlp_scale",
+            "head_scale",
+            "pre_logit_scale"
+          ]
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 200
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Freezes all transformer weights at a seed-derived random initialization and learns only binary masks over them.",
+    "Ships a compact artifact consisting of a uint32 seed, bit-packed masks, and a few fp16 scale parameters.",
+    "Demonstrates a lottery-ticket/supermask regime at large scale with no stored weight values.",
+    "Uses deterministic float32 CPU initialization so the frozen network can be regenerated bit-exactly from the seed.",
+    "Applies temperature-annealed straight-through binary masking with a small set of learned continuous scale knobs."
+  ],
+  "artifact_size": "14,891,849 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
