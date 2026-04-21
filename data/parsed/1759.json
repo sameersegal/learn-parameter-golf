@@ -1,0 +1,172 @@
+{
+  "pr_number": 1759,
+  "title": "Non-record: SP8192 + LoRA on tied embedding (1.07994, 1 seed)",
+  "author": "yijieyuan",
+  "status": "open",
+  "val_bpb": 1.07994,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied token embeddings used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Leaky ReLU activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent reuse of layers to create virtual depth.",
+        "parameters": {
+          "layers": 3,
+          "activate_at_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections used in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": 0.9,
+        "other_params": {
+          "mlr": 0.022
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "tied embedding"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Rank-1 int8 LoRA residual added to the tied token embedding after GPTQ rounding.",
+        "parameters": {
+          "rank": 1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Hessian-weighted shrinkage during GPTQ rounding with an extended zero-zone for low-Hessian columns.",
+        "parameters": {
+          "thresh": 0.55,
+          "h_cutoff": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Rank-1 int8 LoRA residual on the tied token embedding",
+    "Hessian-weighted shrinkage in GPTQ rounding for low-Hessian columns",
+    "Applied both additions only at the GPTQ quantization stage on the tied embedding",
+    "Single-seed non-record extension of the bigbag SOTA stack"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
