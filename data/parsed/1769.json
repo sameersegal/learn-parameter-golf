@@ -1,0 +1,95 @@
+{
+  "pr_number": 1769,
+  "title": "Record: SP8192 CaseOps stack retune (MLP clip 10\u219212) \u2192 1.06453",
+  "author": "dexhunter",
+  "status": "open",
+  "val_bpb": 1.06453,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention with learned scalar out-gates per head and quantized gating enabled.",
+        "parameters": {
+          "init_std": 0.005,
+          "quant_gate": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loop4-5 recurrent depth structure.",
+        "parameters": {
+          "loop_start": 3,
+          "loop_end": 5,
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "CaseOps + SP8192 stack uses the same tokenizer/model setup as the base submission; no explicit weight tying is described.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Retuned MLP GPTQ outlier clipping from 10.0 to 12.0",
+    "Preserved MLP tail mass during int6 calibration for 4x-width MLPs",
+    "Achieved 5-seed mean val_bpb of 1.06453",
+    "Maintained compliance with 16 MB artifact cap and 600s train/eval budgets",
+    "Reported 7-seed disclosure with 5 lowest-BPB seeds used for the official score"
+  ],
+  "artifact_size": "~15.98 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
