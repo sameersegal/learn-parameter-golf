@@ -1,0 +1,154 @@
+{
+  "pr_number": 1783,
+  "title": "[record] val_bpb=1.1716 \u2014 DEQ Universal Transformer + Seed-LoRA + Mixture of Depths",
+  "author": "ismailntl",
+  "status": "open",
+  "val_bpb": 1.17158907,
+  "architecture": "Transformer",
+  "quantization": "int6/int8 GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrence through layers 3-5 with 4 virtual passes, increasing effective depth from a smaller physical stack.",
+        "parameters": {
+          "layers": 3,
+          "passes": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used to share parameters between input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query style attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses sigmoid-gated skip connections between layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "chunk_size": 24576,
+          "epochs_per_chunk": 4,
+          "restricted_to_recurrent_layers": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DEQ Universal Transformer",
+        "description": "A single physical transformer block is iterated to a fixed point using Anderson acceleration and phantom gradients.",
+        "parameters": {
+          "history_window": 5,
+          "unrolled_steps": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Seed-LoRA",
+        "description": "Random linear maps are generated from seeds at runtime and only LoRA adapters are stored.",
+        "parameters": {
+          "adapter_params": 440000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Mixture of Depths",
+        "description": "Routes only a subset of tokens through full attention and MLP while others take identity residuals.",
+        "parameters": {
+          "capacity": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "DEQ Universal Transformer with fixed-point iteration and Anderson acceleration",
+    "Seed-LoRA using runtime-generated random linear maps with stored adapters only",
+    "Mixture of Depths token routing for compute-efficient training",
+    "4-loop depth recurrence with early parallel residuals and selective TTT",
+    "GPTQ int6/int8 compression with Brotli-11 artifact compression"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

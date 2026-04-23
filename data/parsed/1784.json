@@ -1,0 +1,76 @@
+{
+  "pr_number": 1784,
+  "title": "Record: GatedAttn + Alpha-Scaled LoRA + Warm-start A + WD 1.0 \u2014 val_bpb 1.07081 (3-seed mean)",
+  "author": "renqianluo",
+  "status": "open",
+  "val_bpb": 1.07080923,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gate applied to SDPA output in attention blocks.",
+        "parameters": {
+          "per_head": true,
+          "gate_activation": "sigmoid"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 128,
+          "alpha": 144,
+          "warm_start_a": 1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 1.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "attn_gate_w"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Mirrored the attention gate inside the LoRA-TTT forward path so training and scoring use the same gated attention computation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-row int8 quantization for attention gate weights with one fp16 scale per head to fit under the artifact size cap.",
+        "parameters": {
+          "per_row": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Stacks GatedAttn on top of the LoRA-TTT stack from PR #1767.",
+    "Mirrors the attention gate inside the LoRA-TTT inline forward path to avoid train/eval mismatch.",
+    "Uses per-row int8 quantization for attn_gate_w to keep the artifact under the 16 MB cap with minimal accuracy loss."
+  ],
+  "artifact_size": "15.98MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
