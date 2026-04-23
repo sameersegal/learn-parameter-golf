@@ -1,0 +1,98 @@
+{
+  "pr_number": 1787,
+  "title": "Record: PR #1736 + Polar Express NS + MIN_LR + Sparse Attn Gate + Fused CE \u2014 val_bpb 1.06378",
+  "author": "nprime06",
+  "status": "open",
+  "val_bpb": 1.06378,
+  "architecture": "Transformer",
+  "quantization": "int8 per-row",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "MUON_BACKEND_STEPS": 5
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Polar Express Newton-Schulz coefficients used to improve the polar factor produced by Muon's zeropower_via_newtonschulz5."
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention head-output gate with narrow gate_window input, replacing dense gated attention while preserving attn_gate_w routing.",
+        "parameters": {
+          "gate_window": 12,
+          "gate_params_per_layer": 96
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "training_only": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fused softcapped cross-entropy Triton kernel for training-time forward/backward efficiency.",
+        "parameters": {
+          "training_only": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phased": true,
+          "lora": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "gate weights"
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Polar Express Newton-Schulz coefficients ported from PR #1344",
+    "MIN_LR=0.10 warmdown floor",
+    "Sparse attention head-output gate with much smaller parameter footprint",
+    "Fused softcapped cross-entropy Triton kernel",
+    "TTT path mirroring fix for sparse gate consistency",
+    "BOS-fix patch for prepare_caseops_data.py"
+  ],
+  "artifact_size": "~15.94 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,12 @@
+{
+  "number": 1788,
+  "title": "Non-record- QAT cooldown + INT4 MLP + NuMuon-lite - 1.12 BPB ",
+  "author": "marinabar",
+  "body": "This PR builds on the current SOTA with three techniques for optimizing information density.\r\nResults: 1.12 val BPB, 2.9 validation loss (non-record).\r\n\r\n**1. QAT-Fused Cooldown**\r\nRather than running GPTQ after training ends, we enable INT6 fake-quantization during the LR warmdown so the optimizer can actively adapt weights to quantization noise while it's still learning. In this small setup post-hoc quantization accumulates a lot of error, so fusing QAT into the cooldown phase avoids this cleanly.\r\n\r\n**2. INT4 MLP + INT6 Attention Mixed Precision**\r\nMLP weights are the largest and most redundant part of the model, so we drop them to INT4 while keeping attention at INT6. This frees ~2.9MB which goes back into model capacity. The quality is much better than post-hoc INT4 thanks to the QAT cooldown.\r\n\r\n**3. NuMuon-lite (Nuclear-Norm Regularization)**\r\nWe add a Frobenius-norm penalty every 50 steps to push weights toward low-rank structure, which makes GPTQ+Brotli compression more effective downstream. Full NuMuon with Block Krylov SVD is too expensive here, so this is a cheaper proxy that gets most of the benefit.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-23T09:48:38Z",
+  "updated_at": "2026-04-23T09:48:38Z",
+  "submission_readme": null
+}
