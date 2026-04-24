@@ -1,0 +1,221 @@
+{
+  "pr_number": 1809,
+  "title": "Record: SP8192 + Gram-NS + Polar Express + 3-Layer Recurrence + Parallel Residuals + QK-Gain 5.25 + Legal TTT \u2014 val_bpb 1.0800 (3-seed mean)",
+  "author": "PranavViswanath",
+  "status": "open",
+  "val_bpb": 1.08,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence loops layers 3-5 twice, creating 17 virtual layers from 11 physical layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "loops": 2,
+          "virtual_layers": 17,
+          "physical_layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Attention and MLP read from the same pre-residual input in later layers.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Uses a 4x MLP expansion.",
+        "parameters": {
+          "multiplier": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "gram_ns": true,
+          "polar_express": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72,
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.095
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.022
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all model weights"
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Gram-NS for rectangular MLP matrices using Gram-matrix Newton-Schulz iterations",
+    "Polar Express per-iteration minimax Newton-Schulz coefficients",
+    "4 Newton-Schulz steps with extended training budget recovery",
+    "Reduced GPTQ reserve time to recover additional training time",
+    "3-layer depth recurrence with 17 virtual layers",
+    "Parallel residuals in later layers",
+    "QK-Gain 5.25",
+    "Legal score-first test-time training"
+  ],
+  "artifact_size": "~16.02 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
