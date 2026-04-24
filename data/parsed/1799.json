@@ -1,0 +1,128 @@
+{
+  "pr_number": 1799,
+  "title": "Record: SP8192 + Headwise Gated Attention + LeakyReLU2 + Legal TTT (val_bpb 1.2073)",
+  "author": "jamesEmerson112",
+  "status": "open",
+  "val_bpb": 1.2073,
+  "architecture": "Transformer",
+  "quantization": "int8 + zlib",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head sigmoid gate applied after SDPA to suppress or pass through each attention head's output dynamically.",
+        "parameters": {
+          "type": "headwise",
+          "gates_per_head": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 in the MLP instead of ReLU^2.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adam_used_for": "scalars/embeddings"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_tokens": 32768,
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses SP8192 SentencePiece BPE tokenizer/vocabulary.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Headwise gated attention as an original lightweight per-head gating mechanism",
+    "SP8192 tokenizer/vocabulary integration",
+    "LeakyReLU(0.5)^2 activation replacement",
+    "Legal score-first test-time training on already-scored chunks",
+    "Combination of SP8192, headwise gated attention, LeakyReLU2, QK-Gain 5.0, and TTT under the 16 MB budget"
+  ],
+  "artifact_size": "~15.34 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

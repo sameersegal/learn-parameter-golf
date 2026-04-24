@@ -1,0 +1,101 @@
+{
+  "pr_number": 1798,
+  "title": "Record: #1787 + Sparse Gate + Updated Frozen Carry \u2014 val_bpb 1.06287",
+  "author": "leon2k2k2k",
+  "status": "closed",
+  "val_bpb": 1.06287,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "phased": true,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Replaces dense attention output gating with a narrow-input sparse gate; includes learned per-head gate scalars and quant-time gate scaling.",
+        "parameters": {
+          "init_std": 0.005,
+          "quant_gate": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loop4-5 style repeated execution of layers 4 and 5.",
+        "parameters": {
+          "layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "CaseOps tokenizer with shared vocabulary/operator tokens is mentioned, but no explicit model weight tying is described.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "fused_softcapped_ce": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CaseOps reversible case preprocessing with operator tokens and per-token byte sidecar accounting for BPB on original bytes.",
+        "parameters": {
+          "tokenizer": "CaseOps",
+          "byte_sidecar": true
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Sparse attention-output gate replacing the dense gated attention path",
+    "Updated frozen recurrent carry with re-learned and 2-decimal-quantized alpha/beta coefficients",
+    "Phased score-first LoRA TTT stack",
+    "CaseOps reversible tokenizer and original-byte BPB accounting",
+    "Quant-time gate scaling to recover artifact overhead"
+  ],
+  "artifact_size": "~15.91 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

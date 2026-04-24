@@ -1,0 +1,160 @@
+{
+  "pr_number": 1794,
+  "title": "Add 2026-04-23_SP8192_PerLayerClip_UnfrozenTTT_1.0849",
+  "author": "Programmerryoki",
+  "status": "open",
+  "val_bpb": 1.0849,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP, attention, embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses layers in a recurrent encoder/decoder pattern.",
+        "parameters": {
+          "layers": "3-5"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses squared ReLU activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA in the last layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Adds per-head attention output gating with zero-init identity.",
+        "parameters": {
+          "gate": "2\u03c3(attn_gate)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "warmup_start_momentum": 0.92
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings + scalars"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "freeze_blocks": 0,
+          "learning_rate": 0.01,
+          "epochs": 5,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Eval wall-clock budget guard that truncates adaptation when projected runtime would exceed the 600s limit while continuing scoring.",
+        "parameters": {
+          "max_eval_seconds": 600,
+          "warmup_chunks": 5
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Per-layer GPTQ clip sigmas tuned separately for MLP, attention, and embeddings",
+    "Unfrozen score-first TTT with all non-embedding blocks adapting",
+    "Evaluation wall-clock budget guard that truncates adaptation while preserving scoring legality",
+    "Recipe built on SP8192 base architecture with per-category outlier-aware quantization"
+  ],
+  "artifact_size": "15,962,961 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
