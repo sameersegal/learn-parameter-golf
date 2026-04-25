@@ -1,0 +1,210 @@
+{
+  "pr_number": 1818,
+  "title": "Non-record: Post-Quantization Damage Gap \u2014 11L GPTQ Int6 + Curriculum + Sliding TTT (3-seed, 8xH100)",
+  "author": "taka6745",
+  "status": "open",
+  "val_bpb": 1.1009,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention in the transformer stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary embeddings applied to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Extended sparse attention with sliding-window plus global tokens on later layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Asymmetric encoder-decoder skip connections with learned skip weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Token embedding and LM head are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_iterations": 3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings_and_scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate_schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start": 0.0001,
+          "end": 1e-06
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int5",
+        "bits": null,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "calibration and post-training quantization"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Entropy-bucket curriculum sampler with wallclock-driven easy-to-hard crossfade and floor weight.",
+        "parameters": {
+          "floor": 0.02,
+          "buckets": 8
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Freeze-dry linear-reconstruction storage filter that drops weights predictable from row neighbors.",
+        "parameters": {
+          "neighbors": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "2:4 sparsity packing for storage-only compression using 3-bit values and position codes.",
+        "parameters": {
+          "block_size": 4,
+          "survivors_per_block": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Post-quantization damage gap: a large, reproducible degradation from GPTQ int6 despite strong pre-quant performance.",
+    "Entropy-bucket curriculum sampler with wallclock-driven easy-to-hard sampling and floor weight.",
+    "Freeze-dry: local linear-reconstruction-based storage filtering using neighboring weights.",
+    "2:4 sparsity packing for storage-side compression with 3-bit values and compact position codes.",
+    "Observation that TTT partially recovers from quantization damage but does not close the gap."
+  ],
+  "artifact_size": "15,696,362 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

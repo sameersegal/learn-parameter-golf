@@ -1,0 +1,170 @@
+{
+  "pr_number": 1817,
+  "title": "Non-Record: Crawler 3f+2cx2 d=832 + Mixed Int5 GPTQ + TTT \u2014 val_bpb 1.0903 (1-hour cluster)",
+  "author": "Tonyy1977",
+  "status": "open",
+  "val_bpb": 1.0903,
+  "architecture": "Transformer",
+  "quantization": "mixed int5/int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Uses bigram hash embeddings in the crawler transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ValueEmbedding",
+        "description": "Uses value embeddings in the last 2 layers.",
+        "parameters": {
+          "layers": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA across all layers.",
+        "parameters": {
+          "layers": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention.",
+        "parameters": {
+          "heads": 16,
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Crawler blocks are shared and looped through the network for effective depth recurrence.",
+        "parameters": {
+          "effective_depth": 7,
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6 GPTQ",
+        "bits": null,
+        "scope": "flat attention int5, rest int6, embeddings int8"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 6,
+        "scope": "training"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "post-quant artifact"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "freeze": 1,
+          "stride": 64,
+          "chunk_tokens": 32768,
+          "epochs_per_chunk": 3,
+          "learning_rate": 0.002,
+          "momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "fraction": 0.6,
+          "type": "linear"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.085,
+        "momentum": 0.99,
+        "other_params": {
+          "adam_for_scalars": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Crawler Transformer architecture with 3 flat blocks and 2 crawler blocks repeated for 7 effective depth",
+    "Mixed-int quantization scheme using int5 for flat-block attention and int6 for the rest to avoid pruning",
+    "Post-quantization TTT recovery on the GPTQ artifact",
+    "Demonstration that more pre-quant training compute substantially improves final BPB",
+    "Zero-pruning artifact that fits under the 16 MB budget"
+  ],
+  "artifact_size": "15.96 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

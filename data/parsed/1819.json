@@ -1,0 +1,185 @@
+{
+  "pr_number": 1819,
+  "title": "CTM-Golf: Triple Recurrence + Guided Hebbian Learning + Annealed \u03bb",
+  "author": "DuoNeural",
+  "status": "open",
+  "val_bpb": 3.0041,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Triple Recurrence architecture with encoder and decoder recurrence index schedules.",
+        "parameters": {
+          "encoder": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            3,
+            4
+          ],
+          "decoder": [
+            5,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "layers": 11,
+          "dim": 480,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings and scalar parameters"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_fraction": 0.4
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmup_fraction": 0.1,
+          "hold_fraction": 0.4,
+          "floor": 0.005
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Guided Hebbian Learning auxiliary loss that predicts the next hidden state from the current hidden state at each recurrence step.",
+        "parameters": {
+          "lambda_peak": 0.05,
+          "lambda_floor": 0.005
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Guided Hebbian Learning (GHL) auxiliary loss for temporal self-prediction across recurrence steps",
+    "Annealed lambda schedule that prevents divergence at scale and improves perplexity",
+    "Triple Recurrence architecture with specified encoder/decoder recurrence indices",
+    "Compact int8 + byte-shuffle + brotli compressed artifact under the 16MB limit"
+  ],
+  "artifact_size": "15.28MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
