@@ -1,0 +1,12 @@
+{
+  "number": 1814,
+  "title": "Add lowercase SP10240 QK 5.125 ablation",
+  "author": "suryavanshi",
+  "body": "",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-25T09:10:26Z",
+  "updated_at": "2026-04-25T09:10:26Z",
+  "submission_readme": "# Lowercase SP10240 QK Gain 5.125 Ablation\n\nThis is a controlled one-seed ablation, not a SOTA claim. It keeps the lowercase SP10240 tokenizer, depth recurrence, parallel residuals, Muon training setup, GPTQ INT6 matrices, INT7 embeddings, and Brotli compression, then changes the default QK gain from 5.0 to 5.125.\n\n## Result\n\n| Seed | Sliding BPB | Artifact bytes | Train time |\n|------|-------------|----------------|------------|\n| 42 | 1.07419003 | 15,985,150 | 588.029s |\n\nModal run: `ap-p5ABFuwbpOrepAmodKYjNj`\n\n## Configuration\n\n- Hardware: 8x NVIDIA H100 80GB HBM3 on Modal, requested with exact `H100!:8`\n- Python: 3.12.1\n- PyTorch: 2.9.1+cu128\n- Dataset: `MissGlitterToken/sp10240_casefold`\n- Tokenizer: lowercase SP10240 SentencePiece model\n- `QK_GAIN_INIT=5.125`\n- `TTT_ENABLED=0`\n- `MAX_WALLCLOCK_SECONDS=600`\n- `VAL_LOSS_EVERY=4000`\n\n## Validation\n\n- Training stopped by the wallclock cap at step 4528 with `train_time: 588029ms`.\n- Post-EMA pre-quantized validation: `val_bpb=1.07560344`.\n- Quantized standard validation: `val_bpb=1.09004268`.\n- Quantized sliding-window validation: `val_bpb=1.07419003`, `eval_time=525027ms`.\n- Total compressed artifact size was `15,985,150` bytes, under the 16,000,000 byte limit.\n- No test-time training or eval-time adaptation was enabled.\n\n## Reproduction\n\n```bash\nDATA_DIR=/path/to/data \\\nRUN_ID=lowercase_sp10240_qk5125_seed42 \\\nSEED=42 \\\nQK_GAIN_INIT=5.125 \\\nTTT_ENABLED=0 \\\nMAX_WALLCLOCK_SECONDS=600 \\\nVAL_LOSS_EVERY=4000 \\\ntorchrun --standalone --nproc_per_node=8 train_gpt.py\n```\n\n## Notes\n\nCompared with the matching seed-42 QK gain 5.0 baseline (`1.07389857`), this QK gain setting is slightly worse by about `0.00029` BPB. The run is still technically sound as a negative ablation because it completed the full quantized sliding-window evaluation, stayed within the artifact size cap, and used no eval-time adaptation.\n\n## Credits\n\nThis ablation was run by `suryavanshi` on Modal.\n"
+}

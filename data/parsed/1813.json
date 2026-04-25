@@ -1,0 +1,109 @@
+{
+  "pr_number": 1813,
+  "title": "Record: Scylla QK5.25 depth recurrence, val_bpb 0.94166",
+  "author": "djeidy",
+  "status": "open",
+  "val_bpb": 0.94166052,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA active on all layers in the Scylla attention/eval path.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses layers 3-5 as virtual layers after part of training without increasing serialized parameter count.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "enable_after_training_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Reduced bigram dimension to create artifact headroom while retaining quality gains.",
+        "parameters": {
+          "dimensions": 40
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "QK gain set to 5.25.",
+        "parameters": {
+          "qk_gain_init": 5.25
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Training uses 8xH100 SXM and stops by wallclock around 10 minutes.",
+        "parameters": {
+          "gpus": 8,
+          "hardware": "H100 SXM",
+          "time_limit_seconds": 600
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Scylla tokenizer and data path with correct HF tokenizer metadata",
+    "QK-Gain 5.25 configuration",
+    "3-layer depth recurrence over layers 3-5",
+    "Reduced bigram dimension to 40 to fit within the artifact cap",
+    "Full GPTQ int6 plus LZMA compressed submission artifact",
+    "No TTT or eval-time adaptation"
+  ],
+  "artifact_size": "15,868,157 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
