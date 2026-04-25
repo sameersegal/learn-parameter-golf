@@ -1,0 +1,12 @@
+{
+  "number": 1821,
+  "title": "Hierarchical Quantized Embedding (HQE): Zipf-law mixed precision",
+  "author": "anjing00monyet-arch",
+  "body": "## Strategy B: Hierarchical Locality-Based Mixed Precision\r\n\r\n### Idea\r\nToken frequency follows Zipf's law \u2014 top 256 tokens account for the \r\nmajority of all occurrences. We allocate higher bit precision to \r\nfrequent tokens and lower precision to rare ones.\r\n\r\n### Implementation\r\n- TIER 1: tokens   0\u2013255  \u2192 fp16 (highest frequency)\r\n- TIER 2: tokens 256\u20132047  \u2192 int8\r\n- TIER 3: tokens 2048\u201316383 \u2192 int6  \r\n- TIER 4: tokens 16384\u201357600 \u2192 int4 (long tail)\r\n\r\nQuantization uses Straight-Through Estimator (STE) for gradient flow.\r\n\r\n### Results (1\u00d7H100, ~10min)\r\n- val_bpb: 1.3825\r\n- Embedding memory: ~70% reduction vs fp16 baseline\r\n- val_loss within 0.7% of standard nn.Embedding baseline\r\n\r\n### Usage\r\nUSE_HQE=1 TIE_EMBEDDINGS=0 python3 train_gpt.py\r\n\r\n- 4-tier mixed precision embedding following Zipf's law\r\n- Tiers: fp16 (top 256) / int8 / int6 / int4 (long-tail)\r\n- Memory savings: ~70% vs fp16 baseline\r\n- val_loss within 0.7% of baseline (well under 5% threshold)\r\n- Enabled via USE_HQE=1 env var (default on)\r\n- Compatible with TIE_EMBEDDINGS=0\r\n\r\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-25T19:45:52Z",
+  "updated_at": "2026-04-25T20:24:09Z",
+  "submission_readme": null
+}
