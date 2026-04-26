@@ -1,0 +1,136 @@
+{
+  "pr_number": 1834,
+  "title": "Record: NgramRes + Sliding-Window Attention + Legal Score-First TTT. \u2026",
+  "author": "ghrua",
+  "status": "open",
+  "val_bpb": 1.08034,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Neural n-gram head shares input embeddings and ties output projection to the token embedding matrix.",
+        "parameters": {
+          "n_gram": 3,
+          "layers": 2,
+          "d_hidden": 64,
+          "d_embed": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window eval",
+        "description": "Sliding-window attention on early layers with full causal attention on later layers.",
+        "parameters": {
+          "layers": 4,
+          "window_size": 512
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP/NgramRes matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.005,
+          "gradient_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars/NgramRes-head bias and gain terms"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 32768,
+        "eval_length": 32768
+      }
+    }
+  ],
+  "compression": "lzma + brotli-11",
+  "novel_contributions": [
+    "Neural n-gram residual mixing (NgramRes) with a tied-output n-gram head",
+    "Sliding-window attention on early layers to reduce compute while preserving long-context modeling",
+    "Legal score-first test-time training with chunked SGD adaptation",
+    "Mixed int6/int8 GPTQ quantization that fits the model under the 16 MB limit"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
