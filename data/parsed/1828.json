@@ -1,0 +1,231 @@
+{
+  "pr_number": 1828,
+  "title": "Non-record: ETD Hybrid (3 enc + 3\u00d73 think + 4 dec) + Int5 GPTQ + MuonEqR + U-Net \u2014 1.1169 BPB",
+  "author": "5en5e1",
+  "status": "open",
+  "val_bpb": 1.1169,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int5",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid ETD Transformer",
+        "description": "Encode-Think-Decode transformer with 3 unique encoder blocks, 3 shared think blocks looped for 3 passes, and 4 unique decoder blocks.",
+        "parameters": {
+          "encoder_layers": 3,
+          "think_layers": 3,
+          "think_passes": 3,
+          "decoder_layers": 4,
+          "d_model": 512,
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections bridge encoder outputs to matching decoder layers with learned per-channel weights.",
+        "parameters": {
+          "skips": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Token embedding and LM head are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Rotary positional embeddings with base 10000.",
+        "parameters": {
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Softcaps logits to stabilize output scaling.",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "pass embedding",
+        "description": "Learned embedding added at each think pass to distinguish recurrence iterations.",
+        "parameters": {
+          "num_passes": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int8",
+        "bits": null,
+        "scope": "matrices + embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 5,
+        "scope": "all weights"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.09,
+        "momentum": null,
+        "other_params": {
+          "row_norm": true,
+          "lr": 0.02,
+          "momentum_warmup": [
+            0.92,
+            0.99
+          ],
+          "warmup_steps": 1500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "tied_embed_lr": 0.03,
+          "scalar_lr": 0.02,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "embed_weight_decay": 0.085
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "QuIP-style Randomized Hadamard Transform applied before GPTQ to reduce quantization error.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Byte-shuffle preprocessing before Brotli compression to improve entropy coding.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Hybrid Encode-Think-Decode transformer with unique encoder and decoder blocks plus shared looped think blocks",
+    "U-Net skip connections between encoder and decoder stages",
+    "Progressive recurrence with think-pass embedding",
+    "Int5 GPTQ for matrices with int8 embeddings",
+    "QuIP-style Randomized Hadamard Transform before quantization",
+    "Byte-shuffle plus Brotli-11 compression pipeline",
+    "MuonEq-R training with EMA and warmdown"
+  ],
+  "artifact_size": "15,865,354 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
