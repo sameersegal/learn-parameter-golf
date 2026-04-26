@@ -1,0 +1,99 @@
+{
+  "pr_number": 1837,
+  "title": "[non-record / wishlist] E2E TTT \u2014 full-model SGD per chunk, val_bpb 1.07063, demonstrates \"healing property\"",
+  "author": "X-Abhishek-X",
+  "status": "open",
+  "val_bpb": 1.07063,
+  "architecture": "Transformer",
+  "quantization": "SpinQuant + GPTQ",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 5e-06,
+          "momentum": 0.9,
+          "grad_clip": 1.0,
+          "param_subset": "all",
+          "chunk_size": 48,
+          "distributed_lockstep": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "grad_clip": 1.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "full model"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "SpinQuant",
+        "bits": null,
+        "scope": "full model"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "chunk_size": 48,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.095
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "End-to-end full-model test-time training that adapts all parameters per chunk instead of using LoRA adapters",
+    "Distributed lockstep gradient synchronization with all-reduce mean before each optimizer step so all ranks remain byte-identical",
+    "Empirical 'healing property' observation: recovery from severe post-quantization degradation to near/pre-quant performance",
+    "Param-subset throttling framework for ablations over all parameters, normalization scales, or control-scale tensors",
+    "Score-first TTT legality proof and unit tests for causal, single-pass, no-leak evaluation"
+  ],
+  "artifact_size": "15,961,787 B",
+  "prompt_version": "v2",
+  "is_record": false
+}
