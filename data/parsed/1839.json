@@ -1,0 +1,119 @@
+{
+  "pr_number": 1839,
+  "title": "Add artifact-aware LateQAT fixed-plan record",
+  "author": "cardona",
+  "status": "open",
+  "val_bpb": 1.1919522011324903,
+  "architecture": "Transformer",
+  "quantization": "late QAT + GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "tensors in final fixed bit plan"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "artifact compiler refinement"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "tied 1024-token SentencePiece embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "BigramHash vocabulary component",
+        "parameters": {
+          "vocab_size": 10240,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate and scalar control tensors are used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonW for matrix parameters",
+          "adamw_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "mode": "hybrid",
+          "iters": 3700,
+          "curve": "cosine",
+          "min_lr_scale": 0.05
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 524288,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "fixed per-tensor bit plan shared between late fake-quant training and artifact compilation",
+        "parameters": {
+          "bit_plan": "budgeted_v2"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Artifact-aware late fake-quant training aligned to the exact final per-tensor bit plan",
+    "Use of a fixed budgeted_v2 bit plan for both QAT and artifact compilation",
+    "Exact compiled mixed-precision artifact roundtrip evaluation",
+    "Single-run challenge-valid 10min_16mb submission with embedded runtime sources"
+  ],
+  "artifact_size": "15,415,044 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
