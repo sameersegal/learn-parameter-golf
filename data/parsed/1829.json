@@ -1,0 +1,97 @@
+{
+  "pr_number": 1829,
+  "title": "Add non-record submission: HybridSSM SparseAttention MixedQuant",
+  "author": "estesryan",
+  "status": "open",
+  "val_bpb": 1.20473575,
+  "architecture": "Hybrid",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "Hybrid Transformer\u2013SSM architecture with final-layer SSM replacement and selective attention removal in intermediate blocks.",
+        "parameters": {
+          "layers": 8,
+          "model_dim": 512,
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "ssm_layers": 7,
+          "ssm_state_dim": 128,
+          "ssm_num_groups": 8,
+          "no_attn_layers": [
+            3,
+            6
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Heterogeneous feedforward allocation with different MLP expansion ratios for transformer and SSM blocks.",
+        "parameters": {
+          "transformer_mlp_mult": 3.25,
+          "ssm_mlp_mult": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "export"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.3
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Hybrid Transformer\u2013SSM architecture",
+    "Final-layer SSM substitution",
+    "Selective attention removal in intermediate blocks",
+    "Heterogeneous feedforward allocation between Transformer and SSM blocks",
+    "Mixed int8/int6 post-training quantized export",
+    "Compressed roundtrip validation on the final artifact"
+  ],
+  "artifact_size": "15.57MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
