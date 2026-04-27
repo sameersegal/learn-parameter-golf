@@ -1,0 +1,121 @@
+{
+  "pr_number": 1842,
+  "title": "[Non-record] H-Net dynamic chunking \u2014 Path B (attention-only, byte-level)",
+  "author": "Azura-Whiston",
+  "status": "open",
+  "val_bpb": 1.8838,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding and output head weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention",
+        "description": "Replaced Mamba-2 layers with pre-norm Transformer blocks (Path B, attention-only).",
+        "parameters": {
+          "layers": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "DynamicChunking",
+        "description": "Single-stage dynamic chunking module using cosine similarity routing and chunk compression.",
+        "parameters": {
+          "target_ratio": 0.16667
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Chunk-level EMA dechunking/upsampling over the compressed sequence.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "identity init",
+        "description": "Identity initialization for W_q and W_k so the router starts as raw cosine similarity of adjacent encoder states."
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup",
+        "parameters": {
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Attention-only Path B implementation of H-Net dynamic chunking on parameter-golf",
+    "Byte-level (260 vocab) submission replacing the prior BPE tokenizer",
+    "Single-stage dynamic chunking with target ratio 1/6",
+    "Chunk-level EMA dechunking implementation matching the reference repo's math",
+    "End-to-end verified int8 compressed artifact under the 16MB cap",
+    "Quantization ablation across int8/int6/int4/int3/int2/int1 with zlib and lzma"
+  ],
+  "artifact_size": "9.49MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

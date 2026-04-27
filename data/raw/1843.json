@@ -1,0 +1,12 @@
+{
+  "number": 1843,
+  "title": "[train_gpt.py] Autodetect muon warmup from measured step speed",
+  "author": "flappybird1084",
+  "body": "Description:\r\n\r\n  Summary\r\n\r\n  - Changes the default for MUON_MOMENTUM_WARMUP_STEPS from a hardcoded 500 to auto-detection based on measured warmup step timing\r\n  - During warmup, the second half of steps are timed (after JIT settles) to estimate actual step speed\r\n  - Post-warmup, muon_momentum_warmup_steps is set to 25% of estimated total steps, capped to [20, 500], so ~75% of training runs at peak momentum (0.95)\r\n  - Falls back to 100 if no timing data is available (e.g. WARMUP_STEPS=0)\r\n  - MUON_MOMENTUM_WARMUP_STEPS env var still works as an explicit override\r\n\r\n  Motivation\r\n\r\n  The hardcoded default of 500 is wrong for wallclock-capped runs on slower hardware. If a GPU only completes ~300 steps in the time limit, momentum never reaches its target value \u2014 warmup runs longer than training. The fix\r\n   ties warmup length to actual training length rather than an arbitrary constant.\r\n\r\n  Behavior change\r\n\r\n  Runs that previously relied on the default 500 will now use an auto-detected value. On fast hardware (e.g. 8xH100, ~3000+ steps), the auto-detected value will often be near 500 anyway. On slower setups with fewer total\r\n  steps, it will be lower. Set MUON_MOMENTUM_WARMUP_STEPS explicitly to restore the old behavior.\r\n\r\n  Test plan\r\n\r\n  - Run baseline on 1xA100 / 1xH100 and verify muon_warmup_auto log line appears with sensible values\r\n  - Verify MUON_MOMENTUM_WARMUP_STEPS=500 env override still forces 500 regardless\r\n  - Verify WARMUP_STEPS=0 falls back to muon_momentum_warmup_steps=100 with a log message\r\n  - Confirm final val_bpb is equal or better vs the hardcoded-500 baseline",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-04-26T23:28:27Z",
+  "updated_at": "2026-04-26T23:32:02Z",
+  "submission_readme": null
+}
