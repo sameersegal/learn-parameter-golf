@@ -1,0 +1,108 @@
+{
+  "pr_number": 1869,
+  "title": "Add BOS-masked SmearGate record",
+  "author": "ZanePeycke",
+  "status": "open",
+  "val_bpb": 1.06654079,
+  "architecture": "Transformer",
+  "quantization": "GPTQ + LQER",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Causal 1-token residual lookback gate with BOS masking to prevent cross-document residual carry.",
+        "parameters": {
+          "window": 12,
+          "bos_masked": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SparseAttnGate",
+        "description": "Sparse attention gating used in the base PR #1787/#1797 lineage.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4/int8",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "learning_rate": 5e-05,
+          "num_phases": 4,
+          "score_before_update": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": 8192
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CaseOps lossless tokenizer transform with original UTF-8 byte sidecar for scoring.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "TRAIN_SHARD_LIMIT=240 to pin the canonical training subset used for the measured run.",
+        "parameters": {
+          "train_shard_limit": 240
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "BOS-masked SmearGate to prevent cross-document residual carry in both normal and TTT forward paths",
+    "Reproducible 240-shard training limit applied before rank sharding",
+    "Clean 3-seed record candidate with phase-4 score-before-update TTT",
+    "CaseOps + SparseAttnGate + SmearGate + asymmetric LQER lineage packaged as a compliant submission"
+  ],
+  "artifact_size": "15,950,966 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
