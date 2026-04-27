@@ -1,0 +1,99 @@
+{
+  "pr_number": 1863,
+  "title": "Innovation Architecture: Arterial Mixer (N-Lane Transformer)",
+  "author": "seinare",
+  "status": "closed",
+  "val_bpb": 1.2008,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "multi-stream Transformer",
+        "description": "Uses N parallel Transformer streams ('arteries') with lane-wise mixers for cross-stream fusion and independent LM heads per artery during training.",
+        "parameters": {
+          "arteries": 2,
+          "layers": 10,
+          "artery_dim": 384,
+          "heads": 3,
+          "windows": [
+            1024,
+            4096
+          ],
+          "ctx": 16384
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA selectively to the smaller-window artery to improve performance.",
+        "parameters": {
+          "artery": 0,
+          "window": 1024
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses RoPE on U-Net-style residual slots to encode slot position / residual-source identity.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds U-Net-style residual slots at the target block, fused through the mixer KV path rather than direct addition.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sliding window attention",
+        "description": "Uses sliding-window attention with different window sizes across arteries instead of full attention.",
+        "parameters": {
+          "windows": [
+            1024,
+            4096
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "linear attention",
+        "description": "Implements the artery mixer as multi-head linear attention over the artery dimension with ELU routing scores.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "context_length": 16384
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "N parallel Transformer streams ('arteries') with lane-wise mixers for cross-artery fusion",
+    "Independent LM heads per artery with probability-space averaging at validation",
+    "Selective XSA placement on the smaller-window artery",
+    "U-Net-style residual slots fused through the mixer KV path",
+    "RoPE applied to residual slots to encode slot identity",
+    "Causal artery mixing used to inspect incremental artery contributions"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
