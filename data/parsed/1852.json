@@ -1,0 +1,180 @@
+{
+  "pr_number": 1852,
+  "title": "Record: Pre-Quant TTT + Void Compass \u2014 val_bpb 1.0282 (3-seed mean)",
+  "author": "G3sparky",
+  "status": "open",
+  "val_bpb": 1.0282,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 21,
+          "learning_rate": "5e-4 to 5e-5 cosine",
+          "timing": "pre-quantization"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 loop with activated recurrence during forward pass.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "num_loops": 2,
+          "activated_at_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Leaky ReLU activation used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped attention configuration with 4 KV heads.",
+        "parameters": {
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "ema_decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.0005,
+          "min_lr": 5e-05
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Void fraction monitoring used as a training diagnostic during pre-quantization TTT to detect memorization.",
+        "parameters": {
+          "stable_void_fraction": 0.58
+        }
+      }
+    }
+  ],
+  "compression": "lzma + brotli-11",
+  "novel_contributions": [
+    "Pre-quantization test-time training before GPTQ",
+    "Void fraction compass diagnostic for memorization detection",
+    "LZMA-compressed self-extracting code wrapper to fit the size budget",
+    "Brotli-11 model compression",
+    "8-GPU synchronous gradient averaging during TTT"
+  ],
+  "artifact_size": "< 16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
