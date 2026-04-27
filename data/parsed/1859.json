@@ -1,0 +1,181 @@
+{
+  "pr_number": 1859,
+  "title": "Add 10L LeakyReLU + Gated Attention + Value Residual record (1.1454)",
+  "author": "suchihype",
+  "status": "open",
+  "val_bpb": 1.1454,
+  "architecture": "Transformer",
+  "quantization": "int5/int6 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses leaky ReLU squared MLP activation instead of ReLU squared.",
+        "parameters": {
+          "negative_slope": 0.5,
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Applies a sigmoid output gate after attention output projection.",
+        "parameters": {
+          "gate_bias_init": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Blends each block's value tensor with the first block's value tensor using a learnable scalar.",
+        "parameters": {
+          "alpha_init": 0.9
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses encoder-decoder skip connections in the transformer backbone.",
+        "parameters": {
+          "encoder_layers": 5,
+          "decoder_layers": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds a learned bigram hash feature.",
+        "parameters": {
+          "buckets": 4096,
+          "dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.045,
+        "momentum": 0.99,
+        "other_params": {
+          "lr": 0.035,
+          "warmup_momentum_start": 0.92
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.01,
+        "momentum": null,
+        "other_params": {
+          "embed_lr": 0.045,
+          "scalar_lr": 0.035,
+          "betas": [
+            0.9,
+            0.95
+          ],
+          "eps": 1e-08
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2000
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "LeakyReLU(0.5)^2 MLP activation",
+    "Gated Attention with sigmoid output gate and +2 bias initialization",
+    "Value Residual Learning with learnable alpha initialized to 0.9",
+    "Stacking three orthogonal improvements on top of the PR #583 baseline",
+    "Sliding window evaluation with stride 64",
+    "Quantized and compressed submission under the 16 MB cap"
+  ],
+  "artifact_size": "15.65 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
