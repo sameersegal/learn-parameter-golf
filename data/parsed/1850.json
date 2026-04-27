@@ -1,0 +1,161 @@
+{
+  "pr_number": 1850,
+  "title": "Record: SP8192 + Strict Full-Val Byte PPM Mixture \u2014 1.00495 BPB (3-seed mean)",
+  "author": "someone114514",
+  "status": "open",
+  "val_bpb": 1.00495,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings in the base SP8192 stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layer recurrence over a subset of layers in the base architecture.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial rotary positional embeddings used in the base stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation used in the MLP blocks.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width in the base architecture.",
+        "parameters": {
+          "multiplier": 4
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.022
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Strict full-validation byte-level PPM-D mixture applied online at evaluation time with prefix-only binary gating and score-before-update byte ordering.",
+        "parameters": {
+          "ppm_order": 4,
+          "lambda_hi": 0.9,
+          "lambda_lo": 0.05,
+          "conf_threshold": 0.9
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Strict full-validation byte-level PPM-D mixture over the sliding-window NN scores",
+    "Prefix-only binary gating between NN and PPM based on context confidence",
+    "Score-before-update online byte scoring to preserve causality",
+    "Native C runtime scorer with open-addressed context tables and cached logs",
+    "Removal of eval-time TTT from the packed artifact to fit under the 16 MB cap"
+  ],
+  "artifact_size": "15,997,433 B",
+  "prompt_version": "v2",
+  "is_record": false
+}
