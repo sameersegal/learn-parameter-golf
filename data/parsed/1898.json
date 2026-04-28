@@ -1,0 +1,124 @@
+{
+  "pr_number": 1898,
+  "title": "Record: Partial SpinQuant (start_layer=5) + PR#1851 Stack \u2014 val_bpb 1.06614 (3-seed mean)",
+  "author": "X-Abhishek-X",
+  "status": "open",
+  "val_bpb": 1.06614,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gated residual smearing used in the PR#1851 base stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "CaseOps SP8192 tokenizer / tied-embedding related base stack not explicitly stated as tied embeddings in the text; included only if implied by canonical stack is not certain.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention gating via SparseAttnGate.",
+        "parameters": {
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "num_phases": 3,
+          "rank": 80,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "embeddings and weights"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "ttt_beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Hadamard pre-rotation / SpinQuant-style orthogonal rotation regenerated from seed at eval time."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Partial SpinQuant with start_layer=5 applies Hadamard pre-rotation only to layers 5-10, reducing entropy overhead and enabling EMBED_BITS=6 under the 16MB cap.",
+        "parameters": {
+          "start_layer": 5,
+          "layers_rotated": 6,
+          "modules_rotated": 12
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Partial SpinQuant with SPINQUANT_START_LAYER=5",
+    "Hadamard pre-rotation applied only to layers 5-10 instead of all layers",
+    "Reduced brotli entropy overhead enough to make EMBED_BITS=6 fit under the 16MB cap",
+    "Zero serialized bytes for SpinQuant rotations by regenerating from seed at eval time",
+    "Score-first phased TTT stack combined with PR#1851 base and PR#1855 hparams"
+  ],
+  "artifact_size": "15.63MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

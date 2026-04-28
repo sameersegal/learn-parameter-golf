@@ -1,0 +1,119 @@
+{
+  "pr_number": 1901,
+  "title": "Record: 0.8335 BPB \u2014 DualHash + AdaMuon + MoE + SDClip (3-seed mean)",
+  "author": "Karen042009",
+  "status": "open",
+  "val_bpb": 0.83353253,
+  "architecture": "Transformer",
+  "quantization": "INT6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Dual-token hash skip connection using two hash tables for bigram-style skip features.",
+        "parameters": {
+          "tables": 2,
+          "table_shape": "2048x16",
+          "multipliers": [
+            8191,
+            104729
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent layer structure with a repeated loop over layers and learnable LayerScale coefficients.",
+        "parameters": {
+          "pattern": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MoE",
+        "description": "Hybrid mixture-of-experts with shared and specialized experts; top-1 routing plus shared expert output.",
+        "parameters": {
+          "shared_experts": 1,
+          "specialized_experts": 3,
+          "top_k": 1
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "AdaMuon",
+          "rms_preconditioning": true,
+          "riemannian_newton_schulz_orthogonalization": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "artifact export"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "passes": 2
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "learnable_layerscale": true,
+          "main_branch_init": 1.0,
+          "recurrent_branch_init": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "DualTokenHashSkip with dual hash tables for bigram skip connections",
+    "LayerScale recurrence with a repeated layer loop",
+    "SharedMoE with one shared expert and three specialized experts",
+    "AdaMuon optimizer with RMS pre-conditioning and Newton-Schulz orthogonalization",
+    "Dynamic MSE SDClip search for optimal INT6 export",
+    "Score-first two-pass test-time training"
+  ],
+  "artifact_size": "~15.13 MiB",
+  "prompt_version": "v2",
+  "is_record": false
+}
