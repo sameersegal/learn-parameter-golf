@@ -1,0 +1,116 @@
+{
+  "pr_number": 1891,
+  "title": "Add Model Stack BitNet MLP2304 overtone run",
+  "author": "peytontolbert",
+  "status": "open",
+  "val_bpb": 1.2205,
+  "architecture": "Transformer",
+  "quantization": "QAT BitNet",
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "BitNet-compatible model"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings were used in the model stack BitNet run.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query style attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 16,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Training and evaluation used depth recurrence.",
+        "parameters": {
+          "training": 1,
+          "evaluation": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Used YARN RoPE variant for long-context handling.",
+        "parameters": {
+          "type": "yarn"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OvertoneInit",
+        "description": "Spectral embedding initialization with power-law spectrum S_k ~ k^-0.5."
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "muon_backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup",
+        "parameters": {
+          "warmup_steps": 1
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Model Stack-compatible runtime-row packed BitNet export",
+    "TrainableBitNetLinear QAT modules",
+    "Overtone spectral embedding initialization",
+    "MLP hidden dimension 2304 under the 16MB budget",
+    "Fused QKV with FlashAttention",
+    "Parallel Muon optimization",
+    "Dense training backward for grad-input and grad-weight when faster than the compiled step"
+  ],
+  "artifact_size": "15,693,288 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

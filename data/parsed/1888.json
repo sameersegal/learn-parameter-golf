@@ -1,0 +1,180 @@
+{
+  "pr_number": 1888,
+  "title": "13L Tensor-Train Attention + BigramHash 8192",
+  "author": "NikitaBabenko",
+  "status": "open",
+  "val_bpb": 1.1691,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Tensor-Train attention",
+        "description": "TT/MPS decomposition applied to attention.c_q and attention.proj to compress square 512x512 attention matrices.",
+        "parameters": {
+          "layers": 13,
+          "d_model": 512,
+          "rank": 8,
+          "mode_shape": [
+            8,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Doubled bigram vocabulary for token features.",
+        "parameters": {
+          "vocab": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Expanded MLP width to 3x hidden dimension.",
+        "parameters": {
+          "multiplier": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip connections with learnable skip weights.",
+        "parameters": {
+          "encoder_layers": 6,
+          "decoder_layers": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Learnable temporal mixing on input embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Exclusive Self-Attention applied to the last 4 layers.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation used in the MLP.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model artifact"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "Newton-Schulz orthogonalization": true,
+          "TT core reshape": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "TT-SVD initialization from a freshly orthogonal-initialized weight matrix."
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional encoding applied only to part of the head dimensions.",
+        "parameters": {
+          "numerator": 16,
+          "denominator": 64
+        }
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Tensor-Train (TT/MPS) decomposition applied to attention layers for parameter compression.",
+    "Reinvesting TT parameter savings into +2 transformer layers and a larger BigramHash vocabulary.",
+    "TT-SVD initialization and Muon adaptation for 3D TT cores.",
+    "State-dict export via ParameterList to avoid materialization overflow.",
+    "Sliding window evaluation with stride 64 for improved validation BPB."
+  ],
+  "artifact_size": "15.04 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

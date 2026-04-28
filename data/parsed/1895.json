@@ -1,0 +1,203 @@
+{
+  "pr_number": 1895,
+  "title": "Record: SP8192 + 3GDN/8FA 4096 + Attention Sink",
+  "author": "VFYAS",
+  "status": "open",
+  "val_bpb": 1.07849,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": 4096
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary position embeddings over a subset of head dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses GDN mixer layers based on chunk_gated_delta_rule in selected blocks.",
+        "parameters": {
+          "layers": [
+            0,
+            1,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Enables XSA on all full-attention layers.",
+        "parameters": {
+          "layers": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention sink",
+        "description": "Adds a learned sink key per KV head with zero value vector in full-attention layers.",
+        "parameters": {
+          "sink_keys_per_kv_head": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses a loop segment activated partway through training.",
+        "parameters": {
+          "activated_at_wallclock_fraction": 0.4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 MLP activations.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "embeddings and selected attention projections"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "attn.c_k.weight and attn.proj.weight"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "gradient_clip": 1.0,
+          "learning_rate": 0.017
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "chunk_lr": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "value": 0.85
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "optimizer": "SGD",
+          "trainable_set": "mlp only",
+          "learning_rate": 0.017,
+          "epochs": 5,
+          "chunk_size": 65536
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "3 GDN mixer layers combined with 8 full-attention layers under the SP8192 base shape",
+    "Learned attention sink keys per KV head for full-attention layers",
+    "Score-first legal TTT with MLP-only SGD on already-scored chunks",
+    "Late QAT noise applied only near the end of training to improve quantization robustness",
+    "Mixed-bit quantization with Hadamard-rotated attention V/O pairs and frequency-split embeddings",
+    "4096-token training/evaluation context with separate compiled full-attention segment"
+  ],
+  "artifact_size": "~15.934 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

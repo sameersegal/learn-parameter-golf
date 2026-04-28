@@ -1,0 +1,127 @@
+{
+  "pr_number": 1890,
+  "title": "Non-record: Mamba-3 Hybrid + Multi-Epoch TTT + Dynamics-Protected Quant \u2014 1.1456 bpb (3-seed mean)",
+  "author": "mradassaad",
+  "status": "open",
+  "val_bpb": 1.1456,
+  "architecture": "Hybrid",
+  "quantization": "mixed int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "all weights with SSM dynamics rows at int8"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "late QAT",
+        "bits": null,
+        "scope": "post-quant adaptation"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.04
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "matrix_lr": 0.025,
+          "muon_eq_r": 1
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "overlap": 1024
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 4096,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 2600,
+          "shape": "linear"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "7-layer Mamba-3/Attention hybrid with 5 SSM blocks and 2 FlashAttention layers at positions 2 and 5",
+        "parameters": {
+          "layers": 7,
+          "ssm_blocks": 5,
+          "attention_layers": 2,
+          "dim": 512,
+          "d_state": 64,
+          "expand": 2,
+          "headdim": 64,
+          "chunk_size": 64,
+          "mlp_mult": 3
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Multi-epoch TTT with TTT_EPOCHS=2 to reduce post-quant regression",
+    "Mixed-precision SSM dynamics protection by quantizing dd_A and dd_dt rows at int8 while keeping other rows at int6",
+    "Fix for scale-floor quantization bug so int6 rows use the correct 1/qmax floor",
+    "Use of LZMA-based artifact compression for the final submission"
+  ],
+  "artifact_size": "15.93 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
