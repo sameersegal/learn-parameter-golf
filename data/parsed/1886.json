@@ -1,0 +1,88 @@
+{
+  "pr_number": 1886,
+  "title": "Record: Fused softcap CE + WD=2.0 (warm-start stability fix) \u2014 val_bpb 1.06957 (3-seed mean)",
+  "author": "renqianluo",
+  "status": "open",
+  "val_bpb": 1.06957227,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 128,
+          "alpha": 144,
+          "warm_start_A": 1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 2.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-head gated attention with per-row int8 gate quantization and gate mirror in the LoRA-TTT path.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not explicitly stated in this PR body, but the submission references a stacked Transformer-based parameter-golf model; no additional architecture details are confirmed beyond the listed modifications.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fused softcap cross-entropy Triton kernel used during training; evaluation path keeps eager numerics.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Polar Express NS coefficients.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Phased TTT with 3 phases.",
+        "parameters": {
+          "phases": 3
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Stacks the fused softcap CE Triton kernel on top of the prior warm-start LoRA submission.",
+    "Identifies a divergence interaction between fused CE fp32 accumulation differences and warm-start A on certain seeds.",
+    "Shows that increasing TTT_WEIGHT_DECAY from 1.0 to 2.0 stabilizes all three seeds while preserving the warm-start gain.",
+    "Achieves a new 3-seed mean val_bpb of 1.06957, improving over PR #1768."
+  ],
+  "artifact_size": "15.98MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

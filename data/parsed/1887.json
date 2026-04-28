@@ -1,0 +1,180 @@
+{
+  "pr_number": 1887,
+  "title": "Add tns15june SP8192 frontier submission",
+  "author": "tns15june",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Only the first portion of head dimensions use rotary position embeddings.",
+        "parameters": {
+          "fraction": 0.25
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Middle layers are looped multiple times in a physical backbone.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "recurrences": 3,
+          "effective_visits": 17
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Uses grouped-query style attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Attention and MLP share the pre-residual state, with learned mixing from encoder outputs into decoder layers.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.99,
+        "other_params": {
+          "row_norm": 1,
+          "matrix_lr": 0.022,
+          "scalar_lr": 0.02,
+          "tied_embed_lr": 0.03,
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 1500,
+          "grad_clip_norm": 0.3
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "non-embedding matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 256
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 32768
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.72
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "SP8192-tokenized FineWeb training setup",
+    "11-layer frontier Transformer with targeted middle-layer recurrence",
+    "Partial RoPE with only 25% of head dimensions rotated",
+    "Parallel residual connections with learned encoder-to-decoder mixing",
+    "Muon optimizer configuration with EMA and warmdown schedule",
+    "GPTQ export hardening for PyTorch 2.4 SDPA/GQA compatibility",
+    "Brotli-compressed int6/int8 export pipeline",
+    "Score-first test-time training evaluation"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
