@@ -1,0 +1,148 @@
+{
+  "pr_number": 1879,
+  "title": "Record: DualClock PPM token-context mixture \u2014 1.0803 BPB seed 42",
+  "author": "okezue",
+  "status": "open",
+  "val_bpb": 1.080326,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "enabled": true,
+          "learning_rate": 0.002,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Hash-bucketed causal PPM experts using rolling-hash context tables for global and document-local token-context modeling.",
+        "parameters": {
+          "global_order": 6,
+          "local_order": 8,
+          "global_buckets": 2048,
+          "local_buckets": 2048
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embedding applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "base_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self-attention style architectural modification used in the base stack.",
+        "parameters": {
+          "layers": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "VE128",
+        "description": "Value embedding / value residual style component used in later layers.",
+        "parameters": {
+          "layers": [
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation variant in the base model.",
+        "parameters": {
+          "variant": "squared"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA + Tight SWA",
+        "parameters": {
+          "ema_decay": 0.997,
+          "swa_interval": 50
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Fixed-share Bayesian mixer blending neural, global PPM, and local PPM experts with deterministic chunk-wise posterior updates.",
+        "parameters": {
+          "share": 0.005,
+          "prior": [
+            0.9,
+            0.07,
+            0.03
+          ]
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPU-vectorized causal scoring with FNV rolling hashes, hash-bucketed count tables, and prefix-rank counter for chunk-local scoring.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "DualClock mixture of neural, global PPM, and document-local PPM experts",
+    "Fixed-share Bayesian mixer with deterministic chunk-wise weight updates",
+    "GPU-vectorized causal PPM scoring using FNV rolling hashes and hash-bucketed count tables",
+    "Prefix-rank counter for parallel chunk-local causal scoring without leakage",
+    "Score-before-update legality for both TTT and mixture updates"
+  ],
+  "artifact_size": "15,977,914 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
