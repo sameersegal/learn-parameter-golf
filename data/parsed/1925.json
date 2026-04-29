@@ -1,0 +1,153 @@
+{
+  "pr_number": 1925,
+  "title": "Record candidate: CaseOps + Matrix-LR 0.028 + Phased TTT 3500",
+  "author": "simon-marcus",
+  "status": "open",
+  "val_bpb": 1.06109,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "CaseOps",
+        "description": "CaseOps SP8192 tokenizer and byte-sidecar path with lossless caps reserved tokenizer.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "11-layer 512d XSA stack with U-Net skips, parallel decoder, depth recurrence, SparseAttnGate, BOS-fixed SmearGate, and LeakyReLU(0.5)^2 MLP.",
+        "parameters": {
+          "layers": 11,
+          "dimensions": 512
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses U-Net style skip connections in the stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Includes recurrent depth structure in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed SmearGate is used in the attention/stack design.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 MLP activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5,
+          "variant": "Polar-Express Newton-Schulz"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int7/int8",
+        "bits": null,
+        "scope": "embeddings and row gate"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER",
+        "bits": null,
+        "scope": "asymmetric rank-4 correction"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "pergroup lrzip + brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phased": true,
+          "prefix_docs": 3500,
+          "num_phases": 3,
+          "chunk_size": 48,
+          "lora_rank": 80
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "lrzip + brotli",
+  "novel_contributions": [
+    "Final push on the CaseOps/LQER/SmearGate stack while keeping the #1855 architecture intact.",
+    "Raised MATRIX_LR from 0.026 to 0.028.",
+    "Increased PHASED_TTT_PREFIX_DOCS to 3500 to use more of the eval budget.",
+    "Score-first phased TTT on the post-quant model, evaluating each chunk before adaptation.",
+    "Validated a 3-seed record-candidate run with mean val_bpb 1.06109 under the 16 MB artifact limit."
+  ],
+  "artifact_size": "15.90 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
