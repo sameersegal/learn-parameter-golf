@@ -1,0 +1,186 @@
+{
+  "pr_number": 1911,
+  "title": "{RECORD} CaseOps pre-quant TTT record (1.0354 BPB)",
+  "author": "dttdrv",
+  "status": "open",
+  "val_bpb": 1.03540487,
+  "architecture": "Transformer",
+  "quantization": "int6 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "rank": 8,
+          "epochs": 21,
+          "federated_averaging": true,
+          "lr_schedule": "epoch-level cosine"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied on all layers",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer depth recurrence over layers 3-5",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residual path from layer 7 onward",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 MLP activation",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "8-head attention with 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial RoPE lineage referenced in the stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parallel_ranks": 8,
+          "epochs": 21
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "LZMA",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "high_wd": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "epoch_level": true
+        }
+      }
+    }
+  ],
+  "compression": "Brotli + LZMA",
+  "novel_contributions": [
+    "Combines CaseOps reversible capitalization tokenization with pre-quant TTT",
+    "Adds byte-sidecar validation accounting for transformed CaseOps tokens",
+    "Threads original-byte sidecars through validation and sliding evaluation",
+    "Uses pre-quant AdamW TTT before GPTQ export to improve the fixed artifact",
+    "Achieves a new record mean val_bpb of 1.03540487 on track_10min_16mb"
+  ],
+  "artifact_size": "15,995,750 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

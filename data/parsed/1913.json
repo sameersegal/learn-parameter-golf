@@ -1,0 +1,141 @@
+{
+  "pr_number": 1913,
+  "title": "[Submission] Multi-Temperature AR GPTQ Calibration on SP8192 Stack \u2014 1.0847 BPB",
+  "author": "Jeffrey-Le",
+  "status": "open",
+  "val_bpb": 1.0847,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "SP8192 stack uses repeated middle layers as part of the base architecture.",
+        "parameters": {
+          "layers": 11,
+          "repeated_layers": "3-5",
+          "repeat_count": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is used on all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tokenizer/embedding tying is implied by the canonical stack description.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Parallel residuals are used from layer 7 onward.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Parallel residual pathway is enabled in later layers.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "EMA",
+        "description": "Exponential moving average is used with the base stack.",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "row_normalization": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 512,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Multi-temperature autoregressive calibration for GPTQ instead of single-temperature calibration",
+    "Weighted temperature mixture [0.5, 0.8, 1.1, 1.4] with counts [8, 24, 24, 8] for Hessian estimation",
+    "Shorter calibration sequence length of 512 to reduce generation time without hurting BPB",
+    "Ablation study showing the selected temperature spread outperforms single-temperature and wider-spread alternatives",
+    "Fully self-contained calibration with no external data post-training"
+  ],
+  "artifact_size": "16.04MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

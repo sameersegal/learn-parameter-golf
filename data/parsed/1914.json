@@ -1,0 +1,113 @@
+{
+  "pr_number": 1914,
+  "title": "Non-record: PR #1797 reproduction + EMBED_CLIP relax + 5 ablation studies",
+  "author": "Fija",
+  "status": "open",
+  "val_bpb": 1.06122,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "MLP"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention uses a learned scalar out-gate per head with quant-gate enabled.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loop4-5 recurrent depth structure with parallel residual start layer.",
+        "parameters": {
+          "loop_start": 3,
+          "loop_end": 5,
+          "parallel_start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not explicitly stated in the submission text.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "MLP"
+      }
+    }
+  ],
+  "compression": "brotli q=11",
+  "novel_contributions": [
+    "3-seed reproduction of PR #1797-style stack under the 16 MB cap with statistically equivalent performance",
+    "EMBED_CLIP_SIGMAS relaxation from 14 to 20 to reduce artifact size and fit under cap without lrzip",
+    "Five orthogonal ablations with first-principles explanations for why they do not transfer to this regime",
+    "Empirical comparison showing brotli q=11 compresses PR #1797-style quantized weight blobs better than lzma",
+    "Documentation of legality proofs against Issue #1017 conditions for the TTT pipeline"
+  ],
+  "artifact_size": "15,861,545 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
