@@ -1,0 +1,145 @@
+{
+  "pr_number": 1932,
+  "title": "Add SP8192 Family3+ QK5.75 TTT16K LR0.0075 (1.0796 BPB)",
+  "author": "PrzemyslaV88",
+  "status": "open",
+  "val_bpb": 1.07955293,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer depth recurrence over layers 3-5",
+        "parameters": {
+          "layers": 3,
+          "start_layer": 3,
+          "end_layer": 5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "SP8192 tokenizer/model stack uses tied embeddings-style compact parameterization as part of the base family",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "8 attention heads with 4 KV heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Parallel residual connections from layer 7 onward",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices and embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 16384,
+          "learning_rate": 0.0075,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.022,
+          "warmdown_frac": 0.72
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Completed 8xH100 SP8192 Family3+ run for the 10min/16MB track",
+    "Raised QK gain initialization to 5.75",
+    "Used 16K-token score-first TTT with learning rate 0.0075",
+    "Applied GPTQ SDClip int6 matrices and int8 token embeddings",
+    "Used EMA with decay 0.9965 and brotli artifact compression",
+    "Achieved legal score-first TTT exact val_bpb of 1.07955293"
+  ],
+  "artifact_size": "15,989,120 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

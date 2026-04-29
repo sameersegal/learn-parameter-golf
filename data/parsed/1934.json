@@ -1,0 +1,211 @@
+{
+  "pr_number": 1934,
+  "title": "Record: SP8192 CaseOps + TTT + GPTQ + LRZIP \u2014 val_bpb 1.05993 (3-seed mean)",
+  "author": "liujshi",
+  "status": "open",
+  "val_bpb": 1.05993,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings / embedding tying used in the model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Parallel attention and MLP residual paths starting at a later layer.",
+        "parameters": {
+          "start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied only to a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16,
+          "base": 10000
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Looped recurrence over selected layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Smear gate with a fixed window to smooth representations.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation used in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7",
+        "bits": null,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER",
+        "bits": 2,
+        "scope": "top-3 tensors"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "backend": "Polar-Express Newton-Schulz"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "embed_wd": 0.06,
+          "ttt_weight_decay": 1.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000,
+          "lora_rank": 96
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip+brotli",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "phased TTT eval",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.75
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query style attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    }
+  ],
+  "compression": "lrzip+brotli",
+  "novel_contributions": [
+    "CaseOps bijective case transform for SP8192",
+    "Per-group lrzip + brotli compression pipeline",
+    "Tightened GPTQ quantization clips",
+    "Lower embed weight decay",
+    "Phased score-first TTT evaluation",
+    "Sparse attention head-output gate and SmearGate",
+    "Depth recurrence with parallel residuals and U-Net skips"
+  ],
+  "artifact_size": "15,981,105 B",
+  "prompt_version": "v2",
+  "is_record": false
+}
