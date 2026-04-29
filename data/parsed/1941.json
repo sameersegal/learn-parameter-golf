@@ -1,0 +1,85 @@
+{
+  "pr_number": 1941,
+  "title": "Record: PR #1886 base + per-block MLP output gate (Linear, weight-learnable) \u2014 val_bpb 1.06872 (3-seed mean)",
+  "author": "MarioPaerle",
+  "status": "open",
+  "val_bpb": 1.06872454,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Per-block MLP output gate using a learnable linear gate on the MLP output, applied token-wise with sigmoid gating.",
+        "parameters": {
+          "layers": 11,
+          "gate_input_dim": 12,
+          "gate_output_dim": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "artifact/model"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 128,
+          "alpha": 144
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 2.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Gate initialized with weight 0 and bias +5 so sigmoid output starts near identity (~0.993), minimizing initial disruption."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Phased test-time training with score-before-update behavior; each chunk is scored under inference_mode() before any LoRA update.",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2000
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Per-block MLP output gate that is input-dependent and weight-learnable",
+    "Token-wise gating of MLP outputs rather than head-wise gating",
+    "Bug fix making the gate weight-learnable in the modern PR #1886 stack",
+    "Do-no-harm gate initialization with weight 0 and bias +5"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

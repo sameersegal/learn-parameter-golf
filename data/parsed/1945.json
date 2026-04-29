@@ -1,0 +1,93 @@
+{
+  "pr_number": 1945,
+  "title": "Record: PR #1908 base + AWQ-lite + Asymmetric Logit Rescale - val_bpb 1.05932 (3-seed mean)",
+  "author": "alertcat",
+  "status": "open",
+  "val_bpb": 1.05932,
+  "architecture": "Transformer",
+  "quantization": "AWQ-lite int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 6,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Causal residual gate using a 1-token lookback and a content-conditioned sigmoid gate over the first feature dimensions.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SparseAttnGate",
+        "description": "Sparse per-head multiplicative gate inside attention.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asymmetric": true,
+          "pos": "softcap_pos",
+          "neg": "softcap_neg"
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "phases": 3,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64,
+          "context_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Combines PR #1908 AWQ-lite quantization with asymmetric logit rescaling at eval time.",
+    "Shows that asymmetric logit rescale improves TTT recovery when paired with AWQ-lite quantization.",
+    "Uses eval-only surgical edits to train_gpt.py while preserving the training path.",
+    "Achieves a 3-seed mean val_bpb of 1.05932 under the competition constraints."
+  ],
+  "artifact_size": "15,986,941 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

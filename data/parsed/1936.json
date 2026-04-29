@@ -1,0 +1,244 @@
+{
+  "pr_number": 1936,
+  "title": "[Record]: MUDD Connections  + SP8192 + 3-Layer Recurrence + Parallel Residuals + QK-Gain 5.25 + Legal TTT\u2014 val_bpb 1.0769  (3-seed mean)",
+  "author": "hilbertmeng",
+  "status": "open",
+  "val_bpb": 1.0769,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP matrices and part of dynamic dense matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence with virtual layers from 11 physical layers; loops layers 3-5.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "GPT-J style parallel residuals where attention and MLP read from the same pre-residual input.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MUDD Connections",
+        "description": "Lite multiway dynamic dense connections replacing sigmoid-gated U-Net connections and residual mixing with x0.",
+        "parameters": {
+          "query_layers": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            15,
+            16
+          ],
+          "key_windows": [
+            2,
+            null,
+            2,
+            null,
+            2,
+            null,
+            null,
+            null
+          ],
+          "num_ways": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            2,
+            2,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Switched back to MHA because MUDD Connections prefers a wide V-stream.",
+        "parameters": {
+          "kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared activation.",
+        "parameters": {
+          "alpha": 0.5,
+          "power": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "mlr": 0.022
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "causal": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "epochs": 3,
+          "chunk_tokens": 32000,
+          "optimizer": "SGD"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "during_ttt": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.72
+        }
+      }
+    }
+  ],
+  "compression": "lzma+brotli-11",
+  "novel_contributions": [
+    "Lite MUDD Connections with constrained query/key/stream connectivity",
+    "3-layer depth recurrence with 17 virtual layers from 11 physical layers",
+    "Parallel residuals from layer 7",
+    "QK-Gain 5.25",
+    "Legal score-first test-time training",
+    "Mixed int6/int8 GPTQ quantization with SDClip",
+    "Artifact compression using LZMA and Brotli"
+  ],
+  "artifact_size": "~15.99 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

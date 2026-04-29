@@ -1,0 +1,228 @@
+{
+  "pr_number": 1938,
+  "title": "S0/PR1851 + Cap Tokenizer + LQER + Global TTT (val_bpb = 1.0713)",
+  "author": "lijuncheng16",
+  "status": "open",
+  "val_bpb": 1.0713,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applied rotary position embeddings to only part of the head dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeated selected layers during the forward pass to increase effective depth.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Added skip connections from later layers in a U-Net-like pattern.",
+        "parameters": {
+          "start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Used LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Mixed neighboring token representations with a sliding window gate.",
+        "parameters": {
+          "gate_window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Used sparse attention gates to selectively prune attention patterns.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Used grouped-query style attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.97,
+        "other_params": {
+          "backend_steps": 5,
+          "matrix_lr": 0.026,
+          "embed_lr": 0.6,
+          "scalar_lr": 0.02,
+          "gradient_clip": 0.3
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.085,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "scope": "scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention and MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "tied embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER",
+        "bits": 4,
+        "scope": "top-3 highest-error layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 96,
+          "learning_rate": 0.001,
+          "phases": 1,
+          "prefix_docs": 2000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "peak_lr": 0.001
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.75
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 48000
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "Cap tokenizer with lowercasing plus a special capital token",
+    "LQER low-rank quantization error correction on top-error layers",
+    "Global phased test-time training with LoRA adaptation",
+    "GPTQ int6/int8 mixed quantization with Brotli compression",
+    "Depth recurrence, U-Net skip connections, and SmearGate-style architecture tweaks"
+  ],
+  "artifact_size": "16.09 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

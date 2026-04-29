@@ -1,0 +1,112 @@
+{
+  "pr_number": 1937,
+  "title": "Add LocalGlobal_SwiGLU_SeqPack_MixedQuant submission",
+  "author": "estesryan",
+  "status": "open",
+  "val_bpb": 1.20584802,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention modification",
+        "description": "Depth-scheduled local/global attention pattern with local windows followed by full attention.",
+        "parameters": {
+          "pattern": "40,80,full"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaced standard MLP blocks with SwiGLU feedforward blocks.",
+        "parameters": {
+          "mlp_mult": 1.625
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "sequence packing",
+        "description": "Randomized sequence packing with synchronized per-step offsets across DDP ranks.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": 6,
+        "scope": "attn.proj.weight int6, elsewhere int8"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.75
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "SP-1536 tokenizer and dataset variant fineweb10B_sp1536.",
+        "parameters": {
+          "vocab_size": 1536
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Periodic validation every 1000 steps on the full validation split.",
+        "parameters": {
+          "val_every_steps": 1000
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Depth-scheduled local/global attention transformer",
+    "SwiGLU feedforward blocks",
+    "Randomized sequence packing with synchronized offsets across DDP ranks",
+    "Selective mixed-bit quantization with int6 attention output projections",
+    "SP-1536 tokenizer and dataset variant"
+  ],
+  "artifact_size": "15,538,222 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}
