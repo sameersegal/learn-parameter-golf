@@ -1,0 +1,195 @@
+{
+  "pr_number": 1919,
+  "title": "Add SP8192 + ParResid + DR + LoRA TTT + Mixed int4/int6/int8 + AWQ su\u2026",
+  "author": "dev-pratap-singh",
+  "status": "open",
+  "val_bpb": 1.0587,
+  "architecture": "Transformer",
+  "quantization": "mixed int4/int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Uses relu squared activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Attention and MLP both read the same residual input and their outputs are added together in a fused residual update.",
+        "parameters": {
+          "blocks": "every block"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Recurrent execution over a middle band of layers.",
+        "parameters": {
+          "layers": [
+            3,
+            7
+          ],
+          "repetitions": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Skip connections across pre- and post-recurrent zones.",
+        "parameters": {
+          "num_skip_weights": 3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4/int6/int8",
+        "bits": null,
+        "scope": "embeddings and block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "AWQ",
+        "bits": null,
+        "scope": "int4-bound linear layers"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 16,
+          "alpha": 16,
+          "steps_per_chunk": 4,
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "chunk_tokens": 16384
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.97,
+        "other_params": {
+          "newton_schulz_steps": 5,
+          "warmup_momentum_start": 0.85
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": [
+            "tok_emb",
+            "scalars",
+            "skip_weights"
+          ]
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "linear warmup",
+        "parameters": {
+          "warmup_chunks": 100
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1800
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 15
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "causal": true
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Per-block resid_mix re-injects the original embedding into each recurrent block."
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "SP8192 tokenizer with int8 embeddings",
+    "Parallel residuals in every block",
+    "Depth recurrence over the middle layer band",
+    "LoRA-only score-first test-time training",
+    "Mixed int4/int6/int8 quantization with AWQ",
+    "zstd-compressed artifact export"
+  ],
+  "artifact_size": "\u226416 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
