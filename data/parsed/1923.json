@@ -1,0 +1,117 @@
+{
+  "pr_number": 1923,
+  "title": "Record: SP8192 #1855 Base + Asymmetric Logit Rescale \u2014 val_bpb 1.06577 (3-seed mean)",
+  "author": "jorge-asenjo",
+  "status": "open",
+  "val_bpb": 1.06577,
+  "architecture": "Transformer",
+  "quantization": "int4 asym",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed smear gate used in hidden forward and TTT paths to fix cross-document leakage.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse/gated attention path applied to attention outputs.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "SP-8192 tokenizer stack includes tied/consistent embedding handling as part of the inherited baseline.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4",
+        "bits": 4,
+        "scope": "LQER asymmetric weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int7",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phased": true,
+          "prefix_docs": 2500,
+          "num_phases": 3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asymmetric": true,
+          "softcap_pos_init": 30.0,
+          "softcap_neg_init": 30.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": 0.5,
+        "momentum": 0.9,
+        "other_params": {
+          "global_ttt_momentum": 0.9,
+          "beta2": 0.99,
+          "ttt_beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "Asymmetric logit rescale on the eval path using separate positive and negative softcaps.",
+    "Two learnable scalars, softcap_pos and softcap_neg, replace a single logit_softcap in forward_logits and forward_ttt.",
+    "Eval-path asymmetry is initialized to identity behavior by starting both softcaps at 30.0.",
+    "Training/fused softcapped CE path is left unchanged, preserving train-time numerics from the #1855 baseline.",
+    "The new scalars are serialized in the passthrough float16 list with only 8 bytes of artifact cost."
+  ],
+  "artifact_size": "15,903,139 B avg",
+  "prompt_version": "v2",
+  "is_record": false
+}
