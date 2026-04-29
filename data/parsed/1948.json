@@ -1,0 +1,154 @@
+{
+  "pr_number": 1948,
+  "title": "Record: Leaky ReLU Slope + GPTQ Reverse-Cholesky Speedup + PR #1938 (val_bpb = 1.06242)",
+  "author": "TimS-ml",
+  "status": "open",
+  "val_bpb": 1.06242,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses Leaky ReLU squared activation with slope 0.3 instead of 0.5.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all attn and MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "tok_emb.weight"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "attn_gate_w"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used for the vocabulary embeddings.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary position embeddings to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 twice, activated at fraction 0.35.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "repeat": 2,
+          "activation_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate with BOS mask.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses sparse attention gates and gated attention quantization for attn_gate_w.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "batch_size": 16,
+          "prefix_docs_per_phase": 2000,
+          "optimizer": "Adam",
+          "learning_rate_peak": 0.0001,
+          "lora_rank": 96
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "peak_lr": 0.0001
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "Leaky ReLU squared slope tuned from 0.5 to 0.3 for a free validation BPB gain.",
+    "Reverse-Cholesky plus triangular solve replaces the standard GPTQ Hinv path for a significant speedup.",
+    "Builds on PR #1938 with compliance-tuned defaults including smaller TTT batch size, more TTT phases, and GPTQ reserve time.",
+    "Uses GPTQ int6 for most weights, GPTQ int7 + LQER for token embeddings, and int8 quantization for attn_gate_w."
+  ],
+  "artifact_size": "~15.95 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
