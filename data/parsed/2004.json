@@ -1,0 +1,128 @@
+{
+  "pr_number": 2004,
+  "title": "MirrorLoop HRC + LexLoRE non-record submission",
+  "author": "corbensorenson",
+  "status": "open",
+  "val_bpb": 1.35692129,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Mirrored hourglass recurrent circuit with reused middle blocks and mirrored entry/exit tails (012 | 34567 | 34567 | 210).",
+        "parameters": {
+          "unique_blocks": 8,
+          "effective_depth": 16,
+          "route_repeats": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Factored tied embeddings / tied token interface to save artifact bytes while preserving lexical capacity.",
+        "parameters": {
+          "model_dim": 704,
+          "factored_embed_dim": 832
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention modification",
+        "description": "Only the first recurrent-core block keeps attention enabled; the remaining repeated middle blocks are MLP-only.",
+        "parameters": {
+          "core_attention_block": 3,
+          "mlp_only_blocks": [
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "other",
+        "description": "LexLoRE / VocabMoE token-conditioned low-rank residual lexical adapters placed at the input and first loop entry.",
+        "parameters": {
+          "layers": [
+            "input",
+            "loop_first"
+          ],
+          "experts": 16,
+          "rank": 2
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8 QAT",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_steps": 2200
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.0
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "MirrorLoop HRC hourglass recurrent circuit with mirrored input/output tails",
+    "LexLoRE token-conditioned low-rank lexical adapters implemented via VocabMoE flags",
+    "Train-time quantized forward from step 0, including embeddings",
+    "Factored tied embeddings to fit within the 16MB artifact budget",
+    "Single attention-capable core-entry block with MLP-only recurrent blocks",
+    "LQER low-rank export repair for quantization error",
+    "Explicit artifact-size-aware design targeting the decimal 16,000,000 byte cap"
+  ],
+  "artifact_size": "15,658,145 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

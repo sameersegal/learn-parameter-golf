@@ -1,0 +1,143 @@
+{
+  "pr_number": 1999,
+  "title": "Non-Record: TTSM \u2014 Typical Ternary State-Space Model, 2.0032 bpb",
+  "author": "dd-dent",
+  "status": "open",
+  "val_bpb": 2.0032,
+  "architecture": "Mamba",
+  "quantization": "ternary QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "B_proj, C_proj, in_proj, out_proj"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Shared bigram token-boundary features",
+        "parameters": {
+          "buckets": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Shared trigram token-boundary features",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Selective state-space recurrence with chunk-wise parallel scan",
+        "parameters": {
+          "blocks": 7,
+          "d": 576,
+          "d_state": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shared token-boundary feature projections / tied feature usage",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.4,
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 96
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Muon Newton-Schulz orthogonalization / less-orthogonal step tuning"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "z_loss": 0.0001
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "bc_l2_normalization": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Reversed-scan backward reuses the forward Triton scan kernel by flipping time order",
+        "parameters": {
+          "speedup": "26x"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Frozen short convolution outperformed trained convolution, though the submitted artifact used trained conv",
+        "parameters": {
+          "kernel_size": 4
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "First ternary state-space model submission",
+    "Ternary quantization applied at B/C projections while keeping hidden state in fp16",
+    "Reversed-scan backward that reuses the forward Triton kernel",
+    "Finding that NS=5 outperforms NS=10 under ternary STE",
+    "Observation that overtraining degrades quality near the 600s budget",
+    "Observation that frozen convolution can outperform trained convolution"
+  ],
+  "artifact_size": "12,039,626 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

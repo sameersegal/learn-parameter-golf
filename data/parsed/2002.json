@@ -1,0 +1,96 @@
+{
+  "pr_number": 2002,
+  "title": "Non-record: Rust/CUDA record-shaped systems stack",
+  "author": "cedrichaddad",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Parallel Muon",
+  "training_techniques": [
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses BOS/document-boundary masking and legality checks in the record-shaped path.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not explicitly stated as used in the submission; included only if implied by frontier family references is not strong enough, so omitted.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Parallel Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "sharded": true,
+          "reduce_scatter": true,
+          "all_gather": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "score_first": true,
+          "phased": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "cuDNN frontend BF16 SDPA used for forward/backward attention on the record-shaped path.",
+        "parameters": {
+          "backend": "cuDNN frontend BF16 SDPA"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Chunked BF16 output CE cache used to avoid persistent full logits and repeated tiled output GEMMs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Rust workspace split into dedicated crates for training runtime, model execution, CUDA kernels, optimizer, quantization/export, data loading, and eval.",
+        "parameters": {
+          "workspace": "parameter-golf-rs"
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Rust/CUDA systems stack that reaches the real record-shaped 8xH100 training workload",
+    "Explicit record-shaped batching with true local B=48, T=2048 execution per H100",
+    "cuDNN frontend BF16 SDPA integration for the record-shaped path",
+    "Sharded Parallel Muon scaffolding with distributed optimizer communication primitives",
+    "Chunked BF16 output CE cache to remove persistent full logits without repeated tiled GEMMs",
+    "Measured bottleneck ledger and negative-result analysis for H100 runtime optimization",
+    "Rust workspace decomposition into training, model, kernels, optimizer, data, quantization, and eval crates"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}
