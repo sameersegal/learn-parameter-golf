@@ -1,0 +1,144 @@
+{
+  "pr_number": 1958,
+  "title": "Record: PreQuantTTT + Sliding Window on PR #1855 stack, val_bpb=1.01355 (3-seed)",
+  "author": "okezue",
+  "status": "open",
+  "val_bpb": 1.01355,
+  "architecture": "Transformer",
+  "quantization": "GPTQ mixed int6/int7",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Causal context mixer with BOS-fixed mask on the embedding stream.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding-style parameter sharing is referenced in the base stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "Q/K/V/O and MLP"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.0005,
+          "lr_min": 5e-05,
+          "federated_avg": true,
+          "freeze_blocks": 2,
+          "freeze_embeddings": true,
+          "grad_clip": 1.0,
+          "epochs": 21
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "learning_rate": 0.0005,
+          "epochs": 21,
+          "freeze_blocks": 2,
+          "freeze_embeddings": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip",
+        "level": 9
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "start_lr": 0.0005,
+          "end_lr": 5e-05,
+          "epochs": 21
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 15
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "lrzip-9",
+  "novel_contributions": [
+    "Stacks pre-quantization test-time training on top of the PR #1855 SOTA base.",
+    "Uses sliding-window evaluation with stride 64 to improve the final quantized score.",
+    "Applies per-group lrzip compression to fit the artifact under the 16 MB cap.",
+    "Reports a new 3-seed record val_bpb of 1.01355 on track_10min_16mb.",
+    "Demonstrates legality-compliant pre-quant TTT by training only after the validation tokens were already graded."
+  ],
+  "artifact_size": "15,912,740 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

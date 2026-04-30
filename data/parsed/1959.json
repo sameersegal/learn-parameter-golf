@@ -1,0 +1,174 @@
+{
+  "pr_number": 1959,
+  "title": "Record: SP8192 + 3-layer recurrence + byte-PPM mixer \u2014 val_bpb 0.99621 (3-seed mean)",
+  "author": "remg1997",
+  "status": "open",
+  "val_bpb": 0.99621,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "3-layer recurrence stack with parallel residuals and repeated layer loops in the Transformer backbone.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied token embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared activation in the MLP.",
+        "parameters": {
+          "squared": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 8 heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "MLP width multiplier of 4x in the Transformer block.",
+        "parameters": {
+          "multiplier": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all attention/MLP matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": {
+          "variant": "MuonEq-R",
+          "newton_schulz_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "final_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal byte-level PPM-D order-4 mixer applied at evaluation time with an outcome-independent adaptive lambda gate.",
+        "parameters": {
+          "order": 4,
+          "eval_time_only": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "enabled_for_diagnostics": true,
+          "disabled_in_submission": true
+        }
+      }
+    }
+  ],
+  "compression": "lzma + Brotli-11",
+  "novel_contributions": [
+    "Combines SP8192 3-layer recurrence stack with a corrected causal byte-level PPM mixer.",
+    "Uses an outcome-independent adaptive gate for mixing neural byte probabilities with PPM probabilities.",
+    "Reports a 3-seed mean val_bpb of 0.99621, with per-seed logs and compliance verification.",
+    "Disables TTT in the submitted artifact to meet the eval-time budget while preserving the PPM mixer result."
+  ],
+  "artifact_size": "~15.997 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

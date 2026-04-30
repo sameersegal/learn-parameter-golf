@@ -1,0 +1,120 @@
+{
+  "pr_number": 1961,
+  "title": "Non-record: Mini-Hymba hybrid attention+SSM heads (arXiv:2411.13676)",
+  "author": "aparna-1407",
+  "status": "open",
+  "val_bpb": 3.81,
+  "architecture": "Hybrid",
+  "quantization": "int8 + zlib",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid attention+SSM",
+        "description": "Replaces CausalSelfAttention in recurrent layers with a HymbaLayer that runs attention heads and Mamba-lite SSM heads in parallel and concatenates their outputs.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "attention_heads": 4,
+          "ssm_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "meta tokens",
+        "description": "Learnable meta tokens are prepended before attention to store global context and reduce forced-to-attend burden.",
+        "parameters": {
+          "tokens_per_layer": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV sharing",
+        "description": "Cross-layer KV sharing reuses layer 3 K/V projections in layers 4 and 5 to eliminate redundant parameters.",
+        "parameters": {
+          "shared_from_layer": 3,
+          "shared_layers": [
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SSM scan",
+        "description": "Uses a stable fp32 sequential SSM scan to avoid numerical issues at bf16 precision.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "legal TTT",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Base stack includes 3-layer recurrence with parallel residuals.",
+        "parameters": {
+          "layers": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Parallel residual routing is retained from the base submission.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "QK-Gain",
+        "description": "QK-Gain is retained from the base submission.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "int8+zlib",
+  "novel_contributions": [
+    "Mini-Hymba hybrid attention + SSM block",
+    "Parallel attention and Mamba-lite SSM heads",
+    "Learnable meta tokens for global context",
+    "Cross-layer KV sharing to remove redundant parameters",
+    "Stable fp32 sequential SSM scan",
+    "Fits within the 16MB artifact budget with int8+zlib compression"
+  ],
+  "artifact_size": "6,838,905 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

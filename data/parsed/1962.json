@@ -1,0 +1,202 @@
+{
+  "pr_number": 1962,
+  "title": "Record candidate: PR #1855 + Adaptive Hessian-Sensitivity GPTQ Clip \u2014 val_bpb 1.06310 (3-seed mean)",
+  "author": "chris-colinsky",
+  "status": "open",
+  "val_bpb": 1.0631,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/int6/int7",
+        "bits": null,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "All 11 layers use XSA attention modification.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed position-mixing gate with not_bos mask.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections with skip gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loop layers 3\u20135 and run them 3 times once fraction exceeds threshold.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "repeats": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU-squared MLP activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 2:1 grouping.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial RoPE with YaRN scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 56,
+          "phases": 3,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Adaptive Hessian-sensitivity GPTQ clipping with per-tensor sigma selection from Hessian diagonal magnitude and weight row variance.",
+        "parameters": {
+          "sigma_range": [
+            6.0,
+            24.0
+          ]
+        }
+      }
+    }
+  ],
+  "compression": "custom",
+  "novel_contributions": [
+    "Adaptive per-tensor Hessian-sensitivity GPTQ clipping replacing three hand-tuned clip sigmas",
+    "Preservation of the overall compression budget via binary-searched offset matching the prior log-average sigma",
+    "Demonstrated composability with LQER asymmetric quantization and phased TTT on the PR #1855 stack",
+    "Mixed-precision Hessian-based GPTQ ablation implemented and reported as a negative result",
+    "TTT_LORA_RANK reduced to 56 while maintaining phased score-first TTT"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
