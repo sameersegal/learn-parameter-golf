@@ -1,0 +1,113 @@
+{
+  "pr_number": 1982,
+  "title": "Non-record: Frozen N-gram Oracle + HedgeMixer + SGD TTT \u2014 methodology, validated on Kaggle T4\u00d72 DDP",
+  "author": "dhruvpuri",
+  "status": "open",
+  "val_bpb": 2.54,
+  "architecture": "Hybrid",
+  "quantization": "int6",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "neural blob"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU with slope 0.75 as a configurable MLP activation variant.",
+        "parameters": {
+          "slope": 0.75
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "learning_rate": 0.002
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "optimizer": "SGD"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "HedgeMixer",
+        "description": "Extends the online expert mixer with additional frozen n-gram oracle experts.",
+        "parameters": {
+          "base_experts": 5,
+          "total_experts": 13
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Adds frozen multi-order n-gram oracle experts using hashed contexts for orders 3 through 8.",
+        "parameters": {
+          "orders": [
+            3,
+            4,
+            5,
+            6,
+            7,
+            8
+          ],
+          "bucket_counts": [
+            4096,
+            2048,
+            1024,
+            512,
+            256,
+            256
+          ]
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 384,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Frozen multi-order n-gram oracle built offline from training tokens and bundled into the artifact",
+    "HedgeMixer extended with oracle experts via multiplicative-weights updates",
+    "Single magic-prefixed versioned artifact format with in-memory oracle reload",
+    "SGD-based TTT switch as an alternative to AdamW",
+    "LeakyReLU(0.75)^2 configurable activation change",
+    "Bucketed distributed all-reduce for faster TTT",
+    "Deterministic and compliant offline oracle build using training tokens only"
+  ],
+  "artifact_size": "6.85 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

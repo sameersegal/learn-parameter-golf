@@ -1,0 +1,179 @@
+{
+  "pr_number": 1987,
+  "title": "Record: MHA Path + 1855 9-hparam Stack + PR #1948 + PR #1855 (val_bpb = 1.06184, 3-seed)",
+  "author": "TimS-ml",
+  "status": "open",
+  "val_bpb": 1.06184,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Adam",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MHA",
+        "description": "Converted KV=4 GQA to KV=8 MHA, making key/value heads match query heads.",
+        "parameters": {
+          "num_kv_heads": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Used LeakyReLU squared activation with slope 0.3 in the MLP.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Included depth recurrence in layers L3-5.",
+        "parameters": {
+          "layers": "L3-5",
+          "repeats": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residual lanes",
+        "description": "Added parallel residual lanes in later layers.",
+        "parameters": {
+          "layers": "L8+"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Used tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Applied BOS-safe SmearGate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Used sparse attention gating with int8 gate quantization.",
+        "parameters": {
+          "gate_scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Used XSA11 architecture variant.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all attn and MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "attention gate weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip pergroup",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "batch_size": 16,
+          "num_phases": 3,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lrzip pergroup",
+  "novel_contributions": [
+    "MHA conversion from KV=4 GQA to KV=8 MHA while staying within the artifact cap",
+    "Porting the PR #1855 9-hyperparameter tuning stack into the submission",
+    "Leaky ReLU squared slope sweep identifying 0.3 as the best setting",
+    "GPTQ reverse-Cholesky plus triangular solve path for faster Hinv computation",
+    "Using lrzip pergroup compression to recover additional byte budget"
+  ],
+  "artifact_size": "~15.84 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
