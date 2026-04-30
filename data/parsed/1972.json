@@ -1,0 +1,147 @@
+{
+  "pr_number": 1972,
+  "title": "Record: SP10240 SimCTG + PreQuantTTT \u2014 1.03983 sliding-window (3-seed)",
+  "author": "BharathSShankar",
+  "status": "open",
+  "val_bpb": 1.03983,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "epochs": 21,
+          "learning_rate_start": 0.0005,
+          "learning_rate_end": 5e-05,
+          "frozen_layers": 2,
+          "frozen_parameters": [
+            "tok_emb.weight"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Encoder loops layers 3-5 for recurrence.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Parallel residual connections are enabled from layer 7.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 SwiGLU activation variant.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings are used.",
+        "parameters": {
+          "ratio": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention is used on all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SP10240 tokenizer",
+        "description": "SP10240 tokenizer is used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "SimCTG",
+        "parameters": {
+          "lambda": 0.3,
+          "margin": 0.4
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Pre-quantization Test-Time Training (PreQuantTTT) applied after the legal pre-quantization grade and before serialization.",
+    "SimCTG paired with PreQuantTTT, showing the contrastive regularizer survives the test-time fine-tuning stage.",
+    "3-seed validation of the PreQuantTTT recipe on the SP10240 N9 base architecture.",
+    "Self-extracting train_gpt.py packaging using lzma+base85+exec to fit the artifact size cap."
+  ],
+  "artifact_size": "15.948 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,203 @@
+{
+  "pr_number": 1973,
+  "title": "SP8192 + Depth Recurrence + Parallel Residuals + TTT + SDCLIP + GPTQ-Brotli \u2014 1.2192 BPB (LLMAdvisor.ai) [SUPERSEDED]",
+  "author": "harborglowvintage-oss",
+  "status": "closed",
+  "val_bpb": 1.21925538,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bespoke SentencePiece BPE vocabulary with 8192 tokens.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Residual unrolling across selected layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Bypass shortcut used in later layers.",
+        "parameters": {
+          "layers_start": 7
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "epochs": 1,
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "chunk_size": 32000
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Stable Divergence Clipping to prevent divergent TTT inference updates by clipping gradient steps when KL divergence exceeds a threshold.",
+        "parameters": {
+          "steps": 20
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input/output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Squared ReLU activation in the MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style skip connections in the transformer.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": "Orthogonal initialization with muP-scaled outputs."
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "every": 30,
+          "start_frac": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.04,
+        "momentum": 0.99,
+        "other_params": {
+          "embed_scalar_optimizer": "AdamW",
+          "embed_scalar_lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_iters": 3000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.04
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "magnitude pruning",
+        "parameters": {
+          "magnitude_pruning": "3%"
+        }
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "SP8192 bespoke SentencePiece vocabulary",
+    "Depth recurrence across layers 3-5",
+    "Parallel residual bypass in later layers",
+    "TTT with SDCLIP stabilization",
+    "GPTQ int6 quantization with Brotli compression",
+    "SWA-based checkpoint averaging"
+  ],
+  "artifact_size": "15,457,746 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

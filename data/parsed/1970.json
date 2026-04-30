@@ -1,0 +1,133 @@
+{
+  "pr_number": 1970,
+  "title": "Ablation: WiderGate32, RoPE dims, activation slopes, hparam stack (8xH100)",
+  "author": "bsisduck",
+  "status": "open",
+  "val_bpb": 1.0674,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Widened AttnOutGate input from 12 to 32 dimensions for per-head gating.",
+        "parameters": {
+          "gate_width": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Ablated rotary position embedding dimensionality.",
+        "parameters": {
+          "dimensions": 24
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Ablated rotary position embedding dimensionality.",
+        "parameters": {
+          "dimensions": 32
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Changed activation slope to 0.3.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Changed activation to pure ReLU squared with zero leaky slope.",
+        "parameters": {
+          "slope": 0.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "clip sigmas",
+        "parameters": {
+          "embed_clip_sigmas": 14.0,
+          "mlp_clip_sigmas": 11.5
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "beta2": 0.999
+        }
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Systematic ablation of 10 configurations on the PR #1693 architecture with CaseOps SP8192.",
+    "Found that widening the attention gate to 32 dimensions improves both pre-quantization and post-TTT performance.",
+    "Showed that increasing RoPE dimensions hurts quantization robustness and increases the quantization gap.",
+    "Evaluated activation slope variants and found the default slope remains best on this stack.",
+    "Tested the PR #1855 hyperparameter stack and found it does not transfer to this architecture.",
+    "Demonstrated that int6 embeddings are required to fit under the 16MB limit without LQER.",
+    "Compared artifact compressors and found brotli better than LZMA for this submission."
+  ],
+  "artifact_size": "15.89 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
