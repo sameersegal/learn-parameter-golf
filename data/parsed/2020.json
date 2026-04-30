@@ -1,0 +1,134 @@
+{
+  "pr_number": 2020,
+  "title": "Record: PR1851 + 9-hparam stack + wd_strong + GPTQ AR + pergroup - val_bpb 1.05957 (1 seed)",
+  "author": "Itssshikhar",
+  "status": "open",
+  "val_bpb": 1.05957,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Preserves the PR #1851 graph with BOS-fixed SmearGate, LQER asymmetric, and SparseAttnGate/PolarNS/FusedCE stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings / tied embedding in the CaseOps stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "all ranks / model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "wd_schedule_enabled": true,
+          "wd_sched_low_factor": 0.5,
+          "wd_sched_high_factor": 1.75
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "schedule": "wd_strong",
+          "low_factor": 0.5,
+          "high_factor": 1.75
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "phased": true,
+          "num_phases": 3,
+          "rank": 80,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "phased TTT eval",
+        "parameters": {
+          "phases": 3
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "GPTQ all-rank Hessian averaging across ranks during calibration.",
+        "parameters": {
+          "all_reduce": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-group lrzip+brotli compression ported into the PR #1851 graph to fit under the 16 MB cap.",
+        "parameters": {
+          "compressor": "pergroup"
+        }
+      }
+    }
+  ],
+  "compression": "custom",
+  "novel_contributions": [
+    "PR #1851 graph preserved while importing PR #1855's 9-hparam stack",
+    "Stronger Muon weight-decay schedule ('wd_strong')",
+    "GPTQ all-rank Hessian averaging",
+    "Port of PR #1855 pergroup lrzip+brotli compressor into the PR #1851 graph",
+    "Valid-size recovery of a previously over-cap run with nearly identical val_bpb"
+  ],
+  "artifact_size": "15,901,624 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

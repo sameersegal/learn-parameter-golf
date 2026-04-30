@@ -1,0 +1,118 @@
+{
+  "pr_number": 2018,
+  "title": "Record: Gated XSA + LQER top-1 + strict in-timer n-gram TTT (val_bpb: 1.046)",
+  "author": "simon-marcus",
+  "status": "open",
+  "val_bpb": 1.04616683,
+  "architecture": "Transformer",
+  "quantization": "GPTQ-lite",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Gated XSA with a learned per-head scalar gate multiplying the XSA subtraction coefficient via tanh(xsa_alpha).",
+        "parameters": {
+          "gated": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "model artifact"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU 0.3 in the base stack.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phased": true,
+          "phases": 1,
+          "prefix_docs": 1000
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "local_lr_mult": 0.75,
+          "mask": "no_qv"
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "n-gram tilt",
+        "parameters": {
+          "precompute_inside_timer": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2560
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asym_logit_rescale": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LQER top-1 keeps only the best LQER correction tensor to reduce artifact size.",
+        "parameters": {
+          "lqer_rank": 4,
+          "top_k": 1,
+          "asymmetric": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CaseOps SP8192 lossless-caps tokenizer and byte-sidecar dataset setup.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Gated XSA with a learned per-head gate on the XSA subtraction coefficient",
+    "LQER top-1 to reduce artifact size while preserving the best correction tensor",
+    "Strict in-timer n-gram tilt with hint precompute counted inside evaluation time",
+    "Cheaper phased score-first TTT with a 1,000-document prefix",
+    "CaseOps SP8192 lossless-caps tokenizer and byte-sidecar setup"
+  ],
+  "artifact_size": "15,996,490 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

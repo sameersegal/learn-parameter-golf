@@ -1,0 +1,189 @@
+{
+  "pr_number": 2022,
+  "title": "Record: SP10240 + SimCTG + QAHSP + post-quant TTT \u2014 1.07197 ttt-sliding-window (3-seed mean, std 0.00023)",
+  "author": "BharathSShankar",
+  "status": "open",
+  "val_bpb": 1.07197,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "11-layer model with 3-layer recurrence loops over layers 3-5.",
+        "parameters": {
+          "layers": 11,
+          "recurrence_loops": 3,
+          "recurrence_range": "3-5"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel Residuals",
+        "description": "Parallel residual connections introduced from layer 7 onward.",
+        "parameters": {
+          "start_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU(0.5)^2 activation used in SwiGLU.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA attention used in all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input and output embeddings are tied.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Model uses 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "tokenizer",
+        "description": "SP10240 tokenizer.",
+        "parameters": {
+          "vocab_size": 10240
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "variant": "Polar Express NS Muon"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "SimCTG",
+        "parameters": {
+          "lambda": 0.3,
+          "margin": 0.4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 6,
+        "scope": "activations"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "enabled": true,
+          "epochs": 1,
+          "learning_rate": 0.005
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "brotli + lzma",
+  "novel_contributions": [
+    "QAHSP quant-aware activation regularizer pushing hidden states onto an int6 grid during training",
+    "Post-quant test-time training on already-graded eval tokens after the legal pre-quant grading pass",
+    "Bug fix to eval_val_ttt enabling post-quant TTT to complete",
+    "Record 3-seed mean result with low standard deviation"
+  ],
+  "artifact_size": "15.96 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

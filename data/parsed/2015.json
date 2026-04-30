@@ -1,0 +1,109 @@
+{
+  "pr_number": 2015,
+  "title": "Non-record: Rank-0 GPTQ + no-TTT CaseOps ablation",
+  "author": "Muhtasham",
+  "status": "open",
+  "val_bpb": 1.28799323,
+  "architecture": "Transformer",
+  "quantization": "GPTQ",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "serialization"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "CaseOps/LQER/SparseAttnGate stack includes sparse attention gating and smear gate components.",
+        "parameters": {
+          "gate_window": 12,
+          "sparse_attn_gate_scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Quantized gated attention with sparse attention gate enabled.",
+        "parameters": {
+          "quant_gate": 1,
+          "enabled": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not mentioned explicitly in the submission.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "ttt_weight_decay": 0.5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "muon_backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "CaseOps / LQER / SparseAttnGate ablation with rank-0-only GPTQ serialization to avoid duplicated work across torchrun ranks.",
+        "parameters": {
+          "posttrain_single_rank": 1,
+          "world_size": 1
+        }
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "Non-record control submission for the PR #1855 CaseOps/LQER/SparseAttnGate stack",
+    "Disables validation-time TTT while keeping full validation and artifact accounting",
+    "Rank-0-only GPTQ serialization to avoid duplicated GPTQ work across torchrun ranks",
+    "Reproducible systems ablation demonstrating successful packaged run with full validation"
+  ],
+  "artifact_size": "15,929,139 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

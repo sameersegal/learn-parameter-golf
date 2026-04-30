@@ -1,0 +1,132 @@
+{
+  "pr_number": 2009,
+  "title": "Record: DepthShare4096 + SparseAttnGate + Muon TTT - val_bpb 1.0500312",
+  "author": "SlavH",
+  "status": "open",
+  "val_bpb": 1.0500312,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "8 base layers are reused for 3 recurrent passes, giving effective 24-layer depth with weight tying.",
+        "parameters": {
+          "layers": 8,
+          "recurrent_passes": 3,
+          "effective_depth": 24
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Input/output embeddings are tied and recurrent blocks share weights across passes.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "n_head": 8,
+          "n_kv_head": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies rotary embeddings to only part of the head dimensions.",
+        "parameters": {
+          "rotary_pct": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SparseAttnGate",
+        "description": "Learned per-head gating sparsifies attention weights below a threshold.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "mode": "backward-only",
+          "adaptation_target": "layer norms"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.01,
+        "momentum": 0.95,
+        "other_params": {
+          "nesterov": true,
+          "ns_steps": 6,
+          "lr": 0.0095,
+          "warmup_steps": 200,
+          "schedule": "cosine decay"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "cosine decay",
+        "parameters": {
+          "warmup_steps": 200,
+          "final_lr_multiplier": 0.1
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.01
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "DepthShare-4096 depth-recurrent transformer with 8 layers reused for 3 passes",
+    "4096-token BPE tokenizer to improve bytes-per-byte performance",
+    "SparseAttnGate attention sparsification",
+    "Partial RoPE with rotary_pct=0.5",
+    "Muon optimizer tuned with Newton-Schulz steps and momentum settings",
+    "Backward-only test-time training on layer norms",
+    "3-seed statistically significant improvement over prior SOTA"
+  ],
+  "artifact_size": "15,921,334 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

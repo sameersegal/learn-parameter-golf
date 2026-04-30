@@ -1,0 +1,201 @@
+{
+  "pr_number": 2026,
+  "title": "[DRAFT] Record: Variable-Rank LQER + Muon-TTT \u2014 val_bpb TBD",
+  "author": "RahimMirani",
+  "status": "open",
+  "val_bpb": 1.06108,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied XSA to all 11 layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections with skip gates.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 three times once the fraction threshold is reached.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "repeats": 3,
+          "threshold_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Partial RoPE with YaRN scaling.",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Position-mixing gate with BOS leak fix using a not-BOS mask.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention gate on head outputs.",
+        "parameters": {
+          "gate_window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "steps": 5,
+          "backend": "Polar-Express Newton-Schulz"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "attention gate"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "LQER correction"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "phases": 3,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    }
+  ],
+  "compression": "custom",
+  "novel_contributions": [
+    "Variable-rank Hessian-allocated LQER while preserving total rank budget",
+    "Muon-style Newton-Schulz update direction for TTT behind an environment flag",
+    "Longer phased TTT prefix as a runtime-only knob",
+    "Byte-accounting sanity assertion before claiming results",
+    "BOS leak fix for SmearGate in packed validation streams",
+    "Per-group compression pipeline using lrzip/ZPAQ on hot tensor groups with similarity-sorted rows"
+  ],
+  "artifact_size": "~15.9 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
