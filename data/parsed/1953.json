@@ -1,0 +1,142 @@
+{
+  "pr_number": 1953,
+  "title": "Record: PR #1945 base + 2560 long-context + no_qv TTT mask + TTT LR 0.75 + QK_GAIN 5.25 \u2014 val_bpb 1.05855 (3-seed mean)",
+  "author": "andrewbaggio1",
+  "status": "open",
+  "val_bpb": 1.0585537,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2560
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "mask": "no_qv",
+          "q_lora": 0,
+          "v_lora": 0,
+          "local_lr_mult": 0.75,
+          "phased": true,
+          "num_phases": 3,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed smear gate used in the inherited base stack.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Sparse Attention Gate",
+        "description": "Sparse attention gating used in the inherited base stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LQER",
+        "description": "Asymmetric rank-4 low-rank quantization/error recovery component.",
+        "parameters": {
+          "rank": 4,
+          "top_k": 3,
+          "group_size": 64,
+          "asym_enabled": true,
+          "asym_group": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not explicitly mentioned in the submission text.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7",
+        "bits": null,
+        "scope": "weights + embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "AWQ-lite",
+        "bits": null,
+        "scope": "GPTQ calibration"
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asymmetric": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "context_length": 2560
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "QK_GAIN_INIT",
+        "description": "Per-head learnable Q-gain initialized to 5.25."
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Extended evaluation and TTT sequence length from 2048 to 2560.",
+    "Applied a no_qv TTT mask, disabling Q and V LoRA paths during test-time training.",
+    "Reduced TTT local learning-rate multiplier to 0.75.",
+    "Changed QK gain initialization to 5.25.",
+    "Stacked the new levers on top of the PR #1945 base with AWQ-lite and asymmetric logit rescale."
+  ],
+  "artifact_size": "15,992,914 B",
+  "prompt_version": "v2",
+  "is_record": false
+}
