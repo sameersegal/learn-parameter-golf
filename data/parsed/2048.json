@@ -1,0 +1,130 @@
+{
+  "pr_number": 2048,
+  "title": "[Non-record submission] NativeBonsaiBinary 1 bit non-record submission (1.3551 BPB)",
+  "author": "kineticforge",
+  "status": "open",
+  "val_bpb": 1.3551,
+  "architecture": "Transformer",
+  "quantization": "binary STE",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings were enabled.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 16,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applied RoPE with a reduced rotary dimension.",
+        "parameters": {
+          "rope_dim": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Used a SwiGLU MLP with 4x expansion.",
+        "parameters": {
+          "mlp_mult": 4.0
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 1,
+        "scope": "grouped linear weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.99,
+        "other_params": {
+          "momentum_warmup_start": 0.92,
+          "momentum_warmup_steps": 500,
+          "backend_steps": 5,
+          "matrix_lr": 0.006,
+          "scalar_lr": 0.006,
+          "tied_embed_lr": 0.009
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 5,
+          "warmdown_iters": 8000
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30,
+          "mode": "tanh"
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Trained with PyTorch CUDA DDP across 4x NVIDIA H100 80GB GPUs with synchronized stopping and per-rank data shard offset.",
+        "parameters": {
+          "world_size": 4,
+          "hardware": "4x NVIDIA H100 80GB"
+        }
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Native 1-bit grouped-binary transformer submission inspired by Bonsai/Qwen3 1-bit structure",
+    "Grouped binary STE linears with learned scales",
+    "DDP rank data offset to avoid duplicated minibatches across ranks",
+    "Synchronized wallclock stop across DDP ranks to prevent training hangs",
+    "Native packet accounting with exported LZMA-compressed packet plus counted code size"
+  ],
+  "artifact_size": "15,087,895 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

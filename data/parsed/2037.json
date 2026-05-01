@@ -1,0 +1,170 @@
+{
+  "pr_number": 2037,
+  "title": "Non-record: Linear Combiner on Frozen Base \u2014 h' = (1+\u03b1)\u00b7h + M\u00b7T_1 + \u03b2",
+  "author": "organic-intelligence-1976",
+  "status": "open",
+  "val_bpb": 1.26698,
+  "architecture": "Transformer",
+  "quantization": "mixed int6/int8 GPTQ",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output embeddings in the base model.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Uses RoPE with a reduced rotary dimension.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention stack includes XSA / gated attention style modifications.",
+        "parameters": {
+          "last_n": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query style attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Submission notes explicitly state the base is built without recurrence; no depth recurrence is used.",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "base weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "chunked last-position eval",
+        "parameters": {
+          "chunk_length": 2048
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.001
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "embed_wd": 0.085,
+          "muon_wd": 0.085,
+          "adam_wd": 0.02
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.667
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Frozen-base linear combiner trained on cached hidden states and one-step Coconut-style thinking states: h' = (1+\u03b1)\u00b7h + M\u00b7T\u2081 + \u03b2.",
+        "parameters": {
+          "combiner_params": 262657,
+          "zero_init_identity": true
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11",
+  "novel_contributions": [
+    "A frozen-base linear combiner that mixes the last hidden state with a one-step Coconut-style thinking forward.",
+    "Bit-exact identity at zero initialization for the combiner.",
+    "Training the combiner via linear regression on cached features from a frozen, fully trained base.",
+    "Compact storage of the combiner alongside a GPTQ-quantized base within the 16 MB artifact limit.",
+    "Separate chunked last-position evaluation showing a small BPB improvement from the trained combiner."
+  ],
+  "artifact_size": "14.13 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

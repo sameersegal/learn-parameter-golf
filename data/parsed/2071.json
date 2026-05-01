@@ -1,0 +1,182 @@
+{
+  "pr_number": 2071,
+  "title": "Record: SP8192 + Headwise Gate + EMA 0.990 + Small Batch (1.0066 BPB, 3-seed)",
+  "author": "jamesEmerson112",
+  "status": "open",
+  "val_bpb": 1.0066,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "MuonEq-R",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Post-attention per-head sigmoid gate applied after FA3+XSA; Q projection widened by gate_dim.",
+        "parameters": {
+          "gate_dim": null,
+          "per_head": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.99
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "MuonEq-R",
+        "weight_decay": 0.095,
+        "momentum": null,
+        "other_params": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.02,
+        "momentum": null,
+        "other_params": {
+          "scope": "embeddings/scalars"
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": 11
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 96,
+          "learning_rate": 0.0001,
+          "weight_decay": 1.0
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "eval_seq_len": 2048,
+          "chunk_based": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 196608,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Repeated layers in encoder/decoder recurrence pattern.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Uses XSA attention across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies RoPE to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU squared in the MLP.",
+        "parameters": {
+          "squared": true,
+          "slope": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "Brotli-11",
+  "novel_contributions": [
+    "Headwise gated attention with per-head sigmoid gating after FA3+XSA",
+    "EMA decay 0.990 found to be optimal for the limited training window",
+    "Small batch training (196K tokens) to increase optimizer steps within the same wall-clock budget",
+    "6-bit embedding quantization to fit the full technique stack under the 16 MB limit"
+  ],
+  "artifact_size": "~15.97 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

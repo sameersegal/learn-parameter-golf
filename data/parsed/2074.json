@@ -1,0 +1,126 @@
+{
+  "pr_number": 2074,
+  "title": "Add non-record loss-gated TTT 4xH100 run",
+  "author": "sanilb19",
+  "status": "open",
+  "val_bpb": 1.08838847,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "rank": 80,
+          "phases": 3,
+          "prefix_docs": 2500
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.02
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Gated attention mechanism inherited from prior lineage",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention gating with quant gate and smear gate components",
+        "parameters": {
+          "quant_gate": true,
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 4,
+        "scope": "LQER factors"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.5,
+        "momentum": 0.9,
+        "other_params": {
+          "global_ttt_momentum": 0.9,
+          "warmup_steps": 20,
+          "muon_backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "Adaptive loss-gated weighting for legal score-first phased TTT",
+    "Each validation chunk is scored first before adaptation",
+    "Already-scored per-document losses are used to weight the same chunk's subsequent LoRA adaptation objective",
+    "Non-record 4xH100 reproduction of an above-baseline TTT variant built on PR #1855"
+  ],
+  "artifact_size": "15,916,403 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

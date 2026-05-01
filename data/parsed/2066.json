@@ -1,0 +1,123 @@
+{
+  "pr_number": 2066,
+  "title": "Non-record: Mamba2 SSM + Attention Hybrid (SP8192) - val_bpb= 1.1005 prequant, Research preview over 56 SSM runs, limitations and findings",
+  "author": "SarooshKhan897",
+  "status": "open",
+  "val_bpb": 1.1005,
+  "architecture": "Hybrid",
+  "quantization": "mixed int4/5/6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Hybrid",
+        "description": "Mamba2/SSM backbone with a single attention block in a 10-layer model",
+        "parameters": {
+          "layers": 10,
+          "attention_layers": [
+            6
+          ],
+          "embed_dim": 512,
+          "d_state": 64,
+          "headdim": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": 8192
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_on": "large 2D matrices"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_on": [
+            "scalar/control groups",
+            "embed",
+            "attention",
+            "Mamba projections in some ablations"
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int4/int5/int6",
+        "bits": null,
+        "scope": "FFN gate/down, Mamba, attention, embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram embedding/hash enabled in the submitted configuration",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lzma-9",
+  "novel_contributions": [
+    "Documents a Mamba2 SSM + attention hybrid trained at SP8192 with strong pre-quant validation performance",
+    "Shows that SSM-heavy hybrids can achieve competitive full-precision BPB but remain limited by artifact compression",
+    "Provides a research chronicle of many SSM/attention hybrid ablations, including carrier-style SSMs, depth recurrence, and optimizer comparisons",
+    "Demonstrates that aggressive low-bit quantization can preserve quality reasonably well but still miss the 16 MB cap",
+    "Highlights Muon-heavy optimization as stronger than pure AdamW for this setup"
+  ],
+  "artifact_size": "16,094,692 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

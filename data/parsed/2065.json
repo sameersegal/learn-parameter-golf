@@ -1,0 +1,135 @@
+{
+  "pr_number": 2065,
+  "title": "[Record Candidate] SP8192 \u00b7 GatedAttn + Phased TTT + LQER \u00b7 10 min / 16 MB",
+  "author": "IanniMuliterno",
+  "status": "open",
+  "val_bpb": null,
+  "architecture": "Transformer",
+  "quantization": "mixed GPTQ+LQER",
+  "optimizer": "SGD",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Gated attention applied across all layers.",
+        "parameters": {
+          "enabled": true,
+          "layers": "all"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layer recurrence loop over a subset of layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "num_loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Attention uses fewer KV heads than query heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residual",
+        "description": "Parallel residual connection from an intermediate layer.",
+        "parameters": {
+          "from_layer": 7
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "OrthoInit",
+        "description": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "local_lora_adapter_updates": "chunk level",
+          "global_sgd_updates": "phase level"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "SGD",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "global": true,
+          "phase_level": true
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": null,
+        "scope": "mixed with LQER"
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "LQER export path combined with mixed GPTQ quantization.",
+        "parameters": {
+          "export_path": "QuantGate",
+          "lqer": true
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Integration of gated attention with QuantGate export path",
+    "Phased TTT with global SGD updates under score-first compliance",
+    "Mixed GPTQ + LQER export/quantization path",
+    "SP8192 sentencepiece tokenizer with 8192 vocabulary",
+    "Depth recurrence over layers 3-5 with two loops",
+    "Parallel residual from layer 7",
+    "EMA with decay 0.9965 and QK gain initialization"
+  ],
+  "artifact_size": "16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

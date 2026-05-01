@@ -1,0 +1,136 @@
+{
+  "pr_number": 2051,
+  "title": "Record: PR #1908 base + GPTQ module-damp + Asym Logit Rescale \u2014 val_bpb 1.06048 (3-seed mean)",
+  "author": "dexhunter",
+  "status": "closed",
+  "val_bpb": 1.06048,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "module-specific"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "AWQ-lite salient channels"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SparseAttnGate",
+        "description": "Sparse per-head gate inside attention",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-masked causal smear gate with windowed lookback",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Triple-loop recurrence on encoder slice",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Attention gating used in the model stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asymmetric": true
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "prefix_docs": 2500,
+          "lora_rank": 80
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "grad_clip_norm": 0.3,
+          "min_lr": 0.1,
+          "matrix_lr": 0.026,
+          "global_ttt_momentum": 0.9
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "GPTQ per-module damping with separate damping factors for embeddings, MLP, and attention",
+    "Composition with asymmetric logit rescale",
+    "Extension of the PR #1908 base quantization stack with module-specific GPTQ regularization",
+    "Record-setting 3-seed mean validation BPB of 1.06048"
+  ],
+  "artifact_size": "~15.87 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

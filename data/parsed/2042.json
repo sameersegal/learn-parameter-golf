@@ -1,0 +1,112 @@
+{
+  "pr_number": 2042,
+  "title": "Non-record 10min/16MB: BitNet-1.58 Ternary HydraMLP (1xH100, val_bpb 1.36407)",
+  "author": "FF-GardenFn",
+  "status": "open",
+  "val_bpb": 1.36406657,
+  "architecture": "Hybrid",
+  "quantization": "ternary QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 1,
+        "scope": "HydraMLP gate_up and down weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used in the bifurcated local-global recurrent LM.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Global branch uses grouped query attention.",
+        "parameters": {
+          "global_heads": 8,
+          "global_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "BigramHash",
+        "description": "Bigram additive logit priors are loaded as part of the model's prior biasing.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "TrigramHash",
+        "description": "Trigram CP priors are loaded as additive logit biases.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Bifurcated local-global recurrent language model with recurrent structure.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "HydraMLP uses an expanded MLP multiplier in the local branch.",
+        "parameters": {
+          "mlp_mult": 3.25
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "newton_schulz_steps": 5,
+          "safety_factor": 1.05,
+          "min_params": 32768,
+          "same_shape_batch": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "BitNet-1.58 ternary fake-quantization applied to HydraMLP gate_up and down projections",
+    "Buffered absmean ternary scaling persisted through export and restore for exact roundtrip behavior",
+    "Artifact size reduction from an int4 baseline to fit under the 16 MB cap",
+    "Ternary export format packing each group as int8 signs plus fp16 per-group scale",
+    "Bifurcated local-global recurrent LM with additive bigram and trigram priors"
+  ],
+  "artifact_size": "12,886,324 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

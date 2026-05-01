@@ -1,0 +1,103 @@
+{
+  "pr_number": 2063,
+  "title": "[Non-record] EBT - Energy-Based Transformer",
+  "author": "alexdwu13",
+  "status": "open",
+  "val_bpb": 1.21669,
+  "architecture": "Transformer",
+  "quantization": "int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "energy refinement loop",
+        "description": "Adds a learnable quadratic energy over the final hidden state and performs K analytic gradient-descent refinement steps before projecting to logits.",
+        "parameters": {
+          "K_train": 8,
+          "K_eval": 8,
+          "rank": 32
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_params": "A.weight"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "auxiliary_ce_on_h0": true,
+          "aux_loss_weight": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Optional Gaussian noise added to the initial hidden state during training.",
+        "parameters": {
+          "h0_noise_std": 0.05
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "post-training weights"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": 2048
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 1200
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Energy-Based Transformer variant with a learnable quadratic energy on the final hidden state",
+    "Closed-form analytic refinement steps using A^T A h + b instead of autograd-based inner optimization",
+    "Auxiliary CE on the initial hidden state to reduce collapse",
+    "Diagnostic evaluation of iso-step, compute-trade, and K_eval ablations",
+    "Identification of a DDP find_unused_parameters overhead trap that caused a false-positive baseline slowdown"
+  ],
+  "artifact_size": "16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
