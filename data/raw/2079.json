@@ -1,0 +1,12 @@
+{
+  "number": 2079,
+  "title": "NON-RECORD SUBMISSION ----- Text_diffusion_MDLM",
+  "author": "laox5",
+  "body": " MDLM Training Pipeline with Muon Optimizer\r\n-------------------------\r\nMasked Diffusion Language Models (MDLMs) generate text through an iterative denoising process that starts with a fully masked sequence and progressively unmask tokens in parallel until the complete sequence is restored.  Unlike autoregressive models that predict tokens sequentially, MDLMs use bidirectional attention to update all masked positions simultaneously at each step, allowing for mask-parallel decoding which can offer lower inference latency. \r\n\r\nUnlike standard autoregressive LLMs, this architecture uses bidirectional attention to iteratively denoise discrete tokens based on a continuous time-conditioning signal. \r\n Core Architecture Components \r\n----------------------------------------\r\n\r\n MDLM Backbone: A non-causal Transformer that processes masked sequences. The loss is computed exclusively on masked tokens, scaled dynamically by the diffusion timestep t.\r\n     Additive Time Conditioning: Time embeddings are injected additively into the residual stream before the RMSNorm of both Attention and MLP blocks (x + t_emb), allowing the network to modulate its behavior based on the noise level without the parameter overhead of Adaptive Layer Norm (AdaLN).\r\n     Grouped Query Attention (GQA): Implements separate projections for Query heads (num_heads=8) and Key/Value heads (num_kv_heads=4). KV pairs are internally expanded to match Q dimensions before F.scaled_dot_product_attention, reducing memory bandwidth and KV cache size during inference.\r\n     RoPE & FlashAttention: Incorporates Rotary Position Embeddings and routes attention through F.scaled_dot_product_attention (triggering H100 native FlashAttention-2) with is_causal=False.\r\n     Mixed-Precision Stability (CastedLinear): Custom linear layers that safely handle weights kept in FP32 while inputs are cast to BF16 under torch.autocast, ensuring numerical stability for the Muon optimizer's matrix orthogonalization.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-05-01T03:36:35Z",
+  "updated_at": "2026-05-01T03:36:35Z",
+  "submission_readme": null
+}

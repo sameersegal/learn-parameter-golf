@@ -1,0 +1,138 @@
+{
+  "pr_number": 2089,
+  "title": "[Non-Record 16MB] Int8 QAT 7L d512 + Sliding Window + N-gram Backoff + TTT",
+  "author": "AlirezaAlampour",
+  "status": "open",
+  "val_bpb": 1.20925098,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with 8 query heads and 4 KV heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP uses LeakyReLU squared activation.",
+        "parameters": {
+          "negative_slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "U-Net style encoder/decoder skip connections with learned skip weights.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "per-row weights and per-tensor vectors/scalars"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.997
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9382982028913158,
+        "other_params": null
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": 9
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Token-level 5-order n-gram backoff cache mixed with neural probabilities at evaluation time.",
+        "parameters": {
+          "max_order": 5,
+          "alpha": 0.2
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "steps": 1,
+          "target": "last block + ln_f per chunk"
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "Int8 per-row QAT with zlib-compressed artifact under the 16MB limit",
+    "Sliding window evaluation with stride 64",
+    "5-order n-gram backoff cache mixed at evaluation time",
+    "Score-first test-time training on the last block and ln_f per chunk",
+    "GQA-based 7-layer decoder-only transformer with U-Net skip connections"
+  ],
+  "artifact_size": "~15.5MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

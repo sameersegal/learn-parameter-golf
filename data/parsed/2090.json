@@ -1,0 +1,141 @@
+{
+  "pr_number": 2090,
+  "title": "[Non-record] Depth Recur + Randomized Linear Maps :: Parameter-efficient Repartitioning for Shared Modules",
+  "author": "SPThole",
+  "status": "open",
+  "val_bpb": 1.231,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Reuses 2 physical transformer blocks across 11 virtual layers in a U-Net encoder-decoder style shared architecture.",
+        "parameters": {
+          "virtual_layers": 11,
+          "physical_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Uses encoder-decoder skip connections with learned skip gates in the shared-block transformer.",
+        "parameters": {
+          "encoder_blocks": 1,
+          "decoder_blocks": 1
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Shares physical transformer blocks across multiple virtual depths, including ALBERT-style single-block reuse in the ablation.",
+        "parameters": {
+          "shared_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "PRISM-Adapt blends original and permuted Q/K activations with a learned gate.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applies rotary positional embeddings; repartition permutations are designed to be RoPE-safe.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "Brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adamw_used_for": "scalars/embeds"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 2048,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Per-virtual-layer Q/K activation repartitioning via deterministic channel permutations after projection, with a learned identity/permutation blend in PRISM-Adapt.",
+        "parameters": {
+          "virtual_layers": 11
+        }
+      }
+    }
+  ],
+  "compression": "Brotli",
+  "novel_contributions": [
+    "Depth recurrence with a 2-block shared U-Net transformer replacing 11 independent layers",
+    "Per-layer virtual diagonal adapters to recover depth specialization in shared modules",
+    "RoPE-safe Q/K activation repartitioning using deterministic per-virtual-layer channel permutations",
+    "Learned identity/permutation blending for Q/K activations that collapses to a static 50/50 mix",
+    "Ablation study showing PRISM-WO is the best shared-weight control and that raw random permutations hurt performance"
+  ],
+  "artifact_size": "5.07 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

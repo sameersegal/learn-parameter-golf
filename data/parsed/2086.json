@@ -1,0 +1,174 @@
+{
+  "pr_number": 2086,
+  "title": "Non-record: Quinary quantization + SP16384 + per-group lrzip + TTT - bpb 1.1384",
+  "author": "deniskurlov",
+  "status": "open",
+  "val_bpb": 1.1384,
+  "architecture": "Hybrid",
+  "quantization": "quinary QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": 5,
+        "scope": "quinary weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embedding with a 380->576 bottleneck and shared input/output embeddings.",
+        "parameters": {
+          "embed_bottleneck": "380->576",
+          "vocab_size": 16384
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Symmetric 10-layer U-Net with 5 encoder and 5 decoder layers.",
+        "parameters": {
+          "layers": 10,
+          "encoder_layers": 5,
+          "decoder_layers": 5,
+          "model_dim": 576
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with 6 query heads and 3 KV heads.",
+        "parameters": {
+          "query_heads": 6,
+          "kv_heads": 3,
+          "head_dim": 96
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "MLP uses relu squared activation with 4x expansion.",
+        "parameters": {
+          "mlp_mult": 4,
+          "hidden_dim": 2304
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "YaRN rotary positional encoding with extended context.",
+        "parameters": {
+          "base": 5000,
+          "max_len": 2048
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "type": "poly5",
+          "cap": 10
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.0,
+        "momentum": 0.95,
+        "other_params": {
+          "backend_steps": 3,
+          "momentum_warmup_start": 0.85,
+          "momentum_warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 16,
+          "train_seq_len": 1024
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "epochs": 3,
+          "learning_rate": 0.005,
+          "tokens": 32768
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": 1024
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.2,
+          "warmup_steps": 5
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "non-quantized linears"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int5/fp16",
+        "bits": 5,
+        "scope": "scales and quinary weights"
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "Quinary {-2,-1,0,+1,+2} weight quantization with base-5 packing",
+    "Layout-aware per-stream archive with LZMA-screened layout selection and lrzip-zpaq fallback",
+    "SP16384 SentencePiece tokenizer trained from scratch",
+    "5-bit log-delta scale quantization",
+    "Score-first TTT on fp16 calibration parameters only",
+    "Quinary adaptation of the ternary U-Net record with reduced model dimension and adjusted GQA/embedding bottleneck"
+  ],
+  "artifact_size": "15.72 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

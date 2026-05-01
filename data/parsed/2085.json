@@ -1,0 +1,190 @@
+{
+  "pr_number": 2085,
+  "title": "Create README for VRL Revival and Extended Muon Warmup",
+  "author": "umshahid",
+  "status": "open",
+  "val_bpb": 1.0857,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Value Residual",
+        "description": "Re-introduces value residual learning by injecting the first encoder block's value tensor into later blocks via learnable per-block lambdas.",
+        "parameters": {
+          "lambda_init": [
+            1.0,
+            0.0
+          ]
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.99,
+        "other_params": {
+          "muon_momentum_warmup_steps": 2000
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "linear_warmdown": 0.72
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses recurrent encoder/decoder layer reuse with an activated recurrence schedule.",
+        "parameters": {
+          "encoder": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            3,
+            4
+          ],
+          "decoder": [
+            5,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ],
+          "activated_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Adds skip gates / U-Net-style skip connections from later layers.",
+        "parameters": {
+          "from_layer": 7
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Applies partial rotary positional embeddings.",
+        "parameters": {
+          "rotary_fraction": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU activation in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Ties input embeddings and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "learning_rate": 0.005,
+          "momentum": 0.9,
+          "epochs": 3
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "token embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lzma",
+        "level": null
+      }
+    }
+  ],
+  "compression": "lzma",
+  "novel_contributions": [
+    "Re-introduced Value Residual Learning (VRL) on top of the bigbag PR #1493 stack",
+    "Extended Muon momentum warmup from 1500 to 2000 steps",
+    "Reported consistent BPB improvement from VRL and a smaller additional gain from longer momentum warmup",
+    "Documented reproduction steps and seed-wise results, including a near-limit artifact size case"
+  ],
+  "artifact_size": "~16.0 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

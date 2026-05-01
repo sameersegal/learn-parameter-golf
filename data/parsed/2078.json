@@ -1,0 +1,129 @@
+{
+  "pr_number": 2078,
+  "title": "Support: independent PR2014 prefix-2400 reproduction, seed 42 val_bpb 1.05804",
+  "author": "hi-aduek",
+  "status": "open",
+  "val_bpb": 1.05803761,
+  "architecture": "Transformer",
+  "quantization": "int6",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int6",
+        "bits": 6,
+        "scope": "model + code artifact"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001,
+          "local_lr_mult": 0.75,
+          "mask": "no_qv",
+          "num_phases": 1,
+          "prefix_docs": 2400
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1536
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses SmearGate in the attention stack.",
+        "parameters": {
+          "enabled": true,
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses gated attention with quantized gate.",
+        "parameters": {
+          "quant_gate": 1,
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings / weight tying.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses CaseOps SP8192 training shards and a phased TTT prefix budget reproduction of PR #2014.",
+        "parameters": {
+          "caseops_enabled": 1,
+          "vocab_size": 8192,
+          "phased_ttt_prefix_docs": 2400,
+          "phased_ttt_num_phases": 1
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    }
+  ],
+  "compression": "custom",
+  "novel_contributions": [
+    "Independent seed-42 reproduction/support package for PR #2014",
+    "Uses a reduced phased-TTT prefix budget of 2400 docs to stay under the 600s eval cap",
+    "Reports full validation coverage with val_tokens equal to target_tokens",
+    "Provides a compliant support run for the PR #2014 frontier line rather than a new three-seed architecture claim"
+  ],
+  "artifact_size": "15,989,499 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,127 @@
+{
+  "pr_number": 2084,
+  "title": "Non-record: k-XSA (k=2) rank-2 subspace XSA with energy cap",
+  "author": "ShadowNinja10",
+  "status": "open",
+  "val_bpb": 1.1093,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Rank-2 exclusive self-attention using an anchored subspace basis [v, W x] with orthogonal projection and per-head scaling.",
+        "parameters": {
+          "rank": 2,
+          "basis": "v+x",
+          "target": "attn"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Energy-cap variant that soft-thresholds each projection coefficient with learned per-head, per-rank thresholds.",
+        "parameters": {
+          "energy_cap": 1,
+          "threshold_init": 0.0
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": 0.0,
+        "momentum": null,
+        "other_params": {
+          "used_for": "xsa alpha/threshold parameters",
+          "lr": 0.02
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "matrix parameters"
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "AdamW",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "used_for": "embeddings"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Generalization of paper-XSA from rank-1 to rank-2 orthogonal projection in a learned subspace.",
+    "Anchored basis design using [v, W x] to preserve the original XSA direction while adding a learned direction.",
+    "Per-direction energy capping via learned soft-thresholding of projection coefficients.",
+    "Identification and fix of the hidden weight-decay confound on learnable XSA alpha parameters.",
+    "Observation that energy capping makes the added basis projection matrix essentially free to int6-quantize.",
+    "Reported improvement over paper-XSA in both pre-quantized and quantized validation bpb."
+  ],
+  "artifact_size": "16.68 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
