@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Flearn\u002F[slug]","\u002Fpr\u002F[id]","\u002Ftechniques\u002F[category]\u002F[method]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
