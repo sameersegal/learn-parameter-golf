@@ -1,0 +1,172 @@
+{
+  "pr_number": 2132,
+  "title": "Record candidate: PR #2014 base + GPTQ_CALIBRATION_BATCHES=32",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.05759,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int7",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7/int8",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses rotary position embeddings on a subset of dimensions.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 with recurrence enabled partway through training.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses BOS-fixed SmearGate in the attention stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Uses sparse attention gating with a quantized gate.",
+        "parameters": {
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "matrix_lr": 0.026,
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1536
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001,
+          "local_lr_mult": 0.75
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "pergroup",
+        "level": null
+      }
+    }
+  ],
+  "compression": "pergroup",
+  "novel_contributions": [
+    "Increased GPTQ calibration batches from 16 to 32 while keeping the PR #2014 stack otherwise unchanged.",
+    "Ablation-style comparison against PR #2014 to isolate the effect of denser GPTQ Hessian calibration.",
+    "Full validation coverage with val_tokens matching target_tokens across all seeds."
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

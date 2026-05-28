@@ -1,0 +1,141 @@
+{
+  "pr_number": 2109,
+  "title": "Track 2: PR #1855 + MP3 marker-pair fusion + alias smear boundary (val_bpb 1.05917838, 3-seed avg)",
+  "author": "izlley",
+  "status": "open",
+  "val_bpb": 1.05917838,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int7/int8",
+        "bits": null,
+        "scope": "embeddings and attention gate"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Disables previous-position smear immediately after alias tokens via an alias boundary mask.",
+        "parameters": {
+          "alias_prev_smear_scale": 0.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "SparseAttnGate / attention gating used in the inherited stack.",
+        "parameters": {
+          "scale": 0.5,
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Inherited XSA-based architecture from PR #1855.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Not explicitly stated as used; null not included."
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "full TTT",
+        "parameters": {
+          "phased": true,
+          "chunk_size": 48,
+          "lora_rank": 80
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "lrzip+brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85,
+          "warmup_steps": 20
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.5,
+        "momentum": 0.9,
+        "other_params": {
+          "beta2": 0.99
+        }
+      }
+    },
+    {
+      "category": "initialization",
+      "data": {
+        "method": "resid mix",
+        "description": "Alias rows are warm-initialized as a weighted composite of constituent marker embeddings."
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "MP3 marker-pair fusion: fuses [\u2581, TITLE], [\u2581, ALLCAPS], and [\u2581, CAPNEXT] into alias donor tokens to reduce token count.",
+        "parameters": {
+          "token_saving_percent": 8.47
+        }
+      }
+    }
+  ],
+  "compression": "lrzip+brotli",
+  "novel_contributions": [
+    "MP3 marker-pair fusion that merges three frequent marker bigrams into alias donor tokens",
+    "Alias smear boundary that turns off SmearGate's previous-position contribution immediately after alias tokens",
+    "Warm-initialization of alias rows from constituent marker embeddings",
+    "Token-stream reduction of 8.47% while preserving the downstream word boundary signal",
+    "Extension of the PR #1855 stack with phased TTT and alias-aware evaluation/training handling"
+  ],
+  "artifact_size": "15,907,150 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

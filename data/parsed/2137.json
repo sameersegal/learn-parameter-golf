@@ -1,0 +1,115 @@
+{
+  "pr_number": 2137,
+  "title": "Non-record: notes on the recurrence band (mixing parameters, MLP sizing, loop sizing)",
+  "author": "leon2k2k2k",
+  "status": "open",
+  "val_bpb": 1.06358,
+  "architecture": "Transformer",
+  "quantization": null,
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses a recurrent loop band over layers 3-5 with repeated passes through the same block stack.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "NL": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Learns and then freezes recurrent alpha-beta mixing coefficients for the loop band, including cross-layer carries.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Uses frozen Anderson acceleration coefficients as a fixed-coefficient extrapolation over the last three iterates.",
+        "parameters": {
+          "m": 3
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Reallocates FFN width across early, middle, and late stages to widen the loop band while keeping total parameters fixed.",
+        "parameters": {
+          "early_layers": [
+            0,
+            1,
+            2
+          ],
+          "middle_layers": [
+            3,
+            4,
+            5
+          ],
+          "late_layers": [
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Varies the loop band set and number of loop visits per forward pass to study band sizing.",
+        "parameters": {
+          "band_set": [
+            3,
+            4,
+            5
+          ],
+          "NL": [
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Learned recurrent alpha-beta mixing in the loop band and then froze the converged coefficients for a fresh run.",
+    "Applied frozen Anderson acceleration coefficients to remove per-batch least-squares overhead.",
+    "Explored FFN width reallocation across early, middle, and late stages while keeping total parameters fixed.",
+    "Screened loop-band size and repetition count, showing the canonical {3,4,5} NL=2 configuration is locally optimal in the tested range.",
+    "Observed that the loop band is not obviously starved for FFN capacity at the uniform baseline."
+  ],
+  "artifact_size": "16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

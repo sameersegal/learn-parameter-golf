@@ -1,0 +1,188 @@
+{
+  "pr_number": 2101,
+  "title": "Record: AWQ-lite + AsymLogit + GradCentral + ... val_bpb=1.05845",
+  "author": "OnlyJundong",
+  "status": "open",
+  "val_bpb": 1.05845,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6/7-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": null,
+        "scope": "tok_emb.weight"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "top-K salient groups"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Attention gating mechanism with BOS fix",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applied across all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers are looped multiple times during forward pass",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings",
+        "parameters": {
+          "dimensions": [
+            16,
+            64
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "MLP activation choice",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse/gated attention variants used in the model",
+        "parameters": null
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "backend_steps": 5,
+          "grad_centralize": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "prefix_docs": 2500,
+          "num_phases": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "chunk_size": 48,
+          "lora_rank": 80
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "label_smooth": 0.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "softcap": 30.0,
+          "asymmetric_eval": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli/lrzip",
+  "novel_contributions": [
+    "AWQ-lite integration on top of PR #1855",
+    "AsymLogit integration with separate positive and negative softcap parameters",
+    "Gradient centralization added as an optional Muon optimizer feature",
+    "Label smoothing added as an optional training regularizer",
+    "Extended eval-time support via configurable phased TTT prefix docs and number of phases"
+  ],
+  "artifact_size": "~15.98 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

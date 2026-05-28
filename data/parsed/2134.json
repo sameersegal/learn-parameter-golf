@@ -1,0 +1,175 @@
+{
+  "pr_number": 2134,
+  "title": "Record candidate: PR #2130 base + GATE_WINDOW=8",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.0567,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed SmearGate with SparseAttnGate; submission changes SparseAttnGate window from 12 to 8.",
+        "parameters": {
+          "gate_window": 8,
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped recurrently.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention gating used in the model.",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "lr": 0.028,
+          "matrix_params": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "embedding_and_scalars": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER",
+        "bits": 4,
+        "scope": "asymmetric rank-4"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 8e-05,
+          "beta2": 0.99,
+          "weight_decay": 2.0,
+          "phases": 1,
+          "prefix_docs": 2500,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asym_logit_rescale": true,
+          "init": 30.0
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2560
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Reduced SparseAttnGate window from 12 to 8 as the only change versus PR #2130.",
+    "Direct ablation of GATE_WINDOW on the PR #2130 stack while keeping the rest of the training and inference pipeline identical.",
+    "Full validation coverage on the target validation shard with per-seed logs."
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

@@ -1,0 +1,88 @@
+{
+  "pr_number": 2112,
+  "title": "Non record: In DRAM compute quantized ternary + int4",
+  "author": "fingoldin",
+  "status": "open",
+  "val_bpb": 1.2268,
+  "architecture": "Transformer",
+  "quantization": "ternary + int4",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "STE QAT",
+        "bits": null,
+        "scope": "Q/K/V/MLP weights and K/V activations"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "ternary + offset",
+        "bits": 2,
+        "scope": "Q/K/V/MLP weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int4",
+        "bits": 4,
+        "scope": "Key and Value activations"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Uses tied embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped-query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth",
+        "description": "Widens and deepens the model for ternary packing efficiency.",
+        "parameters": {
+          "layers": 10,
+          "model_dim": 1024,
+          "mlp_mult": 2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Custom BitLinear module for blockwise ternary quantization with offsets in 128-element blocks.",
+        "parameters": {
+          "block_size": 128
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Optimizes a GPT-like Transformer for in-DRAM inference on unmodified DDR4 using RowCopy and MAJ3 primitives.",
+    "Applies ternary-plus-offset blockwise quantization to Q/K/V/MLP weights.",
+    "Quantizes key and value activations to int4 with per-block offsets and scalings.",
+    "Uses STE-based quantization-aware training.",
+    "Scales the model to 10 layers and 1024 hidden dimension while keeping attention and FFN in 4-bit arithmetic.",
+    "Targets lower energy and latency for in-DRAM matrix-vector operations."
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

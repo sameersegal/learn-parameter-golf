@@ -1,0 +1,190 @@
+{
+  "pr_number": 2131,
+  "title": "Record candidate: PR #2014 base + GATE_WINDOW=8",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.05759,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed smear gate used in the attention stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention gate with a configurable recent-token window.",
+        "parameters": {
+          "gate_window": 8,
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped with recurrence enabled partway through training.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Parallel decoder",
+        "description": "Parallel lane begins at layer 8 and final lane is averaged.",
+        "parameters": {
+          "start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int7",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "model weights"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "matrix_lr": 0.026,
+          "min_lr": 0.1
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "pergroup",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1536
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001,
+          "local_lr_mult": 0.75,
+          "mask": "no_qv",
+          "short_score_first": true,
+          "short_doc_len": 2000,
+          "short_chunk_size": 24,
+          "prefix_docs": 2500,
+          "num_phases": 1
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    }
+  ],
+  "compression": "pergroup",
+  "novel_contributions": [
+    "Changes only GATE_WINDOW from 12 to 8 relative to PR #2014.",
+    "Keeps the PR #2014 stack otherwise byte-for-byte identical for a clean ablation.",
+    "Uses full validation coverage with val_tokens matching target_tokens in all reported seeds.",
+    "Applies score-first short-doc phased LoRA TTT on the CaseOps/SP8192 stack."
+  ],
+  "artifact_size": "<=16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

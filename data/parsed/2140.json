@@ -1,0 +1,107 @@
+{
+  "pr_number": 2140,
+  "title": "Record: PR #2014 stack + LeakyReLU 0.3 + strict in-timer n-gram TTT (val_bpb 1.0560)",
+  "author": "simon-marcus",
+  "status": "open",
+  "val_bpb": 1.05601155,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 8-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU-square MLP path with slope 0.3 instead of 0.5.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001,
+          "chunk_size": 64,
+          "short_chunk_size": 32,
+          "prefix_docs": 2500,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Strict in-timer causal online n-gram tilt applied during TTT evaluation, with hint precomputation inside the measured eval timer.",
+        "parameters": {
+          "ngram_tilt_enabled": true,
+          "hint_precompute_outside": 0,
+          "token_order": 16,
+          "word_order": 4
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "weight_decay": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asym_logit_rescale": 1
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "pergroup"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "pergroup",
+        "level": null
+      }
+    }
+  ],
+  "compression": "pergroup",
+  "novel_contributions": [
+    "LeakyReLU-square slope changed from 0.5 to 0.3.",
+    "Strict in-timer online n-gram tilt during TTT evaluation.",
+    "Causal n-gram hint generation performed inside the measured eval timer.",
+    "PR #2014 stack combined with larger TTT chunks to fit hinting and scoring within the 600s eval budget."
+  ],
+  "artifact_size": "15,997,965 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

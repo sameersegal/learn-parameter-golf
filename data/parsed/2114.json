@@ -1,0 +1,149 @@
+{
+  "pr_number": 2114,
+  "title": "Non-record: UT7 delta-residual + RLMA-rank320 \u2014 documented failed direction (val_bpb 1.29740, 2-seed 1xH100)",
+  "author": "Sacmaj",
+  "status": "open",
+  "val_bpb": 1.29740352,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 8-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Universal Transformer with a shared recurrent block unrolled for K iterations, plus unique input and output blocks.",
+        "parameters": {
+          "K_iters": 6
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "num_heads": 8,
+          "num_kv_heads": 4,
+          "head_dim": 128
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP3x",
+        "description": "Feed-forward dimension is 3x the model dimension.",
+        "parameters": {
+          "model_dim": 1024,
+          "d_ff": 3072
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RLMA",
+        "description": "Low-rank adapter matrices over deterministic random bases, regenerated per layer/iteration.",
+        "parameters": {
+          "adapter_rank": 320
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "residual delta",
+        "description": "Shared block uses additive delta residual update instead of state contraction.",
+        "parameters": {
+          "branch_scale_init": 0.6
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "adapter matrices and embeddings"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": 22
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "rank": 288
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 8192,
+        "eval_length": 8192
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_iters": 600
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "gradient clipping",
+        "parameters": {
+          "norm": 0.2
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Deterministic random-base adapters regenerate a random projection from a hash of layer name and iteration index, reducing stored parameters.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "zstd-22",
+  "novel_contributions": [
+    "Documented failed UT + RLMA direction with reusable negative results rather than a competitive record submission",
+    "Delta-residual update on the shared Universal Transformer block improved optimization versus recurrent state contraction",
+    "Direct ablation showed in-model TTT was slower and worse at this scale, so it was removed",
+    "Warmdown schedule bug was diagnosed and fixed so LR decay engages even when iteration cap binds first",
+    "Cap-hardening sweep selected a GPTQ clipping threshold that balanced artifact size and validation performance"
+  ],
+  "artifact_size": "15,842,747 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

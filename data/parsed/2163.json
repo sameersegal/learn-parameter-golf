@@ -1,0 +1,260 @@
+{
+  "pr_number": 2163,
+  "title": "Record: SP8192 + NEFTune + Z-Loss + Phased-TTT (4 phases, prefix=3000, LoRA-128) \u2014 val_bpb 1.06035 (3-seed mean)",
+  "author": "uniagent-alpha",
+  "status": "open",
+  "val_bpb": 1.06035,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied to all layers",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder skip connections with skip gates",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "parallel residuals",
+        "description": "Two-lane parallel residual path from later layers with learned lane mixing",
+        "parameters": {
+          "start_layer": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings combined with YaRN",
+        "parameters": {
+          "dimensions": 16,
+          "total_dimensions": 64
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU squared MLP activation",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed position-mixing gate with not-BOS masking",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention head-output gate",
+        "parameters": {
+          "gate_window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 multiple times once a fraction threshold is reached",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "repeats": 3,
+          "threshold_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "KV head count",
+        "description": "Grouped-query attention with fewer KV heads than attention heads",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "logit softcap",
+        "description": "Softcapped logits used in training",
+        "parameters": {
+          "value": 30
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int7/int8",
+        "bits": 7,
+        "scope": "embeddings and attention gates"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER",
+        "bits": 4,
+        "scope": "top-3 tensors"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta1": 0.9,
+          "beta2": 0.99,
+          "scope": "tied embeddings and scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "pergroup",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "Phased TTT",
+        "parameters": {
+          "rank": 128,
+          "prefix_docs": 3000,
+          "num_phases": 4,
+          "per_doc_reset": true,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": {
+          "scale": "1/sqrt(layer+1)"
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "NEFTune",
+        "parameters": {
+          "alpha": 5.0,
+          "training_only": true,
+          "disabled_during_ttt": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "z-loss",
+        "parameters": {
+          "weight": 0.0001
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_steps": 20,
+          "warmdown_frac": 0.85,
+          "min_lr": 0.1
+        }
+      }
+    }
+  ],
+  "compression": "pergroup",
+  "novel_contributions": [
+    "NEFTune embedding noise added during training and disabled during phased TTT",
+    "Z-loss regularization using fused softcapped-CE log-sum-exp output",
+    "Phased TTT retune with LoRA rank increased to 128, prefix length increased to 3000 docs, and phases increased to 4",
+    "Combined GPTQ int6, int7 embeddings, int8 attention-gate quantization, and LQER rank-4 correction under the 16 MB cap"
+  ],
+  "artifact_size": "15.16 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

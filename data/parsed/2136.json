@@ -1,0 +1,177 @@
+{
+  "pr_number": 2136,
+  "title": "Record candidate: PR #2130 base + GATE_WINDOW=8 + GPTQ_CALIBRATION_BATCHES=32",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.0567,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Sparse attention gating with a fixed BOS smear gate and sparse attention gate.",
+        "parameters": {
+          "scale": 0.5,
+          "gate_window": 8
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Cross/self-attention style architectural component applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary position embeddings applied partially.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped recurrently.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention with fewer KV heads than query heads.",
+        "parameters": {
+          "query_heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "matrix_lr": 0.028,
+          "beta2": 0.99,
+          "adam_on_embeddings_and_scalars": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int7",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "LQER asymmetric rank-4",
+        "bits": null,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 8e-05,
+          "beta2": 0.99,
+          "weight_decay": 2.0,
+          "num_phases": 1,
+          "prefix_docs": 2500,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "method": "AsymLogit Rescale",
+          "init": 30.0,
+          "global_ttt": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Token-only n-gram tilt with strictly causal token channel enabled and within-word/word-start channels disabled.",
+        "parameters": {
+          "token_order": 16,
+          "token_threshold": 0.8,
+          "token_boost": 2.625
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": null,
+        "eval_length": 2560
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 2.0
+        }
+      }
+    }
+  ],
+  "compression": null,
+  "novel_contributions": [
+    "Reduced GATE_WINDOW from 12 to 8",
+    "Increased GPTQ_CALIBRATION_BATCHES from 16 to 32",
+    "Isolated two-knob ablation on top of the PR #2130 stack"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

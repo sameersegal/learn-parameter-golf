@@ -1,0 +1,189 @@
+{
+  "pr_number": 2159,
+  "title": "Swiglu gating_ QAT_Residual Attention Scalin _EMA- Sliding window_Optimizations  for 10min/16MB Track",
+  "author": "visin109",
+  "status": "open",
+  "val_bpb": 1.599,
+  "architecture": "Transformer",
+  "quantization": "int8 QAT",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": 8,
+        "scope": "all linear weights"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SwiGLU",
+        "description": "Replaced standard ReLU\u00b2 MLP with a gated SwiGLU-style MLP.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "residual mixing",
+        "description": "Learnable blending between current activation and skip input.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "attention scaling",
+        "description": "Learnable per-head query scaling factor q_gain.",
+        "parameters": {
+          "num_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "per-channel residual scaling",
+        "description": "Learnable per-channel scaling for attention and MLP outputs.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.99995
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_step": 840
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.85,
+        "other_params": {
+          "momentum_end": 0.95,
+          "warmup_steps": 500
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Adam",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "parameter_groups": [
+            "embeddings",
+            "scalar/vector params",
+            "LM head"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Used grouped query attention for efficiency.",
+        "parameters": {
+          "num_heads": 4,
+          "num_kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "RoPE",
+        "description": "Applied rotary positional embeddings to queries and keys.",
+        "parameters": {
+          "base": 10000.0
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "U-Net skip connections",
+        "description": "Encoder-decoder style skip reuse across layers.",
+        "parameters": {
+          "layers": 8,
+          "encoder_layers": 4,
+          "decoder_layers": 4
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zlib",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride_fraction": 0.25
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmup_iters": 20,
+          "warmdown_iters": 700
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 128,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    }
+  ],
+  "compression": "zlib",
+  "novel_contributions": [
+    "STE-based quantization-aware training for int8 export",
+    "SwiGLU gated MLP replacement",
+    "Learnable residual mixing and per-channel residual scaling",
+    "Learnable per-head attention query scaling",
+    "EMA plus SWA stabilization",
+    "Muon and Adam multi-optimizer parameter grouping",
+    "Encoder-decoder style skip connection reuse",
+    "Sliding-window validation for BPB estimation",
+    "Per-row/per-tensor int8 export with percentile clipping and small-tensor FP16 passthrough"
+  ],
+  "artifact_size": "7.3 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

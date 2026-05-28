@@ -1,0 +1,221 @@
+{
+  "pr_number": 2097,
+  "title": "record: AWQ-lite + AsymLogit + GradCentr + LabSmooth - 1.05846 BPB",
+  "author": "OnlyJundong",
+  "status": "closed",
+  "val_bpb": 1.05846,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 6/7-bit",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied embeddings are used in the base architecture.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate attention is used with a windowed gate mechanism.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA is applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped twice during the forward pass.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "loops": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary position embeddings are used.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation is used in the MLP.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "ReLU\u00b2",
+        "description": "Squared ReLU-style MLP activation is used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse/gated attention mechanisms are used.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7/int8",
+        "bits": null,
+        "scope": "tok_emb.weight"
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": 0.9,
+        "other_params": {
+          "backend_steps": 5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "label smoothing",
+        "parameters": {
+          "label_smooth": 0.0
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0,
+          "asymmetric_eval": true
+        }
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "long context eval",
+        "parameters": {
+          "prefix_docs": 2500,
+          "num_phases": 3
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3,
+          "chunk_size": 48,
+          "lora_rank": 80
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "ttt_weight_decay": 0.5
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "AWQ-lite protects the most salient column groups at int8 precision.",
+        "parameters": {
+          "enabled": true,
+          "group_top_k": 1
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "AsymLogit replaces a single logit softcap with separate positive and negative learnable softcaps on the eval path.",
+        "parameters": {
+          "enabled": true
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Gradient centralization subtracts the row mean from gradients inside Muon before the Newton-Schulz step.",
+        "parameters": {
+          "enabled": false
+        }
+      }
+    }
+  ],
+  "compression": "brotli/lrzip",
+  "novel_contributions": [
+    "AWQ-lite integration",
+    "AsymLogit integration",
+    "Gradient centralization support in Muon",
+    "Label smoothing support in training",
+    "Longer eval time support via configurable phased TTT prefix docs and phases"
+  ],
+  "artifact_size": "~15.98 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

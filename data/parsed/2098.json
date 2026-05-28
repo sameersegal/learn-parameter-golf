@@ -1,0 +1,117 @@
+{
+  "pr_number": 2098,
+  "title": "Record: PR #1873 base + tuned PPM gate (T=0.7/H=0.99/L=0.3) \u2014 val_bpb 0.80051 (3-seed mean)",
+  "author": "joshuaswanson",
+  "status": "open",
+  "val_bpb": 0.80050966,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attention/MLP; embeddings int8"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied token embeddings",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Partial rotary positional embeddings",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Encoder/decoder layer recurrence with repeated layer loops",
+        "parameters": {
+          "encoder": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            3,
+            4
+          ],
+          "decoder": [
+            5,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "LeakyReLU activation with squared variant mentioned in the inherited stack",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "layerwise LN scale",
+        "parameters": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "TTT",
+        "parameters": {
+          "learning_rate": 0.008,
+          "epochs": 4
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Causal byte-level PPM-D mixture with tuned confidence gate over NN and PPM log-probabilities",
+        "parameters": {
+          "PPM_C": 0.7,
+          "PPM_LHI": 0.99,
+          "PPM_LLO": 0.3,
+          "PPM_ORDER": 5
+        }
+      }
+    }
+  ],
+  "compression": "brotli-11 + lzma",
+  "novel_contributions": [
+    "Offline sweep of PPM gate hyperparameters on dumped NN distribution",
+    "Improved causal PPM-D gate settings: PPM_C=0.7, PPM_LHI=0.99, PPM_LLO=0.3",
+    "Direct lineage from PR #1873 with byte-identical training pipeline and only runtime hyperparameter changes",
+    "3-seed mean validation improvement from 0.82006 to 0.80051"
+  ],
+  "artifact_size": "<16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

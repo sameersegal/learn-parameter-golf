@@ -1,0 +1,133 @@
+{
+  "pr_number": 2164,
+  "title": "Submission: Asymmetric Logit Rescale + cap-fit bit allocation (PR #2140 fork) [draft, pending 8\u00d7H100]",
+  "author": "vimeto",
+  "status": "open",
+  "val_bpb": 1.0554,
+  "architecture": "Transformer",
+  "quantization": "GPTQ 7-bit",
+  "optimizer": "AdamW",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "Uses sparse attention gating and related attention-path modifications in the PR #2140 lineage.",
+        "parameters": {
+          "enabled": 1,
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses leaky ReLU activation in the model.",
+        "parameters": {
+          "slope": 0.3
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "asymmetric": true,
+          "learnable_scalars": [
+            "softcap_pos",
+            "softcap_neg"
+          ]
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrix/block weights"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7/int8",
+        "bits": null,
+        "scope": "mixed"
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1536
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Asymmetric logit rescale with separate positive/negative softcap parameters.",
+        "parameters": {
+          "enabled": 1
+        }
+      }
+    }
+  ],
+  "compression": "brotli fallback",
+  "novel_contributions": [
+    "Asymmetric logit rescale with separate softcap_pos and softcap_neg scalars",
+    "Cap-fit bit allocation by changing EMBED_BITS to 7 and MLP_CLIP_SIGMAS to 11.5",
+    "GPTQ calibration batch increase from 16 to 32",
+    "GPTQ reserve time reduction from 4.0 to 2.0 seconds",
+    "Port of PR #2140 with H100-targeted cap-compliance adjustments"
+  ],
+  "artifact_size": "17.20 MB",
+  "prompt_version": "v2",
+  "is_record": false
+}

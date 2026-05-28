@@ -1,0 +1,169 @@
+{
+  "pr_number": 2116,
+  "title": "Non-record: Inhibitory layer on PR #1851 stack (val_bpb 1.06438)",
+  "author": "cloud-777-boy",
+  "status": "open",
+  "val_bpb": 1.06438,
+  "architecture": "Transformer",
+  "quantization": "row-int8",
+  "optimizer": null,
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "inhibitory layers",
+        "description": "Low-rank gating mechanism applied to attention and MLP residual paths to provide a subtractive primitive.",
+        "parameters": {
+          "rank": 22,
+          "paths": [
+            "attention residual",
+            "MLP residual"
+          ]
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Base stack uses LeakyReLU squared MLP activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Rotary positional embedding applied to a subset of dimensions.",
+        "parameters": {
+          "dimensions": "16/64"
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Some layers are looped multiple times in the stack.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "loops": 2,
+          "activated_at_frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input embeddings and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "XSA applied across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "SmearGate used in the model stack.",
+        "parameters": {
+          "window": 12
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Grouped-query attention configuration in the base stack.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "MLP",
+        "description": "Expanded MLP width in the transformer block.",
+        "parameters": {
+          "multiplier": 4
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "logit softcap",
+        "parameters": {
+          "value": 30.0
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "int8",
+        "bits": 8,
+        "scope": "inhibitor weights"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "phases": 3
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Biologically inspired inhibitory primitive motivated by cortical inhibitory interneurons and the fly mushroom body APL neuron.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Introduces inhibitory layers as a subtractive primitive for transformer residual streams",
+    "Applies low-rank sigmoid gates to both attention and MLP residual paths",
+    "Uses a 0.95 sigmoid initialization to avoid saturated, weak-gradient gates",
+    "Serializes inhibitor weights as row-int8 to fit under the 16MB artifact limit",
+    "Builds on the PR #1851 stack and combines with phased post-TTT"
+  ],
+  "artifact_size": "15,996,198 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

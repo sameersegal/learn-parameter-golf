@@ -1,0 +1,150 @@
+{
+  "pr_number": 2106,
+  "title": "Record: SP8192+DepthRec+Half batch SWA+Polar NS+Phased LoRa TTT - val_bpb 1.089 (best), val_bpb 1.090 (3-seed mean) - PiyushDatta",
+  "author": "PiyushDatta",
+  "status": "open",
+  "val_bpb": 1.08934733,
+  "architecture": "Transformer",
+  "quantization": "int6/int8 GPTQ",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Layers 3-5 are looped once, giving 14 effective passes from 11 unique layers.",
+        "parameters": {
+          "layers": [
+            3,
+            4,
+            5
+          ],
+          "passes": 14
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "LeakyReLU",
+        "description": "Uses LeakyReLU(0.5)^2 as the MLP activation.",
+        "parameters": {
+          "slope": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with fewer KV heads than attention heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int8",
+        "bits": null,
+        "scope": "weights and embeddings"
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": {
+          "start_scale": 0.12,
+          "frequency": "every step"
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "brotli",
+        "level": null
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "phased": true,
+          "score_first": true
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.095,
+        "momentum": 0.95,
+        "other_params": {
+          "matrix_lr": 0.028,
+          "embed_wd": 0.085,
+          "embed_optimizer": "AdamW"
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_fraction": 0.72
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 393216,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses SP8192 tokenizer with an 8x larger vocabulary than the SP1024 baseline.",
+        "parameters": {
+          "vocab_size": 8192
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses Polar Express Newton-Schulz coefficients for the Muon optimizer.",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "brotli",
+  "novel_contributions": [
+    "Multi-trajectory SWA with independent per-rank warmdown trajectories and cross-rank averaging",
+    "Scale tuning post-GPTQ by freezing int weights and fine-tuning only per-row scales",
+    "Two-pass GPTQ with Hessian recollection on the quantized model",
+    "Selective training-time 2:4 sparsity pruning on MLP weights",
+    "SP8192 tokenizer with GPTQ embeddings and SDClip-style quantization",
+    "Depth recurrence in layers 3-5",
+    "Polar Express Newton-Schulz optimizer coefficients",
+    "Phased LoRA test-time training"
+  ],
+  "artifact_size": "15,999,684 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

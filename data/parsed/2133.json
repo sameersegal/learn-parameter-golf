@@ -1,0 +1,190 @@
+{
+  "pr_number": 2133,
+  "title": "Record candidate: PR #2014 base + GATE_WINDOW=8 + GPTQ_CALIBRATION_BATCHES=32",
+  "author": "codemath3000",
+  "status": "open",
+  "val_bpb": 1.05759,
+  "architecture": "Transformer",
+  "quantization": "GPTQ int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Partial RoPE",
+        "description": "Uses partial rotary positional embeddings.",
+        "parameters": {
+          "dimensions": 16
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Loops layers 3-5 with recurrence enabled partway through training.",
+        "parameters": {
+          "layers": [
+            3,
+            5
+          ],
+          "frac": 0.35
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed SmearGate used in the attention stack.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse attention gating with a fixed window over recent tokens.",
+        "parameters": {
+          "window": 8,
+          "scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "XSA",
+        "description": "Applies XSA across all layers.",
+        "parameters": {
+          "layers": 11
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": 0.5,
+        "momentum": null,
+        "other_params": {
+          "beta2": 0.99,
+          "adam_on": "embedding/scalars"
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "matrices"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 7,
+        "scope": "embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7",
+        "bits": null,
+        "scope": "weights + embeddings"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ-lite",
+        "bits": 8,
+        "scope": "AWQ-lite group quant"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "QAT",
+        "bits": null,
+        "scope": "TTT quantized phased LoRA"
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "score-first TTT",
+        "parameters": {
+          "rank": 80,
+          "learning_rate": 0.0001,
+          "local_lr_mult": 0.75,
+          "mask": "no_qv",
+          "batch_size": 24,
+          "chunk_size": 48
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 3072,
+        "eval_length": 3072
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "stride-based eval",
+        "parameters": {
+          "stride": 1536
+        }
+      }
+    },
+    {
+      "category": "lr_schedule",
+      "data": {
+        "method": "warmdown",
+        "parameters": {
+          "warmdown_frac": 0.85
+        }
+      }
+    },
+    {
+      "category": "regularization",
+      "data": {
+        "method": "weight decay",
+        "parameters": {
+          "value": 0.5
+        }
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "custom",
+        "level": null
+      }
+    }
+  ],
+  "compression": "pergroup (lrzip+brotli)",
+  "novel_contributions": [
+    "Reduced SparseAttnGate window from 12 to 8",
+    "Increased GPTQ calibration batches from 16 to 32",
+    "Kept the PR #2014 stack otherwise unchanged for a clean ablation"
+  ],
+  "artifact_size": null,
+  "prompt_version": "v2",
+  "is_record": false
+}

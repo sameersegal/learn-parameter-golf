@@ -1,0 +1,110 @@
+{
+  "pr_number": 2128,
+  "title": "Non-record: Post-Quantization LoRA Distillation (LCQ) on PR #1855 stack, val_bpb=1.06767",
+  "author": "okezue",
+  "status": "open",
+  "val_bpb": 1.06767,
+  "architecture": "Transformer",
+  "quantization": "GPTQ mixed int6/int7",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "EMA",
+        "parameters": {
+          "decay": 0.9965
+        }
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 6,
+        "scope": "attn/MLP; embeddings int7"
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "mixed int6/int7",
+        "bits": null,
+        "scope": "attn/MLP int6, embeddings int7"
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "SmearGate",
+        "description": "BOS-fixed smear gate used in the base stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "Gated Attention",
+        "description": "Sparse/gated attention path in the base stack",
+        "parameters": {
+          "gate_scale": 0.5
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "depth recurrence",
+        "description": "Depth recurrence / TTT-style infrastructure in the base stack",
+        "parameters": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride": 64
+        }
+      }
+    },
+    {
+      "category": "test_time_training",
+      "data": {
+        "method": "LoRA TTT",
+        "parameters": {
+          "rank": 4,
+          "learning_rate": 0.001
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Post-quantization LoRA distillation (LCQ) using KL divergence against pre-quantization BF16 teacher logits on TRAIN data only",
+        "parameters": {
+          "rank": 4,
+          "time_s": 60
+        }
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "cu_seqlens-aware variable-length attention dispatch for LoRA-augmented evaluation",
+        "parameters": null
+      }
+    }
+  ],
+  "compression": "lrzip",
+  "novel_contributions": [
+    "Post-Quantization LoRA Distillation (LCQ) after GPTQ quantization",
+    "KL distillation of a rank-4 LoRA against pre-quantization BF16 teacher logits on TRAIN data only",
+    "cu_seqlens-aware variable-length attention support for LoRA-augmented sliding-window evaluation",
+    "Keeping the trained LoRA in memory across the train-to-eval boundary within the same process",
+    "Negative-result analysis showing LCQ recovers little beyond plain sliding window and costs main training budget"
+  ],
+  "artifact_size": "15,912,974 bytes",
+  "prompt_version": "v2",
+  "is_record": false
+}

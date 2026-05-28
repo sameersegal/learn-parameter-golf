@@ -1,0 +1,120 @@
+{
+  "pr_number": 2155,
+  "title": "feat(non_record): add SP8192 BPE Mamba3 SSM hybrid 16MB non-record submission",
+  "author": "divagr18",
+  "status": "open",
+  "val_bpb": 1.2542,
+  "architecture": "Hybrid",
+  "quantization": "GPTQ int8",
+  "optimizer": "Muon",
+  "training_techniques": [
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Hybrid architecture replacing every 4th transformer attention block with a Mamba3 state-space model layer.",
+        "parameters": {
+          "layers": 9,
+          "heads": 8,
+          "kv_heads": 4,
+          "model_dim": 448,
+          "ssm_every_n": 4,
+          "ssm_blocks": 2
+        }
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "weight tying",
+        "description": "Tied input and output embeddings.",
+        "parameters": null
+      }
+    },
+    {
+      "category": "architecture_modification",
+      "data": {
+        "component": "GQA",
+        "description": "Uses grouped query attention with 8 attention heads and 4 KV heads.",
+        "parameters": {
+          "heads": 8,
+          "kv_heads": 4
+        }
+      }
+    },
+    {
+      "category": "optimizer_technique",
+      "data": {
+        "method": "Muon",
+        "weight_decay": null,
+        "momentum": null,
+        "other_params": {
+          "adam_for_scalar_params": true
+        }
+      }
+    },
+    {
+      "category": "weight_averaging",
+      "data": {
+        "method": "SWA",
+        "parameters": null
+      }
+    },
+    {
+      "category": "quantization",
+      "data": {
+        "method": "GPTQ",
+        "bits": 8,
+        "scope": "all"
+      }
+    },
+    {
+      "category": "compression",
+      "data": {
+        "method": "zstd",
+        "level": null
+      }
+    },
+    {
+      "category": "evaluation_technique",
+      "data": {
+        "method": "sliding window eval",
+        "parameters": {
+          "stride_frac": 0.5
+        }
+      }
+    },
+    {
+      "category": "sequence_length",
+      "data": {
+        "train_length": 1024,
+        "eval_length": null
+      }
+    },
+    {
+      "category": "other",
+      "data": {
+        "description": "Uses the official Mamba3 CUDA extension as the state-space model implementation.",
+        "parameters": {
+          "impl": "mamba3",
+          "head_dim": 64,
+          "d_state": 128,
+          "expand": 2.0,
+          "mimo_rank": 4
+        }
+      }
+    }
+  ],
+  "compression": "zstd",
+  "novel_contributions": [
+    "Hybrid Mamba3 SSM + attention architecture for a non-record 16MB submission",
+    "Replaces every 4th transformer attention block with Mamba3 to reduce parameter count",
+    "Uses SP8192 SentencePiece BPE tokenizer and exported dataset setup",
+    "Combines Muon for matrix parameters with Adam for scalar parameters",
+    "Applies SWA and GPTQ int8 quantization with zstd compression",
+    "Includes official Mamba CUDA extension integration for efficient SSM layers"
+  ],
+  "artifact_size": "16MB",
+  "prompt_version": "v2",
+  "is_record": false
+}
