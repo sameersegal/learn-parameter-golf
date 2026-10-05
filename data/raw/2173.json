@@ -1,0 +1,12 @@
+{
+  "number": 2173,
+  "title": "Keep rotary angles in float32 after model dtype conversion",
+  "author": "sylvesterkaczmarek",
+  "body": "## Problem\n\nThe baseline converts the model to bfloat16, including Rotary's floating inverse-frequency buffer. Rotary then creates its position sequence in that buffer's dtype. Positions 256 and 257 become identical, and frequency rounding introduces further angular error.\n\nA CPU reproduction is `Rotary(64).bfloat16()(1024, torch.device(\"cpu\"), torch.float32)`: positions 256 and 257 have identical cosine and sine tables. The maximum cosine difference from the float32 construction is approximately 1.9684.\n\n## Change\n\nKeep nonpersistent integer frequency indices and construct inverse frequencies and positions explicitly in float32 whenever the cache is rebuilt. The integer buffer still follows device moves but survives model dtype conversion. Cache reuse, requested output dtype, and checkpoint keys are preserved. The baseline remains under its 1,500-line limit.\n\nPyTorch documents the reduced-precision/repeated-value risk in [torch.arange](https://docs.pytorch.org/docs/stable/generated/torch.arange.html).\n\n## Validation\n\n- **18 CPU tests passed**. Fourteen fail against unchanged production code, while four float32 controls pass.\n- Independent float64 references cover float32/float16/bfloat16 model conversions, warm and cold caches, neighboring positions, output dtypes, and rotary application gradients.\n- Autocast tests pass in eager execution and full-graph capture with `torch.compile(backend=\"eager\")`, including cache rebuilds at different sequence lengths.\n- A bfloat16 grouped-query attention forward/backward smoke test passes with finite outputs and gradients.\n- Ruff syntax/error checks and `git diff --check` pass.\n\nPython 3.12.14 and PyTorch 2.14.1 on macOS arm64. No model or dataset downloads, CUDA kernels, distributed training, or benchmark runs were used. Graph capture does not establish CUDA/Inductor performance. This changes future baseline calculations; it does not modify archived submissions or claim a leaderboard improvement.\n\nReproduced against `f5c079314c4877fbb0af378c0abade5a8ca33d3a`.\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-10-05T08:05:03Z",
+  "updated_at": "2026-10-05T08:05:04Z",
+  "submission_readme": null
+}

@@ -1,0 +1,12 @@
+{
+  "number": 2175,
+  "title": "Count decoded internal whitespace in byte lookup tables",
+  "author": "sylvesterkaczmarek",
+  "body": "## Problem\n\nThe byte lookup tables remove one leading SentencePiece whitespace marker, but count internal or repeated markers as their three-byte U+2581 encoding. Those markers decode to one-byte ASCII spaces. A multiword piece such as `\u2581alpha\u2581beta` is therefore assigned 12 base bytes instead of the decoder's 10.\n\nThis overstates the byte denominator for affected custom tokenizers and can understate bits per byte without improving the model. SentencePiece documents whitespace-marker replacement in its [detokenization description](https://github.com/google/sentencepiece).\n\n## Changes\n\nConvert the remaining whitespace markers to spaces before measuring UTF-8 length in both baseline helpers. Preserve the separate leading-space flag and boundary adjustment. No tokenizer, training data, stored checkpoint, or competition submission is changed.\n\n## Validation\n\n- **24 tests passed** using the actual PyTorch and MLX helpers. Unchanged code fails 12 cases and passes 12 controls.\n- Tests train tiny SentencePiece models entirely in memory from synthetic text, with and without word-boundary splitting. They compare lookup totals with actual decoding for repeated/internal spaces and Unicode text.\n- Piece-level counts, control/unknown tokens, extra vocabulary slots, and fixed-likelihood BPB calculations are checked. MLX cases are optional on unsupported hosts and all ran on CPU here.\n- Ruff syntax/error checks and `git diff --check` passed. Both baselines remain below 1,500 lines.\n\nPython 3.12.14, SentencePiece 0.2.2, PyTorch 2.14.1, MLX 0.32.3 on macOS arm64. No real datasets, GPU training, full validation run, or leaderboard measurement was used.\n\nThis addresses markers inside ordinary pieces. It does not resolve the separate byte-fallback problem in #897 or the leading-space double-credit in #1719. The optimizer and rotary paths are unchanged.\n\nReproduced against `f5c079314c4877fbb0af378c0abade5a8ca33d3a`.",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-10-05T11:30:11Z",
+  "updated_at": "2026-10-05T11:30:11Z",
+  "submission_readme": null
+}
