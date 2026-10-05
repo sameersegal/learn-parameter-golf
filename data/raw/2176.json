@@ -1,0 +1,12 @@
+{
+  "number": 2176,
+  "title": "Preserve small matrix weights during int8 export",
+  "author": "sylvesterkaczmarek",
+  "body": "## Problem\n\nBoth matrix quantizers impose a minimum scale of `1/127`, regardless of the row's magnitude. This forces a minimum effective range of one. In the actual state-dictionary export path, a 257-by-257 float32 matrix ranging from -0.003 to 0.003 is consequently exported as all zero int8 values.\n\n## Change\n\nUse each row's computed range, with only the smallest positive representable float16 scale as a floor. Round the stored scale upward when necessary so the clipped endpoints remain representable, then quantize against that stored scale. Apply the same correction in PyTorch and MLX.\n\nThe format identifier, int8 values, float16 row-scale storage, metadata, and decoder remain unchanged. Vector/scalar scaling is unchanged. This affects future baseline exports and does not modify archived submissions.\n\n## Validation\n\n- **20 focused tests passed**, covering both implementations on CPU. Fourteen fail on unchanged source; six controls pass before and after.\n- Coverage includes row magnitudes from 1e-5 to 100, different ranges within one matrix, zero/empty/tiny rows, stored-scale error bounds, and unchanged vector behavior.\n- Tests exercise matrices above the passthrough threshold through full state-dictionary quantization/dequantization, including a real in-memory torch.save/torch.load round trip.\n- Syntax/error checks and `git diff --check` passed.\n\nPython 3.12.14, PyTorch 2.14.1, MLX 0.32.3 and NumPy 2.5.3 on macOS arm64. MLX operations used its CPU stream. No pretrained weights, datasets, CUDA/Metal execution, full training, or benchmark improvement are claimed. No dependency changes.\n\nReproduced against `f5c079314c4877fbb0af378c0abade5a8ca33d3a`.\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-10-05T18:39:30Z",
+  "updated_at": "2026-10-05T18:39:30Z",
+  "submission_readme": null
+}
