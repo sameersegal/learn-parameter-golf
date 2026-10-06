@@ -1,0 +1,12 @@
+{
+  "number": 2178,
+  "title": "Prevent overflow while clipping finite MLX gradients",
+  "author": "sylvesterkaczmarek",
+  "body": "## Problem\n\nMLX gradient clipping squares float32 gradients before summing in float64. Large but finite gradients overflow during the square, producing an infinite norm and a zero scale. The update disappears instead of being clipped to the requested norm.\n\n## Change\n\nPerform the square in float64, matching the precision already intended for accumulation. Keep the threshold, denominator offset, tensor dtypes, tree structure, and disabled-clipping behavior unchanged. The baseline script remains below its line limit.\n\nNumPy's [square reference](https://numpy.org/doc/stable/reference/generated/numpy.square.html) documents the dtype argument used for the intermediate calculation.\n\n## Validation\n\n- **16 CPU tests passed**. Eight large-gradient regressions fail on unchanged code; eight controls pass before and after.\n- Tests cover float32 and bfloat16 gradients, multiple tensor leaves, two thresholds, and magnitudes from 1e10 to 1e25.\n- Results match an independent float64 norm/scaling reference. Checks cover finite nonzero updates, shapes/dtypes, unchanged input gradients, empty trees, and disabled or unnecessary clipping.\n- Syntax/error checks and `git diff --check` pass.\n- Run `python -m pytest tests/test_mlx_gradient_norm.py` with MLX, the baseline dependencies, and pytest installed.\n\nPython 3.12.14, MLX 0.32.3, and NumPy 2.5.3 on macOS arm64. MLX operations run on its CPU stream. No pretrained weights, datasets, Metal/CUDA execution, or full training was used. Already non-finite inputs and other optimizers are outside this change. No dependency changes.\n\nReproduced against `f5c079314c4877fbb0af378c0abade5a8ca33d3a`.\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-10-06T11:58:34Z",
+  "updated_at": "2026-10-06T11:58:34Z",
+  "submission_readme": null
+}
