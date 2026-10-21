@@ -1,0 +1,12 @@
+{
+  "number": 2180,
+  "title": "fix(optim): prevent learning rate reset at warmdown iteration boundary",
+  "author": "reginaldalfret",
+  "body": "### Problem\n\nIn both `train_gpt.py` and `train_gpt_mlx.py`, the iteration-based learning rate multiplier `lr_mul` uses:\n```python\nwarmdown_start = max(args.iterations - args.warmdown_iters, 0)\nreturn max((args.iterations - step) / max(args.warmdown_iters, 1), 0.0) if warmdown_start <= step < args.iterations else 1.0\n```\n\nWhen training with fixed iteration budgets (when wallclock timeout is disabled or not reached), the condition `warmdown_start <= step < args.iterations` checks `step < args.iterations`.\nAs soon as `step` reaches `args.iterations`:\n1. `step < args.iterations` evaluates to `False`.\n2. Execution falls through to the ternary `else` branch, returning `1.0`.\n3. Consequently, at the iteration boundary (`step == iterations`) or during any subsequent evaluation/continuation steps, the multiplier abruptly resets from ~0.0 back to full learning rate (`1.0`).\n\nThe inner `max(..., 0.0)` guard was clearly intended to clamp any non-positive difference `(iterations - step)` to zero, but the upper-bound check `< args.iterations` prevented `(iterations - step) <= 0` from ever executing.\n\n### Change\n\nChange the condition to `step >= warmdown_start` in both `train_gpt.py` and `train_gpt_mlx.py`:\n```python\nreturn max((args.iterations - step) / max(args.warmdown_iters, 1), 0.0) if step >= warmdown_start else 1.0\n```\nThis ensures:\n- For `step < warmdown_start`, the multiplier remains `1.0`.\n- For `warmdown_start <= step < iterations`, the multiplier decays linearly from 1.0 towards 0.\n- For `step >= iterations`, `max((iterations - step) / warmdown_iters, 0.0)` cleanly clamps to `0.0`.\n\nLine counts in both scripts remain strictly under the 1,500-line limit (unchanged line count).\n\n### Validation\n\n- Added `tests/test_warmdown_schedule.py` covering standard warmdown decay, boundary step (`step == iterations`), post-boundary steps, disabled warmdown (`warmdown_iters=0`), warmdown exceeding total iterations, and wallclock timeout expiration.\n- All 5 tests pass cleanly in pytest.\n- `ruff check --select E,F,W` and `git diff --check` pass with zero errors.\n",
+  "state": "open",
+  "merged": false,
+  "labels": [],
+  "created_at": "2026-10-21T10:53:12Z",
+  "updated_at": "2026-10-21T10:53:12Z",
+  "submission_readme": null
+}
